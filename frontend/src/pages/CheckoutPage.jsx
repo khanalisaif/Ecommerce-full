@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import {
-  Smartphone, CreditCard, Landmark, Wallet, Banknote, Lock, Package, RefreshCw, CheckCircle2, Loader2,
+  Smartphone, CreditCard, Landmark, Wallet, Banknote, Lock, Package, RefreshCw, CheckCircle2, Loader2, Tag, X,
 } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
 import addressService from '../services/addressService'
 import orderService from '../services/orderService'
+import couponService from '../services/couponService'
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
@@ -22,6 +23,9 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isPlacing, setIsPlacing] = useState(false)
   const [placedOrder, setPlacedOrder] = useState(null)
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
 
   useEffect(() => {
     if (isAuthLoading) return
@@ -47,10 +51,50 @@ export default function CheckoutPage() {
   const FREE_SHIPPING_THRESHOLD = 999
   const subtotal = cartSubtotal
   const discount = cartDiscount
+  const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
   const standardShippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 200
   const shippingCost = deliveryOption === 'express' ? standardShippingCost + 79 : standardShippingCost
-  const total = subtotal - discount + shippingCost
-  const savePercent = subtotal > 0 ? Math.round((discount / subtotal) * 100) : 0
+  const total = Math.max(0, subtotal - discount - couponDiscount + shippingCost)
+  const totalSavings = discount + couponDiscount
+  const savePercent = subtotal > 0 ? Math.round((totalSavings / subtotal) * 100) : 0
+
+  // Check for ?coupon=CODE in URL and auto-apply
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const codeParam = params.get('coupon')
+    if (codeParam && subtotal > 0 && !appliedCoupon) {
+      setCouponInput(codeParam.toUpperCase())
+      couponService.applyCoupon(codeParam.toUpperCase(), subtotal)
+        .then((res) => {
+          setAppliedCoupon(res.data)
+          showToast(`Coupon ${res.data.code} automatically applied!`)
+        })
+        .catch(() => {})
+    } else if (codeParam && !couponInput) {
+      setCouponInput(codeParam.toUpperCase())
+    }
+  }, [subtotal])
+
+  const handleApplyCoupon = () => {
+    if (!couponInput.trim()) {
+      showToast('Please enter a coupon code')
+      return
+    }
+    setIsApplyingCoupon(true)
+    couponService.applyCoupon(couponInput.trim(), subtotal)
+      .then((res) => {
+        setAppliedCoupon(res.data)
+        showToast(res.message || `Coupon ${res.data.code} applied!`)
+        setCouponInput('')
+      })
+      .catch((err) => showToast(err.message))
+      .finally(() => setIsApplyingCoupon(false))
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    showToast('Coupon removed')
+  }
 
   const handlePlaceOrder = () => {
     if (cartItems.length === 0) return
@@ -60,7 +104,14 @@ export default function CheckoutPage() {
       return
     }
     setIsPlacing(true)
-    orderService.placeOrder({ addressId: selectedAddressId, paymentMethod, deliveryOption, orderNotes })
+    orderService.placeOrder({
+      addressId: selectedAddressId,
+      paymentMethod,
+      deliveryOption,
+      orderNotes,
+      couponCode: appliedCoupon?.code || '',
+      couponDiscount,
+    })
       .then((res) => {
         setPlacedOrder(res.data.order)
         clearCart()
@@ -331,6 +382,51 @@ export default function CheckoutPage() {
                 )}
               </div>
 
+              {/* Have a Coupon Code? Box */}
+              <div className="border-t border-gray-100 pt-4">
+                <div className="flex items-center gap-1.5 mb-2.5">
+                  <Tag size={14} className="text-purple-600" />
+                  <span className="text-[12px] font-bold text-gray-900">Apply Coupon Code</span>
+                </div>
+                {appliedCoupon ? (
+                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="bg-purple-600 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-xs font-bold text-green-600 truncate">
+                        -₹{appliedCoupon.discount.toLocaleString()} OFF
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="p-1 text-gray-400 hover:text-red-500 rounded-md transition-colors"
+                      title="Remove coupon"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter promo or coupon code"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                      className="flex-1 px-3 py-2 text-xs font-mono uppercase border border-gray-200 rounded-xl focus:outline-none focus:border-purple-500"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={isApplyingCoupon || !couponInput.trim()}
+                      className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-colors shrink-0 flex items-center gap-1"
+                    >
+                      {isApplyingCoupon ? <Loader2 size={12} className="animate-spin" /> : 'Apply'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="border-t border-gray-100 pt-5">
                 <h3 className="font-bold text-gray-900 mb-4 text-[14px]">Price Details</h3>
                 <div className="space-y-3.5">
@@ -342,6 +438,14 @@ export default function CheckoutPage() {
                     <span className="text-gray-500">Discount on MRP</span>
                     <span className="text-green-500 font-medium">- ₹{discount.toLocaleString()}</span>
                   </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-purple-600 font-semibold flex items-center gap-1">
+                        <Tag size={12} /> Coupon ({appliedCoupon.code})
+                      </span>
+                      <span className="text-green-600 font-bold">- ₹{couponDiscount.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-[12px]">
                     <span className="text-gray-500">Shipping Charges</span>
                     <span className={shippingCost === 0 ? 'text-green-500 font-bold' : 'text-gray-900 font-medium'}>
@@ -357,7 +461,7 @@ export default function CheckoutPage() {
                   <span className="text-2xl font-black text-[#e83e8c]">₹{total.toLocaleString()}</span>
                 </div>
                 <p className="text-green-500 text-[11px] font-bold">
-                  You Save ₹{discount.toLocaleString()} ({savePercent}%)
+                  You Save ₹{totalSavings.toLocaleString()} ({savePercent}%)
                 </p>
               </div>
 

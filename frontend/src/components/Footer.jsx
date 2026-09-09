@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Truck, ShieldCheck, Headphones, MessageCircle, Instagram, Facebook, Twitter, Linkedin, Lock, RotateCcw, Box, Gift, Sparkles } from 'lucide-react'
+import { Truck, ShieldCheck, Headphones, MessageCircle, Instagram, Facebook, Twitter, Linkedin, Lock, RotateCcw, Box, Gift, Sparkles, Loader2 } from 'lucide-react'
 import Logo from './Logo'
 import { useShop } from '../context/ShopContext'
 import { useNavigate } from 'react-router-dom'
+import { subscribeNewsletter } from '../services/subscribeService'
 
 const trustIconComponents = { ShieldCheck, Truck, Headphones, Lock, RotateCcw, Box, Gift, Sparkles }
 
@@ -21,14 +22,32 @@ export default function Footer({ showFeatures = true }) {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
+  const [subLoading, setSubLoading] = useState(false)
+  const [subError, setSubError] = useState('')
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!email.trim()) return showToast('Please enter your email address')
-    if (!emailRegex.test(email)) return showToast('Please enter a valid email address')
-    setSubscribed(true)
-    setEmail('')
-    showToast('🎉 You are now subscribed to our newsletter!')
+    setSubError('')
+    if (!email.trim()) {
+      setSubError('Please enter your email address')
+      return
+    }
+    if (!emailRegex.test(email)) {
+      setSubError('Please enter a valid email address')
+      return
+    }
+
+    setSubLoading(true)
+    try {
+      const res = await subscribeNewsletter(email.trim(), 'footer')
+      setSubscribed(true)
+      setEmail('')
+      showToast(res?.message || '🎉 You are now subscribed to our newsletter!', 'success')
+    } catch (err) {
+      setSubError(err.message || 'Subscription failed. Please try again.')
+    } finally {
+      setSubLoading(false)
+    }
   }
 
   const activeSocialLinks = Object.entries(footerSettings.social || {}).filter(([, url]) => url)
@@ -136,16 +155,26 @@ export default function Footer({ showFeatures = true }) {
               {subscribed ? (
                 <p className="text-green-600 font-bold text-sm py-2">✅ You're subscribed! Thank you.</p>
               ) : (
-                <div className="flex gap-2 mb-4">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
-                    placeholder="Enter your email address"
-                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:border-purple-600"
-                  />
-                  <button onClick={handleSubscribe} className="bg-purple-600 text-white px-3 md:px-4 py-2 rounded hover:bg-purple-700 transition-all font-bold text-sm">→</button>
+                <div className="flex flex-col gap-2 mb-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => { setEmail(e.target.value); setSubError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
+                      placeholder="Enter your email address"
+                      className="flex-1 px-3 py-2 border-2 border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:border-purple-600 disabled:opacity-50"
+                      disabled={subLoading}
+                    />
+                    <button 
+                      onClick={handleSubscribe} 
+                      disabled={subLoading}
+                      className="bg-purple-600 text-white px-3 md:px-4 py-2 rounded hover:bg-purple-700 transition-all font-bold text-sm disabled:opacity-70 flex items-center justify-center min-w-[44px]"
+                    >
+                      {subLoading ? <Loader2 size={16} className="animate-spin" /> : '→'}
+                    </button>
+                  </div>
+                  {subError && <p className="text-red-500 text-xs font-medium">{subError}</p>}
                 </div>
               )}
               <p className="text-gray-500 text-xs">🔒 We respect your privacy. Unsubscribe anytime.</p>

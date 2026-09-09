@@ -90,10 +90,10 @@ const userSchema = new mongoose.Schema(
       notifications: {
         orders: { type: Boolean, default: true },
         offers: { type: Boolean, default: true },
-        wishlist: { type: Boolean, default: false },
+        wishlist: { type: Boolean, default: true },
         reviews: { type: Boolean, default: true },
         security: { type: Boolean, default: true },
-        news: { type: Boolean, default: false },
+        news: { type: Boolean, default: true },
       },
     },
 

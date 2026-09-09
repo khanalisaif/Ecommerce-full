@@ -5,7 +5,7 @@ import User from "../../models/user/User.model.js";
 import { generateUserToken } from "../../utils/generateToken.js";
 import { generateOtp, isOtpExpired } from "../../utils/otpUtil.js";
 import { sendOtpSms, TEMPLATES } from "../../utils/sendSms.js";
-import { sendOtpEmail, sendPasswordResetLinkEmail } from "../../utils/sendEmail.js";
+import { sendOtpEmail, sendPasswordResetLinkEmail, sendSecurityAlertEmail } from "../../utils/sendEmail.js";
 import { generateResetToken, hashToken } from "../../utils/resetToken.js";
 
 // Helper: fire OTP over SMS + email in parallel, never block on SMS failure
@@ -143,6 +143,17 @@ export const login = asyncHandler(async (req, res) => {
   if (!user.isActive) throw new ApiError(403, "Account is disabled, contact support");
 
   const token = generateUserToken(res, user._id);
+
+  if (user.preferences?.notifications?.security !== false && user.email) {
+    sendSecurityAlertEmail(user.email, {
+      userName: user.fullName,
+      eventType: "Account Sign-In",
+      time: new Date().toLocaleString("en-IN"),
+      ip: req.ip || req.headers["x-forwarded-for"],
+      userAgent: req.headers["user-agent"],
+    }).catch((err) => console.error("Security alert email failed:", err.message));
+  }
+
   res.status(200).json(new ApiResponse(200, { token, user: sanitizeUser(user) }, "Logged in successfully"));
 });
 
@@ -190,6 +201,17 @@ export const verifyOtpLogin = asyncHandler(async (req, res) => {
   await user.save();
 
   const token = generateUserToken(res, user._id);
+
+  if (user.preferences?.notifications?.security !== false && user.email) {
+    sendSecurityAlertEmail(user.email, {
+      userName: user.fullName,
+      eventType: "OTP Sign-In",
+      time: new Date().toLocaleString("en-IN"),
+      ip: req.ip || req.headers["x-forwarded-for"],
+      userAgent: req.headers["user-agent"],
+    }).catch((err) => console.error("Security alert email failed:", err.message));
+  }
+
   res.status(200).json(new ApiResponse(200, { token, user: sanitizeUser(user) }, "Logged in successfully with OTP"));
 });
 
@@ -256,6 +278,16 @@ export const resetPassword = asyncHandler(async (req, res) => {
   user.resetPasswordToken = undefined;
   user.resetPasswordExpires = undefined;
   await user.save();
+
+  if (user.preferences?.notifications?.security !== false && user.email) {
+    sendSecurityAlertEmail(user.email, {
+      userName: user.fullName,
+      eventType: "Password Changed",
+      time: new Date().toLocaleString("en-IN"),
+      ip: req.ip || req.headers["x-forwarded-for"],
+      userAgent: req.headers["user-agent"],
+    }).catch((err) => console.error("Security alert email failed:", err.message));
+  }
 
   res.status(200).json(new ApiResponse(200, null, "Password reset successfully, please login"));
 });

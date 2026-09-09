@@ -63,30 +63,34 @@ export default function ResetPasswordPage() {
 
       <div className="flex flex-1">
         <div className="hidden lg:block w-1/2 relative">
-          <img src={siteAssets.loginImageUrl} alt="Reset Password" className="w-full h-full object-cover" />
+          <img
+            src={siteAssets.loginImageUrl}
+            alt="Reset Password"
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
         </div>
 
-        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-sm">
+        <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-4 py-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full max-w-[480px] px-5 sm:px-7 py-6">
             {status === 'checking' && (
-              <div className="text-center py-16">
-                <Loader2 size={32} className="animate-spin text-purple-500 mx-auto mb-4" />
-                <p className="text-gray-500 text-sm">Verifying your reset link...</p>
+              <div className="text-center py-12">
+                <Loader2 size={30} className="animate-spin text-purple-500 mx-auto mb-3" />
+                <p className="text-gray-500 text-xs sm:text-sm">Verifying your reset link...</p>
               </div>
             )}
 
             {status === 'invalid' && (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <XCircle size={28} className="text-red-500" />
+              <div className="text-center py-6">
+                <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <XCircle size={26} className="text-red-500" />
                 </div>
-                <h1 className="text-xl font-bold text-gray-900 mb-2">Link expired or invalid</h1>
-                <p className="text-gray-500 text-sm mb-6">
+                <h1 className="text-xl font-bold text-gray-900 mb-1">Link expired or invalid</h1>
+                <p className="text-gray-500 text-xs sm:text-sm mb-5">
                   This password reset link is no longer valid. Please request a new one.
                 </p>
                 <button
                   onClick={() => navigate('/login')}
-                  className="w-full py-3 bg-purple-600 text-white rounded-full font-bold text-sm hover:bg-purple-700 transition-colors"
+                  className="w-full py-2.5 bg-purple-600 text-white rounded-full font-bold text-xs sm:text-sm hover:bg-purple-700 transition-colors cursor-pointer"
                 >
                   Back to Login
                 </button>
@@ -95,49 +99,51 @@ export default function ResetPasswordPage() {
 
             {status === 'valid' && (
               <>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Set a new password</h1>
-                <p className="text-gray-500 text-sm mb-8">Choose a strong password for your account.</p>
+                <div className="text-center mb-4">
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-0.5">Set a new password</h1>
+                  <p className="text-gray-500 text-xs sm:text-sm">Choose a strong password for your account.</p>
+                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-3">
                   {errorMessage && (
-                    <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm animate-fade-in">
-                      <AlertCircle size={18} className="flex-shrink-0 mt-0.5 text-rose-500" />
+                    <div className="flex items-start gap-2 p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs animate-fade-in">
+                      <AlertCircle size={15} className="flex-shrink-0 mt-0.5 text-rose-500" />
                       <span className="flex-1 font-medium leading-snug">{errorMessage}</span>
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-gray-700 text-sm font-semibold mb-2">New Password</label>
+                    <label className="block text-gray-700 text-xs font-semibold mb-1">New Password</label>
                     <div className="relative">
-                      <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Enter new password"
-                        className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
+                        className="w-full pl-9 pr-9 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((s) => !s)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                       >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 text-sm font-semibold mb-2">Confirm Password</label>
+                    <label className="block text-gray-700 text-xs font-semibold mb-1">Confirm Password</label>
                     <div className="relative">
-                      <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirm new password"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
+                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
                         required
                       />
                     </div>
@@ -146,10 +152,10 @@ export default function ResetPasswordPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-3.5 rounded-full text-white font-bold text-sm transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full py-2.5 rounded-full text-white font-bold text-xs sm:text-sm transition-all duration-300 hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer mt-1"
                     style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}
                   >
-                    {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'Reset Password'}
+                    {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : 'Reset Password'}
                   </button>
                 </form>
               </>

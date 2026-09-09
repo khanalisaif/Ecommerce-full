@@ -930,24 +930,18 @@ function PrivacyPanel() {
 
 // ─── NOTIFICATIONS PANEL ──────────────────────────────────────────────────────
 function NotificationsPanel() {
-  const [settings, setSettings] = useState({ orders: true, offers: true, wishlist: false, reviews: true, security: true, news: false })
+  const [settings, setSettings] = useState({ orders: true, offers: true, wishlist: true, reviews: true, security: true, news: true })
   const [isLoading, setIsLoading] = useState(true)
   const { showToast } = useShop()
 
   useEffect(() => {
     preferencesService.getPreferences()
-      .then((res) => setSettings(res.data.preferences.notifications))
+      .then((res) => setSettings((prev) => ({ ...prev, ...(res.data.preferences?.notifications || {}) })))
       .catch((err) => showToast(err.message))
       .finally(() => setIsLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const toggle = (k) => {
-    const next = !settings[k]
-    setSettings(p => ({ ...p, [k]: next }))
-    preferencesService.updatePreferences({ notifications: { [k]: next } })
-      .catch((err) => showToast(err.message))
-  }
   const items = [
     { key: 'orders',   label: 'Order Updates',     desc: 'Get notified about your order status',   icon: ShoppingBag },
     { key: 'offers',   label: 'Offers & Discounts', desc: 'Exclusive deals and discount alerts',    icon: Gift },
@@ -956,6 +950,15 @@ function NotificationsPanel() {
     { key: 'security', label: 'Security Alerts',    desc: 'Important account security updates',     icon: Shield },
     { key: 'news',     label: 'News & Updates',     desc: 'Latest news from Hashtelicom',          icon: Bell },
   ]
+
+  const toggle = (k) => {
+    const next = !settings[k]
+    setSettings(p => ({ ...p, [k]: next }))
+    const item = items.find(i => i.key === k)
+    showToast(`${item?.label || k} ${next ? 'enabled' : 'disabled'}`)
+    preferencesService.updatePreferences({ notifications: { [k]: next } })
+      .catch((err) => showToast(err.message))
+  }
 
   if (isLoading) {
     return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-purple-500" size={28} /></div>

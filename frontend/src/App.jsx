@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -34,6 +34,7 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/product/:id" element={<ProductDetailPage />} />
         <Route
           path="/wishlist"
           element={
@@ -82,6 +83,8 @@ function AppContent() {
             </ProtectedAdminRoute>
           }
         />
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <AIChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </BrowserRouter>

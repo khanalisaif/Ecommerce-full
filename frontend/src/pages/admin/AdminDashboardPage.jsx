@@ -13,6 +13,7 @@ import BrandingTab from '../../components/admin/tabs/BrandingTab'
 import TopbarTab from '../../components/admin/tabs/TopbarTab'
 import FooterTab from '../../components/admin/tabs/FooterTab'
 import PagesTab from '../../components/admin/tabs/PagesTab'
+import OffersUpdatesTab from '../../components/admin/tabs/OffersUpdatesTab'
 import { useAdminAuth } from '../../context/AdminAuthContext'
 import { useShop } from '../../context/ShopContext'
 
@@ -24,6 +25,7 @@ const titles = {
   'category-filters': 'Category Filters',
   inventory: 'Inventory',
   orders: 'Orders',
+  'offers-updates': 'Offers & Updates',
   customers: 'Customers',
   branding: 'Branding',
   topbar: 'Top Bar',
@@ -76,6 +78,7 @@ export default function AdminDashboardPage() {
           {activeTab === 'category-filters' && <CategoryFiltersTab />}
           {activeTab === 'inventory' && <InventoryTab />}
           {activeTab === 'orders' && <OrdersTab />}
+          {activeTab === 'offers-updates' && <OffersUpdatesTab />}
           {activeTab === 'customers' && <CustomersTab />}
           {activeTab === 'branding' && <BrandingTab />}
           {activeTab === 'topbar' && <TopbarTab />}

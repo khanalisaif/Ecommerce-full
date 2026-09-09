@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { User, Mail, Lock, Eye, EyeOff, Phone, Loader2, AlertCircle, X, ArrowLeft } from 'lucide-react'
 import AuthTopBar from '../components/AuthTopBar'
 import Footer from '../components/Footer'
@@ -157,35 +157,35 @@ export default function SignupPage() {
         </div>
 
         {/* Right side - Signup Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-4 py-8">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full max-w-[560px] px-5 sm:px-8 py-8">
+        <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-4 py-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full max-w-[480px] px-5 sm:px-7 py-6">
             {/* Heading */}
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Create an Account</h1>
-              <p className="text-gray-500 text-sm">Join Hashtelicom to access exclusive offers and fast checkout</p>
+            <div className="text-center mb-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-0.5">Create an Account</h1>
+              <p className="text-gray-500 text-xs sm:text-sm">Join Hashtelicom to access exclusive offers and fast checkout</p>
             </div>
 
             {/* Inline Error Alert */}
             {errorMessage && (
-              <div className="mb-5 flex items-start gap-2.5 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm animate-fade-in">
-                <AlertCircle size={18} className="flex-shrink-0 mt-0.5 text-rose-500" />
+              <div className="mb-3.5 flex items-start gap-2 p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs animate-fade-in">
+                <AlertCircle size={15} className="flex-shrink-0 mt-0.5 text-rose-500" />
                 <span className="flex-1 font-medium leading-snug">{errorMessage}</span>
               </div>
             )}
 
-            <form onSubmit={handleSignup} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-3">
               {/* Full Name */}
               <div>
-                <label className="block text-gray-800 font-semibold text-sm mb-1.5">Full Name</label>
+                <label className="block text-gray-700 font-semibold text-xs mb-1">Full Name</label>
                 <div className="relative">
-                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
                     placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
+                    className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
                     required
                   />
                 </div>
@@ -193,16 +193,15 @@ export default function SignupPage() {
 
               {/* Gender */}
               <div>
-                <label className="block text-gray-800 font-semibold text-sm mb-1.5">Gender</label>
-                <div className="grid grid-cols-3 gap-3">
+                <label className="block text-gray-700 font-semibold text-xs mb-1">Gender</label>
+                <div className="grid grid-cols-3 gap-1.5 bg-gray-100/80 p-1 rounded-lg border border-gray-200">
                   {genders.map((g) => (
                     <label
                       key={g.value}
-                      className={`flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 cursor-pointer transition-all text-sm font-medium select-none ${
-                        formData.gender === g.value
-                          ? 'border-purple-500 bg-purple-50 text-purple-700 font-semibold'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                      }`}
+                      className={`flex items-center justify-center gap-1.5 py-1.5 rounded-md cursor-pointer transition-all text-xs font-semibold select-none ${formData.gender === g.value
+                        ? 'bg-white text-purple-700 shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                        }`}
                     >
                       <input
                         type="radio"
@@ -212,7 +211,7 @@ export default function SignupPage() {
                         onChange={handleChange}
                         className="hidden"
                       />
-                      <span className="text-base">{g.icon}</span>
+                      <span>{g.icon}</span>
                       <span>{g.label}</span>
                     </label>
                   ))}
@@ -221,16 +220,16 @@ export default function SignupPage() {
 
               {/* Email */}
               <div>
-                <label className="block text-gray-800 font-semibold text-sm mb-1.5">Email Address</label>
+                <label className="block text-gray-700 font-semibold text-xs mb-1">Email Address</label>
                 <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter your email address"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
+                    className="w-full pl-9 pr-3.5 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
                     required
                   />
                 </div>
@@ -238,11 +237,11 @@ export default function SignupPage() {
 
               {/* Mobile Number */}
               <div>
-                <label className="block text-gray-800 font-semibold text-sm mb-1.5">Mobile Number</label>
+                <label className="block text-gray-700 font-semibold text-xs mb-1">Mobile Number</label>
                 <div className="flex gap-2">
-                  <div className="flex items-center gap-1.5 border border-gray-300 rounded-lg px-3 py-2.5 bg-white">
-                    <Phone size={14} className="text-gray-400" />
-                    <span className="text-sm text-gray-700 font-medium select-none">🇮🇳 +91</span>
+                  <div className="flex items-center gap-1 border border-gray-300 rounded-lg px-2.5 py-2 bg-white flex-shrink-0">
+                    <Phone size={13} className="text-gray-400" />
+                    <span className="text-xs text-gray-700 font-medium select-none">🇮🇳 +91</span>
                   </div>
                   <input
                     type="tel"
@@ -251,7 +250,7 @@ export default function SignupPage() {
                     onChange={handleChange}
                     placeholder="10-digit mobile number"
                     maxLength={10}
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
                     required
                   />
                 </div>
@@ -259,30 +258,30 @@ export default function SignupPage() {
 
               {/* Password */}
               <div>
-                <label className="block text-gray-800 font-semibold text-sm mb-1.5">Password</label>
+                <label className="block text-gray-700 font-semibold text-xs mb-1">Password</label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="At least 6 characters"
-                    className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
+                    className="w-full pl-9 pr-9 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
               </div>
 
               {/* Terms & Conditions */}
-              <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+              <label className="flex items-start gap-2 cursor-pointer pt-0.5">
                 <div className="relative mt-0.5 flex-shrink-0">
                   <input
                     type="checkbox"
@@ -293,21 +292,32 @@ export default function SignupPage() {
                     required
                   />
                   <div
-                    className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
-                      formData.agreeTerms ? 'bg-purple-600 border-purple-600' : 'border-gray-300 bg-white'
-                    }`}
+                    className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors cursor-pointer ${formData.agreeTerms ? 'bg-purple-600 border-purple-600' : 'border-gray-300 bg-white'
+                      }`}
                   >
                     {formData.agreeTerms && (
-                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <svg width="8" height="7" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
                   </div>
                 </div>
-                <span className="text-gray-600 text-sm leading-relaxed select-none">
+                <span className="text-gray-600 text-xs leading-relaxed select-none">
                   I agree to the{' '}
-                  <span className="text-purple-600 font-semibold hover:underline">Terms &amp; Conditions</span> and{' '}
-                  <span className="text-purple-600 font-semibold hover:underline">Privacy Policy</span>
+                  <Link
+                    to="/info/terms-and-conditions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-purple-600 font-semibold hover:underline"
+                  >Terms &amp; Conditions</Link>{' '}and{' '}
+                  <Link
+                    to="/info/privacy-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-purple-600 font-semibold hover:underline"
+                  >Privacy Policy</Link>
                 </span>
               </label>
 
@@ -315,23 +325,22 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={isLoading || !formData.agreeTerms}
-                className={`w-full py-3 rounded-full text-white font-bold text-sm transition-all duration-300 mt-2 flex items-center justify-center gap-2 ${
-                  !formData.agreeTerms || isLoading
-                    ? 'opacity-50 cursor-not-allowed shadow-none'
-                    : 'hover:shadow-lg cursor-pointer'
-                }`}
+                className={`w-full py-2.5 rounded-full text-white font-bold text-xs sm:text-sm transition-all duration-300 mt-1 flex items-center justify-center gap-2 ${!formData.agreeTerms || isLoading
+                  ? 'opacity-50 cursor-not-allowed shadow-none'
+                  : 'hover:shadow-md cursor-pointer'
+                  }`}
                 style={
                   formData.agreeTerms && !isLoading
                     ? { background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }
                     : { background: '#9ca3af' }
                 }
               >
-                {isLoading ? <Loader2 size={18} className="animate-spin" /> : 'Create Account'}
+                {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Create Account'}
               </button>
             </form>
 
             {/* Login Link */}
-            <p className="text-center mt-5 text-gray-500 text-sm">
+            <p className="text-center mt-3.5 text-gray-500 text-xs sm:text-sm">
               Already have an account?{' '}
               <button
                 type="button"
@@ -345,7 +354,6 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <AuthFeaturesBar />
       <Footer showFeatures={false} />
 
       {/* OTP Verification Modal */}

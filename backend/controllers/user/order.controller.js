@@ -14,7 +14,14 @@ const generateOrderId = () => `HTL-${Date.now().toString().slice(-8)}${Math.floo
 
 // @route POST /api/user/orders (checkout)
 export const placeOrder = asyncHandler(async (req, res) => {
-  const { addressId, paymentMethod, deliveryOption = "standard", orderNotes = "" } = req.body;
+  const {
+    addressId,
+    paymentMethod,
+    deliveryOption = "standard",
+    orderNotes = "",
+    couponCode = "",
+    couponDiscount = 0,
+  } = req.body;
   if (!addressId || !paymentMethod) throw new ApiError(400, "addressId and paymentMethod are required");
 
   const user = await User.findById(req.user._id);
@@ -40,11 +47,12 @@ export const placeOrder = asyncHandler(async (req, res) => {
     0
   );
   const discount = Math.max(0, originalTotal - subtotal);
+  const appliedCouponDiscount = Math.max(0, Number(couponDiscount) || 0);
 
   let shippingCost = deliveryOption === "express" ? 150 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
   if (deliveryOption === "express") shippingCost += subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
 
-  const total = subtotal - discount + shippingCost;
+  const total = Math.max(0, subtotal - discount - appliedCouponDiscount + shippingCost);
 
   const order = await Order.create({
     orderId: generateOrderId(),
@@ -59,12 +67,14 @@ export const placeOrder = asyncHandler(async (req, res) => {
       city: address.city,
       state: address.state,
     },
-    paymentMethod,
-    paymentStatus: paymentMethod === "cod" ? "pending" : "paid",
+    paymentMethod: paymentMethod.toLowerCase(),
+    paymentStatus: paymentMethod.toLowerCase() === "cod" ? "pending" : "paid",
     deliveryOption,
     orderNotes,
     subtotal,
     discount,
+    couponCode: couponCode ? couponCode.trim().toUpperCase() : "",
+    couponDiscount: appliedCouponDiscount,
     shippingCost,
     total,
   });
@@ -77,10 +87,22 @@ export const placeOrder = asyncHandler(async (req, res) => {
     await product.save();
   }
 
+  // Increment coupon usage count if applied
+  if (couponCode) {
+    import("../../models/admin/Coupon.model.js")
+      .then(({ default: Coupon }) =>
+        Coupon.findOneAndUpdate({ code: couponCode.trim().toUpperCase() }, { $inc: { usedCount: 1 } })
+      )
+      .catch((err) => console.error("Coupon usage update failed:", err.message));
+  }
+
   cart.items = [];
   await cart.save();
 
-  sendOrderConfirmationEmail(user.email, order).catch(() => {});
+  // Send Order Confirmation email if user hasn't opted out of order updates
+  if (user.preferences?.notifications?.orders !== false) {
+    sendOrderConfirmationEmail(user.email, order).catch(() => {});
+  }
   sendNewOrderAlert(order).catch((err) => console.error("New order admin alert failed:", err.message));
 
   res.status(201).json(new ApiResponse(201, { order }, "Order placed successfully"));

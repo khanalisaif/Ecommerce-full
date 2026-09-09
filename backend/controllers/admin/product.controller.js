@@ -97,6 +97,9 @@ export const updateProduct = asyncHandler(async (req, res) => {
     isAssured, isBestSeller, isNewArrival, badge, sku, discount, isActive, rating, reviews,
   } = req.body;
 
+  const oldPrice = product.price;
+  const isPriceDrop = price !== undefined && Number(price) < oldPrice;
+
   if (name !== undefined) product.name = name;
   if (brand !== undefined) product.brand = String(brand).toUpperCase();
   if (brandName !== undefined || brand_name !== undefined) product.brandName = brandName || brand_name;
@@ -127,6 +130,37 @@ export const updateProduct = asyncHandler(async (req, res) => {
   }
 
   await product.save();
+
+  // If price dropped, alert users who have wishlisted this product
+  if (isPriceDrop) {
+    import("../../models/user/User.model.js")
+      .then(({ default: User }) =>
+        User.find({
+          wishlist: product._id,
+          "preferences.notifications.wishlist": { $ne: false },
+          email: { $exists: true, $ne: null },
+        }).select("fullName email")
+      )
+      .then((wishlistUsers) => {
+        if (!wishlistUsers?.length) return;
+        import("../../utils/sendEmail.js").then(({ sendWishlistPriceDropEmail }) => {
+          wishlistUsers.forEach((u) => {
+            sendWishlistPriceDropEmail(u.email, {
+              userName: u.fullName,
+              product: {
+                id: product._id,
+                name: product.name,
+                image: product.images?.[0] || "",
+              },
+              oldPrice,
+              newPrice: product.price,
+            }).catch((err) => console.error("Wishlist price drop email error:", err.message));
+          });
+        });
+      })
+      .catch((err) => console.error("Wishlist query failed on price drop:", err.message));
+  }
+
   res.status(200).json(new ApiResponse(200, { product }, "Product updated successfully"));
 });
 
