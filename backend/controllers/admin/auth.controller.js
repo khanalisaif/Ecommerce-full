@@ -25,7 +25,8 @@ export const registerAdmin = asyncHandler(async (req, res) => {
   const existing = await Admin.findOne({ email: email.toLowerCase() });
   if (existing) throw new ApiError(409, "Admin already exists with this email");
 
-  const admin = await Admin.create({ name, email, password, role: role === "super-admin" ? "super-admin" : "admin" });
+  const adminPassword = process.env.ADMIN_PASSWORD?.trim() || password;
+  const admin = await Admin.create({ name, email: email.toLowerCase(), password: adminPassword, role: role === "super-admin" ? "super-admin" : "admin" });
 
   res.status(201).json(new ApiResponse(201, { admin: sanitizeAdmin(admin) }, "Admin registered successfully"));
 });
@@ -35,11 +36,49 @@ export const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) throw new ApiError(400, "email and password are required");
 
-  const admin = await Admin.findOne({ email: email.toLowerCase() }).select("+password");
-  if (!admin || !(await admin.comparePassword(password))) {
+  const cleanEmail = email.toLowerCase().trim();
+  const allowedEmails = getAdminEmails();
+
+  let admin = await Admin.findOne({ email: cleanEmail }).select("+password");
+
+  // If admin email is in ADMIN_ALLOWED_EMAILS but record doesn't exist yet, auto-create
+  if (!admin && allowedEmails.includes(cleanEmail)) {
+    const envPassword = process.env.ADMIN_PASSWORD?.trim() || password;
+    admin = await Admin.create({
+      name: "Super Admin",
+      email: cleanEmail,
+      password: envPassword,
+      role: "super-admin",
+      isActive: true,
+    });
+  }
+
+  if (!admin) {
     throw new ApiError(401, "Invalid admin credentials");
   }
   if (!admin.isActive) throw new ApiError(403, "Admin account is disabled");
+
+  // If ADMIN_PASSWORD is set in .env, enforce that password strictly
+  const envPassword = process.env.ADMIN_PASSWORD?.trim();
+  let isPasswordValid = false;
+
+  if (envPassword) {
+    isPasswordValid = (password === envPassword);
+    // If entered password matches .env, ensure DB hash is kept in sync
+    if (isPasswordValid) {
+      const isDbMatching = await admin.comparePassword(password);
+      if (!isDbMatching) {
+        admin.password = password; // pre-save hook will hash it
+        await admin.save();
+      }
+    }
+  } else {
+    isPasswordValid = await admin.comparePassword(password);
+  }
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid admin credentials");
+  }
 
   const token = generateAdminToken(res, admin._id);
 

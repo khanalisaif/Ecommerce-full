@@ -571,24 +571,25 @@ async function seed() {
 
   // 1. Seed or Update Admin
   const adminEmail = "hasansaifkhan0@gmail.com";
+  const adminPassword = process.env.ADMIN_PASSWORD || "Admin@123";
   const existingAdmin = await Admin.findOne({ email: adminEmail });
 
   if (existingAdmin) {
     existingAdmin.name = "Hasan Saif Khan";
-    existingAdmin.password = "Admin@123";
+    existingAdmin.password = adminPassword;
     existingAdmin.role = "super-admin";
     existingAdmin.isActive = true;
     await existingAdmin.save();
-    console.log(`✅ Admin ${adminEmail} updated with active password: Admin@123`);
+    console.log(`✅ Admin ${adminEmail} updated with active password from .env: ${adminPassword}`);
   } else {
     await Admin.create({
       name: "Hasan Saif Khan",
       email: adminEmail,
-      password: "Admin@123",
+      password: adminPassword,
       role: "super-admin",
       isActive: true,
     });
-    console.log(`✅ Admin ${adminEmail} created with password: Admin@123`);
+    console.log(`✅ Admin ${adminEmail} created with password from .env: ${adminPassword}`);
   }
 
   // 2. Seed Categories
