@@ -7,6 +7,7 @@ import { generateOtp, isOtpExpired } from "../../utils/otpUtil.js";
 import { sendOtpSms, TEMPLATES } from "../../utils/sendSms.js";
 import { sendOtpEmail, sendPasswordResetLinkEmail, sendSecurityAlertEmail } from "../../utils/sendEmail.js";
 import { generateResetToken, hashToken } from "../../utils/resetToken.js";
+import { getClientUrl } from "../../utils/urlHelper.js";
 
 // Helper: fire OTP over SMS + email in parallel, never block on SMS failure
 const dispatchOtp = async ({ mobileNumber, email }, otp, templateName, purposeLabel) => {
@@ -216,37 +217,53 @@ export const verifyOtpLogin = asyncHandler(async (req, res) => {
 });
 
 // @route POST /api/user/auth/forgot-password
-// Emails a clickable reset LINK (not an OTP code) — the standard "forgot
-// password" flow used by most web apps.
+// Emails a clickable reset LINK to registered users only using live website URL
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) throw new ApiError(400, "Email address is required");
 
   const cleanEmail = email.trim().toLowerCase();
   const user = await User.findOne({ email: cleanEmail });
-  // Always respond the same way whether or not the account exists, so this
-  // endpoint can't be used to check which emails are registered.
-  if (!user || user.authProvider !== "local") {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, null, "If an account exists for that email, a reset link has been sent."));
+
+  // 1. Send forgot password mail ONLY if user is registered in the database!
+  if (!user) {
+    throw new ApiError(404, "No account found with this email address. Please check your email or register.");
   }
 
+  // 2. If user registered via social login (Google/Facebook), notify them
+  if (user.authProvider && user.authProvider !== "local") {
+    const providerName =
+      user.authProvider === "google"
+        ? "Google"
+        : user.authProvider === "facebook"
+        ? "Facebook"
+        : user.authProvider;
+    throw new ApiError(
+      400,
+      `This account is linked with ${providerName}. Please sign in using ${providerName} instead.`
+    );
+  }
+
+  // 3. Generate reset token and expiration
   const { rawToken, hashedToken, expiresAt } = generateResetToken();
   user.resetPasswordToken = hashedToken;
   user.resetPasswordExpires = expiresAt;
   await user.save();
 
-  const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${rawToken}`;
+  // 4. Construct reset URL using live website URL from .env
+  const liveUrl = getClientUrl();
+  const resetUrl = `${liveUrl}/reset-password/${rawToken}`;
+
   try {
     await sendPasswordResetLinkEmail(user.email, resetUrl);
   } catch (emailErr) {
     console.error("⚠️ Failed to send reset email:", emailErr.message);
+    throw new ApiError(500, "Failed to send reset email. Please try again later.");
   }
 
   res
     .status(200)
-    .json(new ApiResponse(200, null, "If an account exists for that email, a reset link has been sent."));
+    .json(new ApiResponse(200, null, "Password reset link has been sent to your registered email address."));
 });
 
 // @route GET /api/user/auth/reset-password/:token/valid

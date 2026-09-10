@@ -2,6 +2,7 @@ import "dotenv/config";
 import "isomorphic-fetch";
 import { Client } from "@microsoft/microsoft-graph-client";
 import { ClientSecretCredential } from "@azure/identity";
+import { getClientUrl } from "./urlHelper.js";
 
 // ==============================================================
 // Legacy Nodemailer (Hidden/Commented as backup)
@@ -512,7 +513,7 @@ export const sendReviewReminderEmail = async (to, { userName, orderId, items = [
         Your order <b>#${orderId}</b> was delivered recently. We would love to hear what you think about your new purchase${firstItem.name ? ` (<b>${firstItem.name}</b>)` : ""}!
       </p>
       <div style="text-align: center; margin: 28px 0;">
-        <a href="${process.env.CLIENT_URL || "http://localhost:5173"}/account" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 28px; border-radius: 999px; display: inline-block;">
+        <a href="${getClientUrl()}/account" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 28px; border-radius: 999px; display: inline-block;">
           Write a Review
         </a>
       </div>
@@ -556,7 +557,7 @@ export const sendWishlistPriceDropEmail = async (to, { userName, product, oldPri
         </div>
       </div>
       <div style="text-align: center; margin: 24px 0;">
-        <a href="${process.env.CLIENT_URL || "http://localhost:5173"}/product/${product.id || product._id}" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 28px; border-radius: 999px; display: inline-block;">
+        <a href="${getClientUrl()}/product/${product.id || product._id}" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 28px; border-radius: 999px; display: inline-block;">
           Buy Now Before Stock Ends
         </a>
       </div>
@@ -599,7 +600,7 @@ export const sendNewsBroadcastEmail = async (to, { title, message, bannerUrl, ac
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0 16px;" />
       <p style="color: #94a3b8; font-size: 11px; text-align: center; line-height: 1.4;">
         You are receiving this update because News & Updates is enabled in your notification preferences.<br/>
-        To update your preferences, visit <a href="${process.env.CLIENT_URL || "http://localhost:5173"}/account" style="color: #7c3aed; text-decoration: underline;">Account Settings</a>.<br/>
+        To update your preferences, visit <a href="${getClientUrl()}/account" style="color: #7c3aed; text-decoration: underline;">Account Settings</a>.<br/>
         &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.
       </p>
     </div>
@@ -622,7 +623,7 @@ export const sendCouponOfferEmail = async (to, { coupon }) => {
     ? new Date(coupon.validUntil).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : "Limited Time";
 
-  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const clientUrl = getClientUrl();
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 520px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">

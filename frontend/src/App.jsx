@@ -13,6 +13,7 @@ import CheckoutPage from './pages/CheckoutPage'
 import CategoryPage from './pages/CategoryPage'
 import FaqPage from './pages/FaqPage'
 import InfoPage from './pages/InfoPage'
+import UnsubscribePage from './pages/UnsubscribePage'
 import { ShopProvider, useShop } from './context/ShopContext'
 import { AuthProvider } from './context/AuthContext'
 import { AdminAuthProvider } from './context/AdminAuthContext'
@@ -72,6 +73,7 @@ function AppContent() {
         <Route path="/category/:category" element={<CategoryPage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/info/:slug" element={<InfoPage />} />
+        <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
         {/* Hidden admin panel — not linked anywhere in the site's navigation */}
         <Route path="/page/admin" element={<AdminLoginPage />} />

@@ -1,8 +1,8 @@
 import Subscriber from "../../models/user/Subscriber.model.js";
 import { sendEmail } from "../../utils/sendEmail.js";
+import { getClientUrl } from "../../utils/urlHelper.js";
 
 const brandName = "HASHTELICOM";
-const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
 
 /**
  * POST /api/user/subscribe
@@ -61,24 +61,12 @@ export const unsubscribe = async (req, res) => {
   try {
     const { token } = req.params;
     const subscriber = await Subscriber.findOne({ unsubscribeToken: token });
-
     const isHtml = req.headers.accept?.includes("text/html");
+    const clientUrl = getClientUrl();
 
     if (!subscriber) {
       if (isHtml) {
-        return res.status(404).send(`
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="utf-8"/><title>Hashtelicom</title><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
-        <body style="font-family: sans-serif; background: #f8fafc; padding: 50px 20px; text-align: center;">
-          <div style="background: #fff; max-width: 440px; margin: auto; padding: 36px; border-radius: 16px; border: 1px solid #e2e8f0;">
-            <h2 style="color: #ef4444; margin-top: 0;">❌ Invalid Link</h2>
-            <p style="color: #64748b;">This unsubscribe link is invalid or has already expired.</p>
-            <a href="${clientUrl}" style="color: #7c3aed; font-weight: bold; text-decoration: none;">Return to store &rarr;</a>
-          </div>
-        </body>
-        </html>
-      `);
+        return res.redirect(`${clientUrl}/unsubscribe?status=invalid`);
       }
       return res.status(404).json({ message: "Invalid unsubscribe link." });
     }
@@ -87,26 +75,7 @@ export const unsubscribe = async (req, res) => {
     await subscriber.save();
 
     if (isHtml) {
-      return res.status(200).send(`
-      <!DOCTYPE html>
-      <html>
-      <head><meta charset="utf-8"/><title>Unsubscribed - Hashtelicom</title><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; margin: 0; padding: 50px 20px; display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-        <div style="background: #fff; max-width: 460px; width: 100%; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); text-align: center; border: 1px solid #e2e8f0;">
-          <div style="display: inline-block; background: linear-gradient(135deg, #a855f7, #ec4899); color: #fff; font-size: 22px; font-weight: 900; letter-spacing: 2px; padding: 8px 20px; border-radius: 8px; margin-bottom: 20px;">
-            HASHTELICOM
-          </div>
-          <h2 style="color: #1e293b; margin: 0 0 10px; font-size: 22px;">✅ You're Unsubscribed</h2>
-          <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 0 0 25px;">
-            You have been successfully removed from our promotional email list. You won't receive marketing emails from us anymore.
-          </p>
-          <a href="${clientUrl}" style="display: inline-block; background: #7c3aed; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 999px;">
-            Return to Hashtelicom
-          </a>
-        </div>
-      </body>
-      </html>
-    `);
+      return res.redirect(`${clientUrl}/unsubscribe?status=success`);
     }
 
     return res.status(200).json({
@@ -120,10 +89,11 @@ export const unsubscribe = async (req, res) => {
 
 /** Internal: Send styled welcome/confirmation email */
 const sendSubscriptionWelcomeEmail = async (email, unsubscribeToken = "") => {
+  const clientUrl = getClientUrl();
   const subject = `Welcome to ${brandName}! Exclusive Offers Await You 🎉`;
   const unsubUrl = unsubscribeToken
-    ? `${process.env.API_URL || "http://localhost:5000"}/api/user/subscribe/unsubscribe/${unsubscribeToken}`
-    : `${clientUrl}`;
+    ? `${clientUrl}/unsubscribe?token=${unsubscribeToken}`
+    : clientUrl;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 520px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
@@ -178,3 +148,4 @@ const sendSubscriptionWelcomeEmail = async (email, unsubscribeToken = "") => {
     console.warn("Subscription welcome email failed:", err.message);
   }
 };
+

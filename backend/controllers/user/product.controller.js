@@ -90,15 +90,20 @@ export const searchProducts = asyncHandler(async (req, res) => {
   const { q } = req.query;
   if (!q || q.trim().length === 0) throw new ApiError(400, "Search query 'q' is required");
 
+  // Escape regex special characters to prevent RegExp syntax error
+  const escapedQ = q.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(escapedQ, "i");
+
   const products = await Product.find({
     isActive: true,
     $or: [
-      { name: new RegExp(q, "i") },
-      { brand: new RegExp(q, "i") },
-      { brandName: new RegExp(q, "i") },
-      { categorySlug: new RegExp(q, "i") },
+      { name: regex },
+      { brand: regex },
+      { brandName: regex },
+      { categorySlug: regex },
+      { tags: regex },
     ],
   }).limit(30);
 
-  res.status(200).json(new ApiResponse(200, { products: products.map(toStorefront), query: q }, "Search results fetched"));
+  res.status(200).json(new ApiResponse(200, { products: products.map(toStorefront), query: q.trim() }, "Search results fetched"));
 });
