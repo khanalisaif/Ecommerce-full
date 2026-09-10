@@ -15,7 +15,7 @@ const subscriberSchema = new mongoose.Schema(
     },
     source: {
       type: String,
-      enum: ["signup_page", "login_page", "footer", "popup"],
+      enum: ["signup_page", "login_page", "footer", "popup", "unsubscribe_page"],
       default: "signup_page",
     },
     unsubscribeToken: {

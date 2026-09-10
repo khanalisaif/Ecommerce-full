@@ -22,16 +22,33 @@ export default function HomePage() {
   const [currentBanner, setCurrentBanner] = useState(0)
   const [activeCategory, setActiveCategory] = useState(0)
 
-  // Auto-slide banner every 4 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentBanner(prev => (prev + 1) % banners.length)
-    }, 4000)
-    return () => clearInterval(timer)
-  }, [])
+  const bannerList = banners && banners.length > 0 ? banners : []
+  const safeBannerIndex =
+    Number.isFinite(currentBanner) && currentBanner >= 0 && currentBanner < bannerList.length
+      ? currentBanner
+      : 0
 
-  const nextBanner = () => setCurrentBanner(prev => (prev + 1) % banners.length)
-  const prevBanner = () => setCurrentBanner(prev => (prev - 1 + banners.length) % banners.length)
+  // Auto-slide banner every 4.5 seconds safely
+  useEffect(() => {
+    if (bannerList.length <= 1) return
+    const timer = setInterval(() => {
+      setCurrentBanner(prev => {
+        const p = Number.isFinite(prev) ? prev : 0
+        return (p + 1) % bannerList.length
+      })
+    }, 4500)
+    return () => clearInterval(timer)
+  }, [bannerList.length])
+
+  const nextBanner = () => {
+    if (bannerList.length <= 1) return
+    setCurrentBanner(prev => ((Number.isFinite(prev) ? prev : 0) + 1) % bannerList.length)
+  }
+
+  const prevBanner = () => {
+    if (bannerList.length <= 1) return
+    setCurrentBanner(prev => ((Number.isFinite(prev) ? prev : 0) - 1 + bannerList.length) % bannerList.length)
+  }
 
   const handleAddToCart = (e, product) => {
     e.stopPropagation()
@@ -82,85 +99,93 @@ export default function HomePage() {
       <main className="w-full">
 
         {/* ── Hero Banner Carousel ────────────────────────── */}
-        <div className="relative mx-4 md:mx-8 mt-6 rounded-2xl overflow-hidden h-[280px] md:h-[340px]">
-          {banners.map((banner, index) => (
-            <div
-              key={banner.id}
-              className={`absolute inset-0 transition-all duration-700 ${index === currentBanner ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-            >
-              {/* gradient bg */}
-              <div className="h-full w-full bg-gradient-to-br from-purple-200 via-pink-200 to-purple-700 relative overflow-hidden">
-                {/* right side image */}
-                <img
-                  src={banner.image}
-                  alt={banner.title}
-                  className="absolute right-0 top-0 h-full w-1/2 object-cover object-left opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-100/90 via-pink-100/60 to-transparent" />
+        {bannerList.length > 0 && (
+          <div className="relative mx-4 md:mx-8 mt-6 rounded-2xl overflow-hidden h-[280px] md:h-[340px]">
+            {bannerList.map((banner, index) => (
+              <div
+                key={banner.id || index}
+                className={`absolute inset-0 transition-all duration-700 ${index === safeBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+              >
+                {/* gradient bg */}
+                <div className="h-full w-full bg-gradient-to-br from-purple-200 via-pink-200 to-purple-700 relative overflow-hidden">
+                  {/* right side image */}
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="absolute right-0 top-0 h-full w-1/2 object-cover object-left opacity-80"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-100/90 via-pink-100/60 to-transparent" />
 
-                {/* text content */}
-                <div className="relative z-10 h-full flex flex-col justify-center px-5 md:px-12 max-w-[100%] sm:max-w-[90%] md:max-w-[55%] pt-2">
-                  <p className="text-[9px] sm:text-[10px] font-bold text-pink-600 tracking-[0.2em] uppercase mb-1.5 sm:mb-2">
-                    PRIVATE. PREMIUM.
-                  </p>
-                  <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-gray-900 leading-tight mb-1.5 sm:mb-2">
-                    {banner.title}
-                    <br />
-                    <span className="text-purple-600">{banner.subtitle}</span>
-                  </h2>
-                  <p className="text-gray-600 text-[11px] sm:text-sm md:text-base mb-4 sm:mb-6 max-w-[85%] sm:max-w-full leading-snug">
-                    {banner.description}
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start">
-                    <button
-                      onClick={() => {
-                        window.scrollTo({ top: 0, behavior: 'instant' })
-                        navigate('/category/Best-Sellers')
-                      }}
-                      className="bg-purple-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-1.5 w-max"
-                    >
-                      {banner.buttonText} →
-                    </button>
-                    <button
-                      onClick={() => {
-                        window.scrollTo({ top: 0, behavior: 'instant' })
-                        navigate('/category/New-Arrivals')
-                      }}
-                      className="border-2 border-gray-600 text-gray-800 bg-white/80 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm hover:border-gray-900 transition-colors w-max"
-                    >
-                      Explore Collections
-                    </button>
+                  {/* text content */}
+                  <div className="relative z-10 h-full flex flex-col justify-center px-5 md:px-12 max-w-[100%] sm:max-w-[90%] md:max-w-[55%] pt-2">
+                    <p className="text-[9px] sm:text-[10px] font-bold text-pink-600 tracking-[0.2em] uppercase mb-1.5 sm:mb-2">
+                      PRIVATE. PREMIUM.
+                    </p>
+                    <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-gray-900 leading-tight mb-1.5 sm:mb-2">
+                      {banner.title}
+                      <br />
+                      <span className="text-purple-600">{banner.subtitle}</span>
+                    </h2>
+                    <p className="text-gray-600 text-[11px] sm:text-sm md:text-base mb-4 sm:mb-6 max-w-[85%] sm:max-w-full leading-snug">
+                      {banner.description}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start">
+                      <button
+                        onClick={() => {
+                          window.scrollTo({ top: 0, behavior: 'instant' })
+                          navigate('/category/Best-Sellers')
+                        }}
+                        className="bg-purple-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-1.5 w-max"
+                      >
+                        {banner.buttonText || 'Shop Best Sellers'} →
+                      </button>
+                      <button
+                        onClick={() => {
+                          window.scrollTo({ top: 0, behavior: 'instant' })
+                          navigate('/category/New-Arrivals')
+                        }}
+                        className="border-2 border-gray-600 text-gray-800 bg-white/80 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm hover:border-gray-900 transition-colors w-max"
+                      >
+                        Explore Collections
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-
-          {/* Prev / Next */}
-          <button
-            onClick={prevBanner}
-            className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 z-20 bg-white/40 md:bg-white/90 hover:bg-white/70 md:hover:bg-white shadow-sm md:shadow p-1.5 md:p-2 rounded-full opacity-60 md:opacity-100 transition-all"
-          >
-            <ChevronLeft size={16} className="text-gray-800 md:text-gray-700" />
-          </button>
-          <button
-            onClick={nextBanner}
-            className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 z-20 bg-white/40 md:bg-white/90 hover:bg-white/70 md:hover:bg-white shadow-sm md:shadow p-1.5 md:p-2 rounded-full opacity-60 md:opacity-100 transition-all"
-          >
-            <ChevronRight size={16} className="text-gray-800 md:text-gray-700" />
-          </button>
-
-          {/* Dots */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-            {banners.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentBanner(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${i === currentBanner ? 'bg-purple-600 w-6' : 'bg-white/70 w-1.5'}`}
-              />
             ))}
+
+            {/* Prev / Next */}
+            {bannerList.length > 1 && (
+              <>
+                <button
+                  onClick={prevBanner}
+                  className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 z-20 bg-white/40 md:bg-white/90 hover:bg-white/70 md:hover:bg-white shadow-sm md:shadow p-1.5 md:p-2 rounded-full opacity-60 md:opacity-100 transition-all"
+                >
+                  <ChevronLeft size={16} className="text-gray-800 md:text-gray-700" />
+                </button>
+                <button
+                  onClick={nextBanner}
+                  className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 z-20 bg-white/40 md:bg-white/90 hover:bg-white/70 md:hover:bg-white shadow-sm md:shadow p-1.5 md:p-2 rounded-full opacity-60 md:opacity-100 transition-all"
+                >
+                  <ChevronRight size={16} className="text-gray-800 md:text-gray-700" />
+                </button>
+              </>
+            )}
+
+            {/* Dots */}
+            {bannerList.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+                {bannerList.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentBanner(i)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${i === safeBannerIndex ? 'bg-purple-600 w-6' : 'bg-white/70 w-1.5'}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* ── Collections 5-Column Grid ───────────────────── */}
         <div className="mt-8 px-4 md:px-8">

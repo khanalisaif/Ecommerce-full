@@ -51,6 +51,7 @@ router.get("/user/search", searchProducts);
 router.use("/content", siteContentRoutes); // /content, /content/:key — generic CMS key/value store (public read)
 router.use("/chat", chatRoutes); // /chat — AI shopping assistant
 router.use("/user/subscribe", subscribeRoutes); // /user/subscribe — newsletter email subscription (public)
+router.use("/user/unsubscribe", subscribeRoutes); // /user/unsubscribe/:token — direct unsubscribe alias
 
 // ---------- Admin ----------
 router.use("/admin/auth", adminAuthRoutes);

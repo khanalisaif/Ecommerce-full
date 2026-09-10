@@ -1,4 +1,5 @@
 import Subscriber from "../../models/user/Subscriber.model.js";
+import User from "../../models/user/User.model.js";
 import { sendEmail } from "../../utils/sendEmail.js";
 import { getClientUrl } from "../../utils/urlHelper.js";
 
@@ -29,6 +30,18 @@ export const subscribe = async (req, res) => {
       // Re-subscribe if previously unsubscribed
       existing.isActive = true;
       await existing.save();
+
+      // Re-enable news and offers notifications in user account if registered
+      await User.updateMany(
+        { email: email.toLowerCase() },
+        {
+          $set: {
+            "preferences.notifications.news": true,
+            "preferences.notifications.offers": true,
+          },
+        }
+      ).catch(() => {});
+
       await sendSubscriptionWelcomeEmail(email, existing.unsubscribeToken);
       return res.status(200).json({
         message: "Welcome back! You've been re-subscribed to Hashtelicom updates.",
@@ -73,6 +86,17 @@ export const unsubscribe = async (req, res) => {
 
     subscriber.isActive = false;
     await subscriber.save();
+
+    // Also disable news and offers in User profile if an account exists
+    await User.updateMany(
+      { email: subscriber.email.toLowerCase() },
+      {
+        $set: {
+          "preferences.notifications.news": false,
+          "preferences.notifications.offers": false,
+        },
+      }
+    ).catch(() => {});
 
     if (isHtml) {
       return res.redirect(`${clientUrl}/unsubscribe?status=success`);

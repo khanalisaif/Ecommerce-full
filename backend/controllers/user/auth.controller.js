@@ -148,7 +148,7 @@ export const login = asyncHandler(async (req, res) => {
   if (user.preferences?.notifications?.security !== false && user.email) {
     sendSecurityAlertEmail(user.email, {
       userName: user.fullName,
-      eventType: "Account Sign-In",
+      eventType: "Password Sign-In",
       time: new Date().toLocaleString("en-IN"),
       ip: req.ip || req.headers["x-forwarded-for"],
       userAgent: req.headers["user-agent"],

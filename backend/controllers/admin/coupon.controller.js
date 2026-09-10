@@ -3,6 +3,7 @@ import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import Coupon from "../../models/admin/Coupon.model.js";
 import User from "../../models/user/User.model.js";
+import Subscriber from "../../models/user/Subscriber.model.js";
 import { sendCouponOfferEmail } from "../../utils/sendEmail.js";
 
 // @route POST /api/admin/coupons
@@ -43,13 +44,36 @@ export const createCoupon = asyncHandler(async (req, res) => {
 
   let broadcastCount = 0;
   if (broadcastEmail) {
+    // 1. Fetch unsubscribed emails so we NEVER send offers to them
+    const unsubscribedList = await Subscriber.find({ isActive: false }).distinct("email");
+    const unsubscribedSet = new Set(unsubscribedList.map((e) => e.toLowerCase()));
+
+    // 2. Registered users who want offers
     const subscribers = await User.find({
       isActive: true,
       email: { $exists: true, $ne: null },
       "preferences.notifications.offers": { $ne: false },
-    }).select("email fullName");
+    }).select("email");
 
-    const emails = subscribers.map((s) => s.email).filter(Boolean);
+    // 3. Active newsletter subscribers
+    const activeSubs = await Subscriber.find({ isActive: true }).select("email");
+
+    // 4. Combine and filter out unsubscribed emails
+    const emailSet = new Set();
+    for (const u of subscribers) {
+      if (u.email) {
+        const em = u.email.trim().toLowerCase();
+        if (!unsubscribedSet.has(em)) emailSet.add(em);
+      }
+    }
+    for (const s of activeSubs) {
+      if (s.email) {
+        const em = s.email.trim().toLowerCase();
+        if (!unsubscribedSet.has(em)) emailSet.add(em);
+      }
+    }
+
+    const emails = Array.from(emailSet);
     if (emails.length > 0) {
       Promise.allSettled(emails.map((to) => sendCouponOfferEmail(to, { coupon }))).catch((err) =>
         console.error("Coupon broadcast error:", err.message)

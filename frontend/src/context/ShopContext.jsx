@@ -130,10 +130,10 @@ export function ShopProvider({ children }) {
   const [footerCategoryLinks, setFooterCategoryLinksState] = useState(DEFAULT_FOOTER_CATEGORY_LINKS)
   const [pages, setPagesState] = useState(DEFAULT_PAGES)
   const [faqs, setFaqsState] = useState(DEFAULT_FAQS)
-  const [banners, setBannersState] = useState([])
-  const [collections, setCollectionsState] = useState([])
-  const [categoryCards, setCategoryCardsState] = useState([])
-  const [featureBanners, setFeatureBannersState] = useState([])
+  const [banners, setBannersState] = useState(() => buildInitialBanners())
+  const [collections, setCollectionsState] = useState(() => buildInitialCollections())
+  const [categoryCards, setCategoryCardsState] = useState(() => buildInitialCategoryCards())
+  const [featureBanners, setFeatureBannersState] = useState(() => buildInitialFeatureBanners())
   const [trustBadges, setTrustBadgesState] = useState(DEFAULT_TRUST_BADGES)
 
   // Persists a CMS key to the backend (admin only — silently skipped for

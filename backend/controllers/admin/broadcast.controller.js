@@ -3,6 +3,7 @@ import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import Broadcast from "../../models/admin/Broadcast.model.js";
 import User from "../../models/user/User.model.js";
+import Subscriber from "../../models/user/Subscriber.model.js";
 import { sendNewsBroadcastEmail } from "../../utils/sendEmail.js";
 import { resolveImage } from "../../config/cloudinary.js";
 
@@ -26,14 +27,36 @@ export const sendNewsBroadcast = asyncHandler(async (req, res) => {
     }
   }
 
-  // Find all active users with news notifications enabled (default is true)
-  const subscribers = await User.find({
+  // 1. Fetch unsubscribed emails so we NEVER send to them
+  const unsubscribedList = await Subscriber.find({ isActive: false }).distinct("email");
+  const unsubscribedSet = new Set(unsubscribedList.map((e) => e.toLowerCase()));
+
+  // 2. Fetch active registered users with news notifications enabled
+  const users = await User.find({
     isActive: true,
     email: { $exists: true, $ne: null },
     "preferences.notifications.news": { $ne: false },
-  }).select("email fullName");
+  }).select("email");
 
-  const recipientEmails = subscribers.map((u) => u.email).filter(Boolean);
+  // 3. Fetch active newsletter subscribers
+  const activeSubs = await Subscriber.find({ isActive: true }).select("email");
+
+  // 4. Combine emails and strictly exclude anyone who has unsubscribed
+  const emailSet = new Set();
+  for (const u of users) {
+    if (u.email) {
+      const em = u.email.trim().toLowerCase();
+      if (!unsubscribedSet.has(em)) emailSet.add(em);
+    }
+  }
+  for (const s of activeSubs) {
+    if (s.email) {
+      const em = s.email.trim().toLowerCase();
+      if (!unsubscribedSet.has(em)) emailSet.add(em);
+    }
+  }
+
+  const recipientEmails = Array.from(emailSet);
 
   // Send email to all subscribers (settled, non-blocking failure for individual addresses)
   let sentCount = 0;

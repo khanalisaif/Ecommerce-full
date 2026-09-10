@@ -401,6 +401,30 @@ export const sendOrderConfirmationEmail = async (to, order) => {
 export const sendSecurityAlertEmail = async (to, { userName, eventType = "New Login", time, ip, userAgent }) => {
   const brandName = "HASHTELICOM";
   const subject = `Security Alert: ${eventType} detected on your account | ${brandName}`;
+  const cleanIp = ip ? String(ip).replace(/^::ffff:/, "").trim() : "";
+
+  // Parse friendly device label from User-Agent
+  let friendlyDevice = "";
+  if (userAgent) {
+    const ua = String(userAgent);
+    let browser = "Web Browser";
+    if (ua.includes("Edg/")) browser = "Microsoft Edge";
+    else if (ua.includes("Chrome/")) browser = "Google Chrome";
+    else if (ua.includes("Firefox/")) browser = "Mozilla Firefox";
+    else if (ua.includes("Safari/") && !ua.includes("Chrome/")) browser = "Apple Safari";
+
+    let os = "Desktop/Mobile";
+    if (ua.includes("Windows NT 10.0")) os = "Windows 10/11";
+    else if (ua.includes("Windows NT")) os = "Windows PC";
+    else if (ua.includes("Android")) os = "Android Device";
+    else if (ua.includes("iPhone")) os = "iPhone (iOS)";
+    else if (ua.includes("iPad")) os = "iPad (iPadOS)";
+    else if (ua.includes("Mac OS X")) os = "macOS (Mac)";
+    else if (ua.includes("Linux")) os = "Linux";
+
+    friendlyDevice = `${browser} on ${os}`;
+  }
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 20px;">
@@ -415,8 +439,14 @@ export const sendSecurityAlertEmail = async (to, { userName, eventType = "New Lo
       <div style="background: #f8fafc; border-left: 4px solid #7c3aed; padding: 14px; border-radius: 6px; margin: 18px 0; font-size: 13px; color: #334155;">
         <p style="margin: 0 0 6px;"><b>Activity:</b> ${eventType}</p>
         <p style="margin: 0 0 6px;"><b>Time:</b> ${time || new Date().toLocaleString("en-IN")}</p>
-        ${ip ? `<p style="margin: 0 0 6px;"><b>IP Address:</b> ${ip}</p>` : ""}
-        ${userAgent ? `<p style="margin: 0;"><b>Device:</b> ${userAgent}</p>` : ""}
+        ${cleanIp ? `<p style="margin: 0 0 6px;"><b>IP Address:</b> ${cleanIp}</p>` : ""}
+        ${
+          friendlyDevice
+            ? `<p style="margin: 0 0 6px;"><b>Device:</b> ${friendlyDevice}</p><p style="margin: 0; font-size: 11px; color: #94a3b8; word-break: break-all;"><b>Browser Details:</b> ${userAgent}</p>`
+            : userAgent
+            ? `<p style="margin: 0; word-break: break-all;"><b>Device:</b> ${userAgent}</p>`
+            : ""
+        }
       </div>
       <p style="color: #64748b; font-size: 13px; line-height: 1.5;">
         <b>Was this you?</b> If you initiated this activity, no further action is needed.
