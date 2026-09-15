@@ -612,7 +612,7 @@ export const sendReviewReminderEmail = async (to, { userName, orderId, items = [
   // Build a review button for each item
   const itemButtons = items.slice(0, 3).map((item) => {
     const productLink = item.product
-      ? `${clientUrl}/product/${item.product}`
+      ? `${clientUrl}/review/${item.product}`
       : `${clientUrl}/account`;
     return `
       <div style="border: 1px solid #f1f5f9; border-radius: 12px; padding: 14px 16px; margin: 10px 0; background: #faf5ff; display: flex; align-items: center; gap: 12px;">
@@ -635,7 +635,7 @@ export const sendReviewReminderEmail = async (to, { userName, orderId, items = [
       </div>
       <p style="color: #334155; font-size: 15px;">Hi <b>${userName || "Customer"}</b>,</p>
       <p style="color: #475569; font-size: 14px; line-height: 1.5;">
-        Your order <b>#${orderId}</b> was delivered recently. We would love to hear what you think about your purchase — click the button below to go directly to the product page and leave your review!
+        Your order <b>#${orderId}</b> was delivered recently. We would love to hear what you think about your purchase — click the button below to rate your product and leave your review!
       </p>
       ${itemButtons || `<div style="text-align: center; margin: 28px 0;"><a href="${clientUrl}/account" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 28px; border-radius: 999px; display: inline-block;">Write a Review</a></div>`}
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />

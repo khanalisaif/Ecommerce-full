@@ -70,7 +70,14 @@ export default function ProductDetailPage() {
   const stockInfo = displayStock > 0 ? 'In Stock' : 'Out of Stock'
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' })
+    if (window.location.hash === '#reviews') {
+      setTimeout(() => {
+        const el = document.getElementById('reviews')
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      }, 150)
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
   }, [id])
 
   const discountPercent = product.originalPrice > product.price ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0
@@ -336,10 +343,20 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Customer Reviews Card */}
-          <div className="bg-white border border-gray-100 rounded-[20px] p-6 shadow-sm">
+          <div id="reviews" className="bg-white border border-gray-100 rounded-[20px] p-6 shadow-sm scroll-mt-24">
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-lg font-bold text-gray-900">Customer Reviews ({totalReviews})</h2>
-              <button onClick={() => setShowReviewModal(true)} className="bg-purple-700 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-purple-800 transition-colors">
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    showToast('Please login to write a review')
+                    navigate('/login', { state: { from: { pathname: `/review/${product.id}` } } })
+                  } else {
+                    navigate(`/review/${product.id}`)
+                  }
+                }}
+                className="bg-purple-700 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-purple-800 transition-colors"
+              >
                 Write a Review
               </button>
             </div>

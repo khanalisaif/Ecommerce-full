@@ -365,6 +365,7 @@ function ProfilePanel() {
 
 // ─── ORDERS PANEL ─────────────────────────────────────────────────────────────
 function OrdersPanel() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('All')
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -488,7 +489,28 @@ function OrdersPanel() {
                   {order.status !== 'Cancelled' && (
                     <button onClick={() => handleReorder(order)} className="text-gray-500 text-xs font-bold hover:underline flex items-center gap-1"><RotateCcw size={12} /> Reorder</button>
                   )}
-                  {order.status === 'Delivered' && <button className="text-gray-500 text-xs font-bold hover:underline flex items-center gap-1"><ThumbsUp size={12} /> Rate</button>}
+                  {order.status === 'Delivered' && order.itemsList && order.itemsList.length > 0 && (
+                    order.itemsList.length === 1 ? (
+                      <button
+                        onClick={() => navigate(`/review/${order.itemsList[0].product}`)}
+                        className="text-amber-600 hover:text-amber-700 text-xs font-bold hover:underline flex items-center gap-1"
+                      >
+                        <Star size={12} className="fill-amber-500 text-amber-500" /> Write Review
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {order.itemsList.map((item, idx) => (
+                          <button
+                            key={item.product || idx}
+                            onClick={() => navigate(`/review/${item.product}`)}
+                            className="text-amber-600 hover:text-amber-700 text-xs font-bold hover:underline flex items-center gap-1"
+                          >
+                            <Star size={12} className="fill-amber-500 text-amber-500" /> Review {item.name ? (item.name.length > 16 ? item.name.slice(0, 16) + '...' : item.name) : `Item ${idx + 1}`}
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  )}
                   {(order.status === 'Pending' || order.status === 'Processing') && (
                     <button onClick={() => setCancelModal(order)} className="text-red-500 text-xs font-bold hover:underline flex items-center gap-1"><X size={12} /> Cancel</button>
                   )}

@@ -4,6 +4,7 @@ import SignupPage from './pages/SignupPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import HomePage from './pages/HomePage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import ReviewPage from './pages/ReviewPage'
 import WishlistPage from './pages/WishlistPage'
 import AccountPage from './pages/AccountPage'
 import SearchPage from './pages/SearchPage'
@@ -36,6 +37,14 @@ function AppContent() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/product/:id" element={<ProductDetailPage />} />
+        <Route
+          path="/review/:productId"
+          element={
+            <ProtectedUserRoute>
+              <ReviewPage />
+            </ProtectedUserRoute>
+          }
+        />
         <Route
           path="/wishlist"
           element={
