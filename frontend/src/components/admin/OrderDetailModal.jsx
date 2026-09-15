@@ -2,8 +2,32 @@ import { useState } from 'react'
 import {
   X, Clock, PackageCheck, Truck, Home, XCircle, Download,
   ArrowRight, Ban, CheckCircle2, Trash2, Loader2,
+  CreditCard, Smartphone, Wallet, Building2, Coins, Package,
 } from 'lucide-react'
 import { useShop } from '../../context/ShopContext'
+
+const PAYMENT_META = {
+  upi:        { label: 'UPI Pay',      bg: '#f3e8ff', color: '#7c3aed', Icon: Smartphone },
+  cod:        { label: 'Cash on Delivery', bg: '#fff7ed', color: '#c2410c', Icon: Coins },
+  card:       { label: 'Card Payment', bg: '#eff6ff', color: '#1d4ed8', Icon: CreditCard },
+  netbanking: { label: 'Net Banking',  bg: '#ecfeff', color: '#0e7490', Icon: Building2 },
+  wallet:     { label: 'Wallet',       bg: '#f0fdf4', color: '#15803d', Icon: Wallet },
+}
+
+function PaymentMethodBadge({ method }) {
+  const key = method?.toLowerCase()
+  const meta = PAYMENT_META[key] || { label: method || 'Unknown', bg: '#f3f4f6', color: '#6b7280', Icon: CreditCard }
+  const { label, bg, color, Icon } = meta
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full"
+      style={{ background: bg, color }}
+    >
+      <Icon size={13} />
+      {label}
+    </span>
+  )
+}
 
 const STAGE_META = {
   Pending:    { icon: Clock,        label: 'Order Received',  color: '#a855f7' },
@@ -233,10 +257,11 @@ export default function OrderDetailModal({ order, onClose }) {
 
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-bold text-gray-900">Payment</h4>
-                  <span className="text-xs font-semibold text-gray-500 uppercase">{order.paymentMethod}</span>
+                  <h4 className="text-sm font-bold text-gray-900">Payment Method</h4>
+                  <PaymentMethodBadge method={order.paymentMethod} />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-xs text-gray-500 w-full mb-1 font-medium">Payment Status:</p>
                   {['pending', 'paid', 'failed', 'refunded'].map((s) => (
                     <button
                       key={s}
@@ -252,6 +277,58 @@ export default function OrderDetailModal({ order, onClose }) {
                   ))}
                 </div>
               </div>
+
+              {/* Order Items & Price Breakdown */}
+              {order.items && order.items.length > 0 && (
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1.5">
+                    <Package size={14} /> Order Items ({order.items.length})
+                  </h4>
+                  <div className="space-y-2 mb-3">
+                    {order.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2.5">
+                        {item.image && <img src={item.image} alt="" className="w-9 h-9 rounded-lg object-cover bg-gray-200 shrink-0" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-800 truncate">{item.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {[item.size && `Size: ${item.size}`, item.color && `Color: ${item.color}`].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xs font-bold text-gray-800">₹{(item.price || 0).toLocaleString('en-IN')}</p>
+                          <p className="text-xs text-gray-400">×{item.quantity}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-200 pt-2 space-y-1">
+                    {order.subtotal != null && (
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Subtotal (MRP)</span><span>₹{(order.subtotal || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                    {order.discount > 0 && (
+                      <div className="flex justify-between text-xs text-green-600">
+                        <span>Product Discount</span><span>− ₹{order.discount.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                    {order.couponDiscount > 0 && (
+                      <div className="flex justify-between text-xs text-green-600">
+                        <span>Coupon ({order.couponCode})</span><span>− ₹{order.couponDiscount.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                    {order.shippingCost != null && (
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Shipping</span>
+                        <span>{order.shippingCost === 0 ? 'FREE' : `₹${order.shippingCost.toLocaleString('en-IN')}`}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm font-bold text-gray-900 border-t border-gray-200 pt-1 mt-1">
+                      <span>Total Paid</span><span>₹{(order.amount || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {isTerminal ? (
                 <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-4 text-gray-500 text-sm">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronRight, Trash2, AlertTriangle, Loader2, ShoppingBag, Clock, Loader, Truck, CheckCircle, XCircle } from 'lucide-react'
+import { ChevronRight, Trash2, AlertTriangle, Loader2, ShoppingBag, Clock, Loader, Truck, CheckCircle, XCircle, CreditCard, Smartphone, Wallet, Building2, Coins } from 'lucide-react'
 import { useShop } from '../../../context/ShopContext'
 import Pagination from '../Pagination'
 import OrderDetailModal from '../OrderDetailModal'
@@ -10,6 +10,25 @@ const statusStyles = {
   Processing: 'bg-amber-100 text-amber-700',
   Pending: 'bg-gray-100 text-gray-600',
   Cancelled: 'bg-red-100 text-red-600',
+}
+
+const paymentMeta = {
+  upi:        { label: 'UPI',        bg: 'bg-purple-100', text: 'text-purple-700', Icon: Smartphone },
+  cod:        { label: 'COD',        bg: 'bg-orange-100', text: 'text-orange-700', Icon: Coins },
+  card:       { label: 'Card',       bg: 'bg-blue-100',   text: 'text-blue-700',   Icon: CreditCard },
+  netbanking: { label: 'Net Bank',   bg: 'bg-cyan-100',   text: 'text-cyan-700',   Icon: Building2 },
+  wallet:     { label: 'Wallet',     bg: 'bg-green-100',  text: 'text-green-700',  Icon: Wallet },
+}
+
+function PaymentBadge({ method }) {
+  const meta = paymentMeta[method?.toLowerCase()] || { label: method || '—', bg: 'bg-gray-100', text: 'text-gray-500', Icon: CreditCard }
+  const { label, bg, text, Icon } = meta
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${bg} ${text}`}>
+      <Icon size={10} />
+      {label}
+    </span>
+  )
 }
 
 const filters = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
@@ -106,6 +125,7 @@ export default function OrdersTab() {
                 <th className="px-5 sm:px-6 py-3 font-semibold">Product</th>
                 <th className="px-5 sm:px-6 py-3 font-semibold">Date</th>
                 <th className="px-5 sm:px-6 py-3 font-semibold">Amount</th>
+                <th className="px-5 sm:px-6 py-3 font-semibold">Payment</th>
                 <th className="px-5 sm:px-6 py-3 font-semibold">Status</th>
                 <th className="px-5 sm:px-6 py-3 font-semibold text-right">Actions</th>
               </tr>
@@ -130,6 +150,7 @@ export default function OrdersTab() {
                   </td>
                   <td className="px-5 sm:px-6 py-3 text-gray-500">{o.date}</td>
                   <td className="px-5 sm:px-6 py-3 font-semibold text-gray-800">₹{(o.amount ?? 0).toLocaleString('en-IN')}</td>
+                  <td className="px-5 sm:px-6 py-3"><PaymentBadge method={o.paymentMethod} /></td>
                   <td className="px-5 sm:px-6 py-3">
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusStyles[o.status]}`}>
                       {o.status}
@@ -155,7 +176,7 @@ export default function OrdersTab() {
               ))}
               {!paginated.length && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-gray-400 text-sm">No orders found</td>
+                  <td colSpan={8} className="px-6 py-10 text-center text-gray-400 text-sm">No orders found</td>
                 </tr>
               )}
             </tbody>

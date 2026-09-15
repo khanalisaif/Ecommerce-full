@@ -241,6 +241,13 @@ export function ShopProvider({ children }) {
       address: formattedAddress,
       paymentMethod: o.paymentMethod,
       paymentStatus: o.paymentStatus,
+      subtotal: o.subtotal,
+      discount: o.discount ?? 0,
+      couponCode: o.couponCode || '',
+      couponDiscount: o.couponDiscount ?? 0,
+      shippingCost: o.shippingCost ?? 0,
+      deliveryOption: o.deliveryOption,
+      orderNotes: o.orderNotes || '',
     }
   }
 

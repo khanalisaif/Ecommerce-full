@@ -125,6 +125,8 @@ export default function InventoryTab() {
               <tr className="text-left text-gray-600 text-xs uppercase tracking-wide">
                 <th className="px-5 sm:px-6 py-3 font-semibold">Product</th>
                 <th className="px-5 sm:px-6 py-3 font-semibold">SKU</th>
+                <th className="px-5 sm:px-6 py-3 font-semibold">Category</th>
+                <th className="px-5 sm:px-6 py-3 font-semibold">Price</th>
                 <th className="px-5 sm:px-6 py-3 font-semibold">Status</th>
                 <th className="px-5 sm:px-6 py-3 font-semibold">Stock</th>
               </tr>
@@ -140,7 +142,25 @@ export default function InventoryTab() {
                         <span className="font-semibold text-gray-800 max-w-[220px] truncate">{p.name}</span>
                       </div>
                     </td>
-                    <td className="px-5 sm:px-6 py-3 text-gray-500">{p.sku}</td>
+                    <td className="px-5 sm:px-6 py-3 text-gray-500 font-mono text-xs">{p.sku}</td>
+                    <td className="px-5 sm:px-6 py-3">
+                      <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full capitalize">
+                        {p.category || '—'}
+                      </span>
+                    </td>
+                    <td className="px-5 sm:px-6 py-3">
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">₹{(p.price || 0).toLocaleString('en-IN')}</p>
+                        {p.originalPrice && p.originalPrice > p.price && (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <p className="text-xs text-gray-400 line-through">₹{p.originalPrice.toLocaleString('en-IN')}</p>
+                            <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
+                              {Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)}% OFF
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-5 sm:px-6 py-3">
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusBadgeClass(status)}`}>{status}</span>
                     </td>
@@ -196,7 +216,7 @@ export default function InventoryTab() {
               })}
               {!filtered.length && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-gray-400 text-sm">No products found</td>
+                  <td colSpan={6} className="px-6 py-10 text-center text-gray-400 text-sm">No products found</td>
                 </tr>
               )}
             </tbody>

@@ -391,6 +391,13 @@ function OrdersPanel() {
         date: new Date(s.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
         done: true,
       })),
+      paymentMethod: o.paymentMethod || '',
+      paymentStatus: o.paymentStatus || 'pending',
+      subtotal: o.subtotal,
+      discount: o.discount,
+      couponDiscount: o.couponDiscount,
+      couponCode: o.couponCode,
+      shippingCost: o.shippingCost,
     }
   }
 
@@ -456,6 +463,20 @@ function OrdersPanel() {
                     <p className="font-bold text-gray-900">{order.product}</p>
                     <p className="text-gray-400 text-xs mt-0.5">{order.items} item{order.items > 1 ? 's' : ''} · {order.orderNumber}</p>
                     <p className="text-gray-400 text-xs mt-0.5">{order.date}</p>
+                    {order.paymentMethod && (
+                      <p className="text-xs mt-1">
+                        <span className="text-gray-400">Paid via: </span>
+                        <span className="font-semibold text-gray-700 capitalize">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod === 'upi' ? 'UPI' : order.paymentMethod === 'netbanking' ? 'Net Banking' : order.paymentMethod}</span>
+                        {order.paymentStatus && (
+                          <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                            order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
+                            order.paymentStatus === 'pending' ? 'bg-amber-100 text-amber-700' :
+                            order.paymentStatus === 'failed' ? 'bg-red-100 text-red-600' :
+                            'bg-gray-100 text-gray-500'
+                          }`}>{order.paymentStatus}</span>
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-black text-gray-900">₹{order.total.toLocaleString()}</p>
