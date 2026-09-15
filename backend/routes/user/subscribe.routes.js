@@ -8,5 +8,6 @@ router.post("/", subscribe);
 
 // GET /api/user/unsubscribe/:token — one-click unsubscribe from email link
 router.get("/unsubscribe/:token", unsubscribe);
+router.get("/:token", unsubscribe);
 
 export default router;

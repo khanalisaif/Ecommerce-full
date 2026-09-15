@@ -5,7 +5,7 @@ import User from "../../models/user/User.model.js";
 import { generateUserToken } from "../../utils/generateToken.js";
 import { generateOtp, isOtpExpired } from "../../utils/otpUtil.js";
 import { sendOtpSms, TEMPLATES } from "../../utils/sendSms.js";
-import { sendOtpEmail, sendPasswordResetLinkEmail, sendSecurityAlertEmail } from "../../utils/sendEmail.js";
+import { sendOtpEmail, sendPasswordResetLinkEmail, sendSecurityAlertEmail, formatDelhiDateTime } from "../../utils/sendEmail.js";
 import { generateResetToken, hashToken } from "../../utils/resetToken.js";
 import { getClientUrl } from "../../utils/urlHelper.js";
 
@@ -149,7 +149,7 @@ export const login = asyncHandler(async (req, res) => {
     sendSecurityAlertEmail(user.email, {
       userName: user.fullName,
       eventType: "Password Sign-In",
-      time: new Date().toLocaleString("en-IN"),
+      time: formatDelhiDateTime(),
       ip: req.ip || req.headers["x-forwarded-for"],
       userAgent: req.headers["user-agent"],
     }).catch((err) => console.error("Security alert email failed:", err.message));
@@ -207,7 +207,7 @@ export const verifyOtpLogin = asyncHandler(async (req, res) => {
     sendSecurityAlertEmail(user.email, {
       userName: user.fullName,
       eventType: "OTP Sign-In",
-      time: new Date().toLocaleString("en-IN"),
+      time: formatDelhiDateTime(),
       ip: req.ip || req.headers["x-forwarded-for"],
       userAgent: req.headers["user-agent"],
     }).catch((err) => console.error("Security alert email failed:", err.message));
@@ -300,7 +300,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
     sendSecurityAlertEmail(user.email, {
       userName: user.fullName,
       eventType: "Password Changed",
-      time: new Date().toLocaleString("en-IN"),
+      time: formatDelhiDateTime(),
       ip: req.ip || req.headers["x-forwarded-for"],
       userAgent: req.headers["user-agent"],
     }).catch((err) => console.error("Security alert email failed:", err.message));

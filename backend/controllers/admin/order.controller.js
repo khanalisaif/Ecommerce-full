@@ -3,6 +3,7 @@ import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import Order from "../../models/user/Order.model.js";
 import User from "../../models/user/User.model.js";
+import Product from "../../models/admin/Product.model.js";
 import { sendOrderStatusUpdateEmail, sendReviewReminderEmail } from "../../utils/sendEmail.js";
 
 // @route GET /api/admin/orders
@@ -65,6 +66,15 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
           orderId: order.orderId,
           items: order.items,
         }).catch((err) => console.error("Review reminder email failed:", err.message));
+      }
+    }
+
+    // Restore stock if order was cancelled
+    if (oldStatus !== "Cancelled" && status === "Cancelled") {
+      for (const item of order.items) {
+        if (item.product) {
+          await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+        }
       }
     }
   }

@@ -13,7 +13,7 @@ import couponService from '../services/couponService'
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
-  const { cartItems, cartSubtotal, cartDiscount, clearCart, showToast } = useShop()
+  const { cartItems, cartSubtotal, cartOriginalTotal, cartDiscount, clearCart, showToast } = useShop()
   const { isAuthenticated, isAuthLoading } = useAuth()
   const [paymentMethod, setPaymentMethod] = useState('upi')
   const [deliveryOption, setDeliveryOption] = useState('standard')
@@ -50,13 +50,14 @@ export default function CheckoutPage() {
 
   const FREE_SHIPPING_THRESHOLD = 999
   const subtotal = cartSubtotal
+  const originalTotal = cartOriginalTotal
   const discount = cartDiscount
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
   const standardShippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 200
   const shippingCost = deliveryOption === 'express' ? standardShippingCost + 79 : standardShippingCost
-  const total = Math.max(0, subtotal - discount - couponDiscount + shippingCost)
+  const total = Math.max(0, subtotal - couponDiscount + shippingCost)
   const totalSavings = discount + couponDiscount
-  const savePercent = subtotal > 0 ? Math.round((totalSavings / subtotal) * 100) : 0
+  const savePercent = originalTotal > 0 ? Math.round((totalSavings / originalTotal) * 100) : 0
 
   // Check for ?coupon=CODE in URL and auto-apply
   useEffect(() => {
@@ -432,12 +433,14 @@ export default function CheckoutPage() {
                 <div className="space-y-3.5">
                   <div className="flex justify-between text-[12px]">
                     <span className="text-gray-500">Total MRP</span>
-                    <span className="text-gray-600 font-medium">₹{subtotal.toLocaleString()}</span>
+                    <span className="text-gray-600 font-medium">₹{originalTotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-[12px]">
-                    <span className="text-gray-500">Discount on MRP</span>
-                    <span className="text-green-500 font-medium">- ₹{discount.toLocaleString()}</span>
-                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-gray-500">Discount on MRP</span>
+                      <span className="text-green-500 font-medium">- ₹{discount.toLocaleString()}</span>
+                    </div>
+                  )}
                   {appliedCoupon && (
                     <div className="flex justify-between text-[12px]">
                       <span className="text-purple-600 font-semibold flex items-center gap-1">
@@ -460,9 +463,11 @@ export default function CheckoutPage() {
                   <span className="text-lg font-bold text-gray-900">To Pay</span>
                   <span className="text-2xl font-black text-[#e83e8c]">₹{total.toLocaleString()}</span>
                 </div>
-                <p className="text-green-500 text-[11px] font-bold">
-                  You Save ₹{totalSavings.toLocaleString()} ({savePercent}%)
-                </p>
+                {totalSavings > 0 && (
+                  <p className="text-green-500 text-[11px] font-bold">
+                    You Save ₹{totalSavings.toLocaleString()} ({savePercent}%)
+                  </p>
+                )}
               </div>
 
               {/* Trust Badges */}

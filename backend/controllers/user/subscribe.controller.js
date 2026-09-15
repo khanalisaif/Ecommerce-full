@@ -1,6 +1,6 @@
 import Subscriber from "../../models/user/Subscriber.model.js";
 import User from "../../models/user/User.model.js";
-import { sendEmail } from "../../utils/sendEmail.js";
+import { sendEmail, formatDelhiDateTime, getDelhiYear } from "../../utils/sendEmail.js";
 import { getClientUrl } from "../../utils/urlHelper.js";
 
 const brandName = "HASHTELICOM";
@@ -119,6 +119,9 @@ const sendSubscriptionWelcomeEmail = async (email, unsubscribeToken = "") => {
     ? `${clientUrl}/unsubscribe?token=${unsubscribeToken}`
     : clientUrl;
 
+  const liveTime = formatDelhiDateTime();
+  const currentYear = getDelhiYear();
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 520px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 22px;">
@@ -159,9 +162,9 @@ const sendSubscriptionWelcomeEmail = async (email, unsubscribeToken = "") => {
 
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0 16px;" />
       <p style="color: #94a3b8; font-size: 11px; text-align: center; line-height: 1.6;">
-        You subscribed with <b>${email}</b>.<br/>
+        You subscribed with <b>${email}</b> on ${liveTime}.<br/>
         Don't want to hear from us? <a href="${unsubUrl}" style="color: #7c3aed;">Unsubscribe anytime</a>.<br/>
-        &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.
+        &copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}
       </p>
     </div>
   `;

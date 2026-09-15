@@ -153,7 +153,7 @@ export default function SearchPage() {
     if (selectedDiscount) {
       const discountInt = parseInt(selectedDiscount)
       data = data.filter(p => {
-        const pct = Math.round((1 - p.price / p.originalPrice) * 100)
+        const pct = p.originalPrice > p.price ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0
         return pct >= discountInt
       })
     }

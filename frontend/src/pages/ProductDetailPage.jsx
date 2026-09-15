@@ -73,7 +73,7 @@ export default function ProductDetailPage() {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [id])
 
-  const discountPercent = Math.round((1 - product.price / product.originalPrice) * 100)
+  const discountPercent = product.originalPrice > product.price ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0
 
   // Real reviews for this product, fetched from the backend
   const [reviewsList, setReviewsList] = useState([])

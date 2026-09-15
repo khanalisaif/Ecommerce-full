@@ -49,10 +49,10 @@ export const placeOrder = asyncHandler(async (req, res) => {
   const discount = Math.max(0, originalTotal - subtotal);
   const appliedCouponDiscount = Math.max(0, Number(couponDiscount) || 0);
 
-  let shippingCost = deliveryOption === "express" ? 150 : subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
-  if (deliveryOption === "express") shippingCost += subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
+  let shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
+  if (deliveryOption === "express") shippingCost += 79;
 
-  const total = Math.max(0, subtotal - discount - appliedCouponDiscount + shippingCost);
+  const total = Math.max(0, subtotal - appliedCouponDiscount + shippingCost);
 
   const order = await Order.create({
     orderId: generateOrderId(),
@@ -133,6 +133,13 @@ export const cancelOrder = asyncHandler(async (req, res) => {
   order.status = "Cancelled";
   order.statusHistory.push({ status: "Cancelled", timestamp: new Date() });
   await order.save();
+
+  // Restore inventory for cancelled order items
+  for (const item of order.items) {
+    if (item.product) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
+    }
+  }
 
   res.status(200).json(new ApiResponse(200, { order }, "Order cancelled"));
 });

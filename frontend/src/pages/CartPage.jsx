@@ -13,7 +13,7 @@ export default function CartPage() {
   const navigate = useNavigate()
   const {
     cartItems, updateQuantity, removeFromCart,
-    cartSubtotal, cartDiscount, addToCart, toggleWishlist, isWishlisted, products,
+    cartSubtotal, cartOriginalTotal, cartDiscount, addToCart, toggleWishlist, isWishlisted, products,
   } = useShop()
 
   // "Saved for later" is a lightweight local list seeded from the removed
@@ -43,15 +43,16 @@ export default function CartPage() {
   }
 
   const subtotal = cartSubtotal
+  const originalTotal = cartOriginalTotal
   const discount = cartDiscount
-  const total = subtotal - discount
   
   const FREE_SHIPPING_THRESHOLD = 999
   const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
   const shippingCost = freeShipping ? 0 : 200
+  const total = subtotal + shippingCost
   const amountNeeded = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
   const progressPercent = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100))
-  const discountPct = subtotal > 0 ? Math.round((discount / subtotal) * 100) : 0
+  const discountPct = originalTotal > 0 ? Math.round((discount / originalTotal) * 100) : 0
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -181,13 +182,15 @@ export default function CartPage() {
 
               <div className="space-y-4 border-b border-gray-100 pb-5">
                 <div className="flex justify-between text-[12px]">
-                  <span className="text-gray-500">Subtotal ({cartItems.reduce((a, i) => a + i.quantity, 0)} Items)</span>
-                  <span className="font-medium text-gray-600">₹{subtotal.toLocaleString()}</span>
+                  <span className="text-gray-500">Total MRP ({cartItems.reduce((a, i) => a + i.quantity, 0)} Items)</span>
+                  <span className="font-medium text-gray-600">₹{originalTotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-[12px]">
-                  <span className="text-gray-500">Discount on MRP</span>
-                  <span className="text-[#00b368] font-medium">- ₹{discount.toLocaleString()}</span>
-                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-[12px]">
+                    <span className="text-gray-500">Discount on MRP</span>
+                    <span className="text-[#00b368] font-medium">- ₹{discount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[12px]">
                   <span className="text-gray-500">Shipping Charges</span>
                   <span className={freeShipping ? 'text-[#00b368] font-bold' : 'text-gray-900 font-medium'}>
@@ -199,12 +202,14 @@ export default function CartPage() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <span className="font-bold text-gray-900 text-[14px]">Total Amount</span>
-                  <span className="font-black text-[#e83e8c] text-[22px]">₹{(total + shippingCost).toLocaleString()}</span>
+                  <span className="font-black text-[#e83e8c] text-[22px]">₹{total.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-[#00b368] font-bold">You Save</span>
-                  <span className="text-[#00b368] font-bold">₹{discount.toLocaleString()} ({discountPct}%)</span>
-                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-[#00b368] font-bold">You Save</span>
+                    <span className="text-[#00b368] font-bold">₹{discount.toLocaleString()} ({discountPct}%)</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">

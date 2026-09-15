@@ -3,7 +3,7 @@ import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 import Admin from "../../models/admin/Admin.model.js";
 import { generateAdminToken } from "../../utils/generateToken.js";
-import { getAdminEmails, sendAdminLoginAlert, sendOtpEmail } from "../../utils/sendEmail.js";
+import { getAdminEmails, sendAdminLoginAlert, sendOtpEmail, formatDelhiDateTime } from "../../utils/sendEmail.js";
 import { generateOtp, isOtpExpired } from "../../utils/otpUtil.js";
 
 // @route POST /api/admin/auth/register
@@ -87,7 +87,7 @@ export const loginAdmin = asyncHandler(async (req, res) => {
   sendAdminLoginAlert({
     name: admin.name,
     email: admin.email,
-    time: new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }),
+    time: formatDelhiDateTime(),
     ip: req.ip,
   }).catch((err) => console.error("Admin login alert failed:", err.message));
 
@@ -153,7 +153,7 @@ export const verifyAdminOtpLogin = asyncHandler(async (req, res) => {
   sendAdminLoginAlert({
     name: admin.name,
     email: admin.email,
-    time: new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }),
+    time: formatDelhiDateTime(),
     ip: req.ip,
   }).catch((err) => console.error("Admin login alert failed:", err.message));
 

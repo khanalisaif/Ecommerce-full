@@ -1,8 +1,61 @@
+process.env.TZ = "Asia/Kolkata";
 import "dotenv/config";
 import "isomorphic-fetch";
 import { Client } from "@microsoft/microsoft-graph-client";
 import { ClientSecretCredential } from "@azure/identity";
 import { getClientUrl } from "./urlHelper.js";
+
+/**
+ * Format any date or current timestamp into Delhi / India Standard Time (IST, Asia/Kolkata)
+ * Example output: "15 Sep 2026, 08:07:05 AM IST"
+ * @param {Date|string|number} [date]
+ * @returns {string}
+ */
+export const formatDelhiDateTime = (date = new Date()) => {
+  const d = date ? new Date(date) : new Date();
+  const validDate = isNaN(d.getTime()) ? new Date() : d;
+  const formatted = new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  })
+    .format(validDate)
+    .replace(/\b(am|pm)\b/i, (m) => m.toUpperCase());
+  return `${formatted} IST`;
+};
+
+/**
+ * Format a Date into Delhi date only
+ * Example: "15 Sep 2026"
+ * @param {Date|string|number} [date]
+ * @returns {string}
+ */
+export const formatDelhiDate = (date = new Date()) => {
+  const d = date ? new Date(date) : new Date();
+  const validDate = isNaN(d.getTime()) ? new Date() : d;
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(validDate);
+};
+
+/**
+ * Current year in Delhi timezone
+ * @returns {string}
+ */
+export const getDelhiYear = () => {
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+  }).format(new Date());
+};
 
 // ==============================================================
 // Legacy Nodemailer (Hidden/Commented as backup)
@@ -150,6 +203,8 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
 export const getMailOptions = (templateType, email, otp) => {
   const fromEmail = process.env.FROM_EMAIL || "support@hashtelicom.com";
   const brandName = "HASHTELICOM";
+  const liveTime = formatDelhiDateTime();
+  const currentYear = getDelhiYear();
 
   switch (templateType) {
     case "signup":
@@ -168,10 +223,11 @@ export const getMailOptions = (templateType, email, otp) => {
             <div style="text-align: center; margin: 28px 0;">
               <span style="display: inline-block; background: #22c55e; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: 6px; padding: 12px 32px; border-radius: 8px;">${otp}</span>
             </div>
+            <p style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Sent at: <b>${liveTime}</b></p>
             <p style="color: #64748b; font-size: 13px;">This code will expire in 10 minutes.</p>
             <p style="color: #94a3b8; font-size: 12px;">If you didn't request this code, you can safely ignore this email.</p>
             <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-            <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.</p>
+            <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}</p>
           </div>
         `,
       };
@@ -192,10 +248,11 @@ export const getMailOptions = (templateType, email, otp) => {
             <div style="text-align: center; margin: 28px 0;">
               <span style="display: inline-block; background: #22c55e; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: 6px; padding: 12px 32px; border-radius: 8px;">${otp}</span>
             </div>
+            <p style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Sent at: <b>${liveTime}</b></p>
             <p style="color: #64748b; font-size: 13px;">This code will expire in 10 minutes.</p>
             <p style="color: #94a3b8; font-size: 12px;">If you didn't request this code, you can safely ignore this email.</p>
             <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-            <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.</p>
+            <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}</p>
           </div>
         `,
       };
@@ -216,10 +273,11 @@ export const getMailOptions = (templateType, email, otp) => {
             <div style="text-align: center; margin: 28px 0;">
               <span style="display: inline-block; background: #22c55e; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: 6px; padding: 12px 32px; border-radius: 8px;">${otp}</span>
             </div>
+            <p style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Sent at: <b>${liveTime}</b></p>
             <p style="color: #64748b; font-size: 13px;">This code will expire in 10 minutes.</p>
             <p style="color: #94a3b8; font-size: 12px;">If you didn't request this code, you can safely ignore this email.</p>
             <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-            <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.</p>
+            <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}</p>
           </div>
         `,
       };
@@ -236,8 +294,9 @@ export const getMailOptions = (templateType, email, otp) => {
             <div style="text-align: center; margin: 24px 0;">
               <span style="display: inline-block; background: #22c55e; color: #ffffff; font-size: 26px; font-weight: bold; letter-spacing: 6px; padding: 10px 28px; border-radius: 8px;">${otp}</span>
             </div>
+            <p style="color: #64748b; font-size: 12px; margin-bottom: 4px;">Sent at: <b>${liveTime}</b></p>
             <p style="color: #64748b; font-size: 13px;">This code expires in 10 minutes.</p>
-            <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.</p>
+            <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}</p>
           </div>
         `,
       };
@@ -265,6 +324,8 @@ export const sendOTPViaEmail = async (email, otp, templateType = "signup") => {
 
 // Password reset link email (clickable link)
 export const sendPasswordResetLinkEmail = async (to, resetUrl) => {
+  const liveTime = formatDelhiDateTime();
+  const currentYear = getDelhiYear();
   const subject = "Reset your HASHTELICOM password";
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #eee; border-radius: 12px;">
@@ -273,10 +334,11 @@ export const sendPasswordResetLinkEmail = async (to, resetUrl) => {
       <p style="text-align: center; margin: 28px 0;">
         <a href="${resetUrl}" style="background: linear-gradient(135deg, #a855f7, #ec4899); color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-weight: bold; display: inline-block;">Reset Password</a>
       </p>
+      <p style="color: #666; font-size: 13px; margin-bottom: 4px;">Requested at: <b>${liveTime}</b></p>
       <p style="color: #666; font-size: 13px;">This link is valid for 1 hour. If you didn't request this, you can safely ignore this email.</p>
       <p style="color: #999; font-size: 11px; word-break: break-all;">Or copy this link: ${resetUrl}</p>
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${new Date().getFullYear()} HASHTELICOM. All rights reserved.</p>
+      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${liveTime}</p>
     </div>
   `;
   return sendEmail({ to, subject, html });
@@ -303,20 +365,24 @@ const notifyAdmins = async (subject, html) => {
 };
 
 export const sendAdminLoginAlert = async ({ name, email, time, ip }) => {
+  const liveTime = formatDelhiDateTime(time || new Date());
+  const currentYear = getDelhiYear();
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #eee; border-radius: 12px;">
       <h2 style="color: #7c3aed;">Admin Login Alert</h2>
       <p><b>${name}</b> (${email}) just logged into the HASHTELICOM admin panel.</p>
-      <p style="color: #666; font-size: 13px;">Time: ${time}${ip ? `<br/>IP: ${ip}` : ""}</p>
+      <p style="color: #666; font-size: 13px;"><b>Time:</b> ${liveTime}${ip ? `<br/><b>IP:</b> ${ip}` : ""}</p>
       <p style="color: #999; font-size: 12px;">If this wasn't you, change the admin password immediately.</p>
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${new Date().getFullYear()} HASHTELICOM. All rights reserved.</p>
+      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${liveTime}</p>
     </div>
   `;
   return notifyAdmins("Admin Login Alert — HASHTELICOM", html);
 };
 
 export const sendNewOrderAlert = async (order) => {
+  const orderTime = formatDelhiDateTime(order.createdAt || new Date());
+  const currentYear = getDelhiYear();
   const itemsHtml = (order.items || [])
     .map((i) => `<li>${i.name} × ${i.quantity} — ₹${i.price * i.quantity}</li>`)
     .join("");
@@ -324,11 +390,12 @@ export const sendNewOrderAlert = async (order) => {
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #eee; border-radius: 12px;">
       <h2 style="color: #7c3aed;">New Order Received!</h2>
       <p><b>Order #${order.orderId}</b> — ₹${order.total}</p>
+      <p style="color: #666; font-size: 13px; margin: 4px 0;"><b>Order Time:</b> ${orderTime}</p>
       <p><b>Customer:</b> ${order.shippingAddress?.fullName || ""} (${order.shippingAddress?.mobile || ""})</p>
       <ul style="color: #444; font-size: 13px;">${itemsHtml}</ul>
       <p style="color: #666; font-size: 13px;">Payment: ${order.paymentMethod?.toUpperCase()} · ${order.paymentStatus}</p>
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${new Date().getFullYear()} HASHTELICOM. All rights reserved.</p>
+      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${orderTime}</p>
     </div>
   `;
   return notifyAdmins(`New Order #${order.orderId} — ₹${order.total} | HASHTELICOM`, html);
@@ -349,6 +416,8 @@ export const sendOtpEmail = async (to, otp, purpose = "verification") => {
 };
 
 export const sendOrderConfirmationEmail = async (to, order) => {
+  const orderTime = formatDelhiDateTime(order.createdAt || new Date());
+  const currentYear = getDelhiYear();
   const subject = `Order Confirmed - #${order.orderId} | HASHTELICOM`;
   const itemsHtml = (order.items || [])
     .map(
@@ -371,6 +440,7 @@ export const sendOrderConfirmationEmail = async (to, order) => {
       </div>
       <div style="background: #f8fafc; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px;">
         <p style="margin: 0; font-size: 14px; color: #334155;"><b>Order ID:</b> #${order.orderId}</p>
+        <p style="margin: 4px 0 0 0; font-size: 13px; color: #334155;"><b>Order Date & Time:</b> ${orderTime}</p>
         <p style="margin: 4px 0 0 0; font-size: 14px; color: #334155;"><b>Payment:</b> ${order.paymentMethod?.toUpperCase()} (${order.paymentStatus?.toUpperCase()})</p>
       </div>
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
@@ -389,7 +459,7 @@ export const sendOrderConfirmationEmail = async (to, order) => {
         <p style="margin: 0; font-size: 16px; font-weight: bold; color: #1e293b;">Total Amount: <span style="color: #7c3aed;">₹${(order.total || 0).toLocaleString("en-IN")}</span></p>
       </div>
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0 16px;" />
-      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${new Date().getFullYear()} HASHTELICOM. All rights reserved.</p>
+      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${orderTime}</p>
     </div>
   `;
   return sendEmail({ to, subject, html });
@@ -400,6 +470,8 @@ export const sendOrderConfirmationEmail = async (to, order) => {
  */
 export const sendSecurityAlertEmail = async (to, { userName, eventType = "New Login", time, ip, userAgent }) => {
   const brandName = "HASHTELICOM";
+  const liveTime = formatDelhiDateTime(time || new Date());
+  const currentYear = getDelhiYear();
   const subject = `Security Alert: ${eventType} detected on your account | ${brandName}`;
   const cleanIp = ip ? String(ip).replace(/^::ffff:/, "").trim() : "";
 
@@ -438,7 +510,7 @@ export const sendSecurityAlertEmail = async (to, { userName, eventType = "New Lo
       </p>
       <div style="background: #f8fafc; border-left: 4px solid #7c3aed; padding: 14px; border-radius: 6px; margin: 18px 0; font-size: 13px; color: #334155;">
         <p style="margin: 0 0 6px;"><b>Activity:</b> ${eventType}</p>
-        <p style="margin: 0 0 6px;"><b>Time:</b> ${time || new Date().toLocaleString("en-IN")}</p>
+        <p style="margin: 0 0 6px;"><b>Time:</b> ${liveTime}</p>
         ${cleanIp ? `<p style="margin: 0 0 6px;"><b>IP Address:</b> ${cleanIp}</p>` : ""}
         ${
           friendlyDevice
@@ -457,7 +529,7 @@ export const sendSecurityAlertEmail = async (to, { userName, eventType = "New Lo
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
       <p style="color: #94a3b8; font-size: 11px; text-align: center;">
         You are receiving this security email because Security Alerts are active for your account.<br/>
-        &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.
+        &copy; ${currentYear} ${brandName}. All rights reserved. &bull; Alert Time: ${liveTime}
       </p>
     </div>
   `;
@@ -469,6 +541,8 @@ export const sendSecurityAlertEmail = async (to, { userName, eventType = "New Lo
  */
 export const sendOrderStatusUpdateEmail = async (to, { userName, orderId, status, total, items = [] }) => {
   const brandName = "HASHTELICOM";
+  const liveTime = formatDelhiDateTime();
+  const currentYear = getDelhiYear();
   const subject = `Order #${orderId} Update: Status is now ${status} | ${brandName}`;
 
   const statusColors = {
@@ -490,6 +564,7 @@ export const sendOrderStatusUpdateEmail = async (to, { userName, orderId, status
       <div style="text-align: center; margin-bottom: 20px;">
         <h2 style="color: #7c3aed; margin: 0; font-size: 22px;">Order Status Update</h2>
         <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Your order #${orderId} has a new status</p>
+        <p style="color: #64748b; font-size: 12px; margin-top: 2px;">Updated on: <b>${liveTime}</b></p>
       </div>
       <p style="color: #334155; font-size: 15px;">Hi <b>${userName || "Customer"}</b>,</p>
       <p style="color: #475569; font-size: 14px; line-height: 1.5;">
@@ -517,7 +592,7 @@ export const sendOrderStatusUpdateEmail = async (to, { userName, orderId, status
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
       <p style="color: #94a3b8; font-size: 11px; text-align: center;">
         You received this email because Order Updates are enabled for your account.<br/>
-        &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.
+        &copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}
       </p>
     </div>
   `;
@@ -529,6 +604,8 @@ export const sendOrderStatusUpdateEmail = async (to, { userName, orderId, status
  */
 export const sendReviewReminderEmail = async (to, { userName, orderId, items = [] }) => {
   const brandName = "HASHTELICOM";
+  const liveTime = formatDelhiDateTime();
+  const currentYear = getDelhiYear();
   const subject = `How did you like your purchase? Review Order #${orderId} | ${brandName}`;
   const firstItem = items[0] || {};
   const html = `
@@ -550,7 +627,7 @@ export const sendReviewReminderEmail = async (to, { userName, orderId, items = [
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
       <p style="color: #94a3b8; font-size: 11px; text-align: center;">
         You received this email because Review Reminders are enabled for your account.<br/>
-        &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.
+        &copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}
       </p>
     </div>
   `;
@@ -562,6 +639,8 @@ export const sendReviewReminderEmail = async (to, { userName, orderId, items = [
  */
 export const sendWishlistPriceDropEmail = async (to, { userName, product, oldPrice, newPrice }) => {
   const brandName = "HASHTELICOM";
+  const liveTime = formatDelhiDateTime();
+  const currentYear = getDelhiYear();
   const subject = `Price Drop Alert: ${product.name} is now on sale! | ${brandName}`;
   const savings = Math.max(0, oldPrice - newPrice);
   const savePercent = oldPrice > 0 ? Math.round((savings / oldPrice) * 100) : 0;
@@ -572,6 +651,7 @@ export const sendWishlistPriceDropEmail = async (to, { userName, product, oldPri
         <span style="font-size: 32px;">🔥</span>
         <h2 style="color: #ec4899; margin: 6px 0 0; font-size: 22px;">Price Drop on Your Wishlist!</h2>
         <p style="color: #64748b; font-size: 14px; margin-top: 4px;">An item in your wishlist just dropped in price</p>
+        <p style="color: #64748b; font-size: 12px; margin-top: 2px;">Price updated on: <b>${liveTime}</b></p>
       </div>
       <p style="color: #334155; font-size: 15px;">Hi <b>${userName || "Customer"}</b>,</p>
       <p style="color: #475569; font-size: 14px; line-height: 1.5;">
@@ -594,7 +674,7 @@ export const sendWishlistPriceDropEmail = async (to, { userName, product, oldPri
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
       <p style="color: #94a3b8; font-size: 11px; text-align: center;">
         You received this email because Wishlist Alerts are active for your account.<br/>
-        &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.
+        &copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}
       </p>
     </div>
   `;
@@ -606,12 +686,15 @@ export const sendWishlistPriceDropEmail = async (to, { userName, product, oldPri
  */
 export const sendNewsBroadcastEmail = async (to, { title, message, bannerUrl, actionLink }) => {
   const brandName = "HASHTELICOM";
+  const liveTime = formatDelhiDateTime();
+  const currentYear = getDelhiYear();
   const subject = `${title} | ${brandName} News`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 540px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 20px;">
         <h2 style="color: #7c3aed; margin: 0; font-size: 24px;">HASHTELICOM</h2>
         <p style="color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">News & Updates</p>
+        <p style="color: #64748b; font-size: 12px; margin-top: 2px;">Published on: <b>${liveTime}</b></p>
       </div>
       ${bannerUrl ? `<div style="text-align: center; margin: 0 0 22px;"><img src="${bannerUrl}" alt="${title}" border="0" style="display: block; width: 100%; max-width: 500px; max-height: 280px; object-fit: cover; border-radius: 10px; margin: 0 auto;" /></div>` : ""}
       <h3 style="color: #1e293b; font-size: 20px; margin: 0 0 14px;">${title}</h3>
@@ -631,7 +714,7 @@ export const sendNewsBroadcastEmail = async (to, { title, message, bannerUrl, ac
       <p style="color: #94a3b8; font-size: 11px; text-align: center; line-height: 1.4;">
         You are receiving this update because News & Updates is enabled in your notification preferences.<br/>
         To update your preferences, visit <a href="${getClientUrl()}/account" style="color: #7c3aed; text-decoration: underline;">Account Settings</a>.<br/>
-        &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.
+        &copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}
       </p>
     </div>
   `;
@@ -643,6 +726,8 @@ export const sendNewsBroadcastEmail = async (to, { title, message, bannerUrl, ac
  */
 export const sendCouponOfferEmail = async (to, { coupon }) => {
   const brandName = "HASHTELICOM";
+  const liveTime = formatDelhiDateTime();
+  const currentYear = getDelhiYear();
   const discountText =
     coupon.discountType === "percentage"
       ? `${coupon.discountValue}% OFF`
@@ -650,7 +735,7 @@ export const sendCouponOfferEmail = async (to, { coupon }) => {
   const subject = `Special Deal: ${discountText} with code ${coupon.code}! | ${brandName}`;
 
   const validUntilStr = coupon.validUntil
-    ? new Date(coupon.validUntil).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    ? formatDelhiDate(coupon.validUntil)
     : "Limited Time";
 
   const clientUrl = getClientUrl();
@@ -701,7 +786,7 @@ export const sendCouponOfferEmail = async (to, { coupon }) => {
       <p style="color: #94a3b8; font-size: 11px; text-align: center; line-height: 1.4;">
         You received this email because Offers & Discounts is enabled in your account.<br/>
         Manage your notification preferences anytime in your <a href="${clientUrl}/account" style="color: #7c3aed;">Account Settings</a>.<br/>
-        &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.
+        &copy; ${currentYear} ${brandName}. All rights reserved. &bull; Sent: ${liveTime}
       </p>
     </div>
   `;
