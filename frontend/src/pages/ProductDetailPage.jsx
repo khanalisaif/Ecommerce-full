@@ -90,7 +90,7 @@ export default function ProductDetailPage() {
     reviewService.getProductReviews(product.id)
       .then((res) => {
         const mapped = (res.data.reviews || []).map((r) => ({
-          id: r.id, name: r.userName, date: r.date, stars: r.rating, text: r.body, images: r.images,
+          id: r.id, name: r.userName, avatar: r.userAvatar || '', date: r.date, stars: r.rating, text: r.body, images: r.images,
         }))
         setReviewsList(mapped)
       })
@@ -125,7 +125,7 @@ export default function ProductDetailPage() {
     reviewService.createReview(product.id, reviewForm)
       .then((res) => {
         const r = res.data.review
-        setReviewsList((prev) => [{ id: r.id, name: r.userName, date: r.date, stars: r.rating, text: r.body, images: r.images }, ...prev])
+        setReviewsList((prev) => [{ id: r.id, name: r.userName, avatar: r.userAvatar || '', date: r.date, stars: r.rating, text: r.body, images: r.images }, ...prev])
         setShowReviewModal(false)
         showToast('Review submitted successfully!')
         setReviewForm({ rating: 5, title: '', body: '' })
@@ -388,10 +388,12 @@ export default function ProductDetailPage() {
               {reviewsList.slice(0, showAllReviews ? undefined : 2).map((rev, idx) => (
                 <div key={rev.id || idx} className="border-t border-gray-50 pt-5">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80" alt="avatar" className="w-full h-full object-cover" />
-                      </div>
+                    <div className="flex items-center gap-3">
+                      {rev.avatar ? (
+                        <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
+                          <img src={rev.avatar} alt={rev.name} className="w-full h-full object-cover" />
+                        </div>
+                      ) : null}
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-xs text-gray-900">{rev.name}</span>

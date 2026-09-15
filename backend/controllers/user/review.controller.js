@@ -26,6 +26,7 @@ const toClient = (r) => ({
   productBrand: r.product?.brandName || r.product?.brand || "",
   user: r.user?._id || r.user,
   userName: r.user?.fullName || "You",
+  userAvatar: r.user?.profilePicture || "",
   rating: r.rating,
   title: r.title,
   body: r.body,
@@ -37,7 +38,7 @@ const toClient = (r) => ({
 // @route GET /api/user/products/:productId/reviews  (public)
 export const getProductReviews = asyncHandler(async (req, res) => {
   const reviews = await Review.find({ product: req.params.productId })
-    .populate("user", "fullName")
+    .populate("user", "fullName profilePicture")
     .sort({ createdAt: -1 });
   res.status(200).json(new ApiResponse(200, { reviews: reviews.map(toClient) }, "Reviews fetched"));
 });
@@ -64,13 +65,14 @@ export const createReview = asyncHandler(async (req, res) => {
 
   await recomputeProductRating(product._id);
 
-  const populated = await review.populate("user", "fullName");
+  const populated = await review.populate("user", "fullName profilePicture");
   res.status(201).json(new ApiResponse(201, { review: toClient(populated) }, "Review submitted successfully"));
 });
 
 // @route GET /api/user/reviews  (auth — "my reviews" across all products)
 export const getMyReviews = asyncHandler(async (req, res) => {
   const reviews = await Review.find({ user: req.user._id })
+    .populate("user", "fullName profilePicture")
     .populate("product", "name images brand brandName")
     .sort({ createdAt: -1 });
   res.status(200).json(new ApiResponse(200, { reviews: reviews.map(toClient) }, "My reviews fetched"));
@@ -89,7 +91,7 @@ export const updateReview = asyncHandler(async (req, res) => {
   await review.save();
   await recomputeProductRating(review.product);
 
-  const populated = await review.populate([{ path: "user", select: "fullName" }, { path: "product", select: "name images brand brandName" }]);
+  const populated = await review.populate([{ path: "user", select: "fullName profilePicture" }, { path: "product", select: "name images brand brandName" }]);
   res.status(200).json(new ApiResponse(200, { review: toClient(populated) }, "Review updated"));
 });
 

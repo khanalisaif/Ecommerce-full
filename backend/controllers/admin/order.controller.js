@@ -45,28 +45,35 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 
   // Trigger emails if status actually changed
   if (oldStatus !== status) {
-    const user = await User.findById(order.user).select("fullName email preferences");
-    if (user && user.email) {
-      // 1. Order Status Update Email
-      if (user.preferences?.notifications?.orders !== false) {
-        sendOrderStatusUpdateEmail(user.email, {
-          userName: user.fullName || order.shippingAddress?.fullName,
-          orderId: order.orderId,
-          status,
-          total: order.total,
-          items: order.items,
-        }).catch((err) => console.error("Order status update email failed:", err.message));
-      }
+    const userId = order.user?._id || order.user;
+    const user = userId ? await User.findById(userId).select("fullName email") : null;
+    const recipientEmail = user?.email || order.shippingAddress?.email;
+    const customerName = user?.fullName || order.shippingAddress?.fullName || "Customer";
 
-      // 2. Review Reminder Email (when Delivered)
-      if (status === "Delivered" && user.preferences?.notifications?.reviews !== false) {
-        // Send review reminder
-        sendReviewReminderEmail(user.email, {
-          userName: user.fullName || order.shippingAddress?.fullName,
+    if (recipientEmail) {
+      // 1. Order Status Update Email — sent immediately on any status change
+      sendOrderStatusUpdateEmail(recipientEmail, {
+        userName: customerName,
+        orderId: order.orderId,
+        status,
+        total: order.total,
+        items: order.items,
+      })
+        .then(() => console.log(`📧 [ORDER STATUS EMAIL] Dispatched "${status}" email to ${recipientEmail} for order #${order.orderId}`))
+        .catch((err) => console.error(`❌ [ORDER STATUS EMAIL ERROR] Failed to send "${status}" email to ${recipientEmail}:`, err.message));
+
+      // 2. Review Reminder Email — triggered immediately when status becomes Delivered
+      if (status === "Delivered") {
+        sendReviewReminderEmail(recipientEmail, {
+          userName: customerName,
           orderId: order.orderId,
           items: order.items,
-        }).catch((err) => console.error("Review reminder email failed:", err.message));
+        })
+          .then(() => console.log(`⭐ [REVIEW REMINDER EMAIL] Dispatched review reminder to ${recipientEmail} for order #${order.orderId}`))
+          .catch((err) => console.error(`❌ [REVIEW REMINDER EMAIL ERROR] Failed to send review reminder to ${recipientEmail}:`, err.message));
       }
+    } else {
+      console.warn(`⚠️ [ORDER STATUS] No recipient email found for order #${order.orderId}`);
     }
 
     // Restore stock if order was cancelled
