@@ -607,9 +607,27 @@ export const sendReviewReminderEmail = async (to, { userName, orderId, items = [
   const liveTime = formatDelhiDateTime();
   const currentYear = getDelhiYear();
   const subject = `How did you like your purchase? Review Order #${orderId} | ${brandName}`;
-  const firstItem = items[0] || {};
+  const clientUrl = getClientUrl();
+
+  // Build a review button for each item
+  const itemButtons = items.slice(0, 3).map((item) => {
+    const productLink = item.product
+      ? `${clientUrl}/product/${item.product}`
+      : `${clientUrl}/account`;
+    return `
+      <div style="border: 1px solid #f1f5f9; border-radius: 12px; padding: 14px 16px; margin: 10px 0; background: #faf5ff; display: flex; align-items: center; gap: 12px;">
+        ${item.image ? `<img src="${item.image}" alt="${item.name}" style="width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0;" />` : ""}
+        <div style="flex: 1; min-width: 0;">
+          <p style="margin: 0 0 6px; font-size: 14px; font-weight: bold; color: #1e293b;">${item.name || "Product"}</p>
+          <a href="${productLink}" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: bold; padding: 8px 18px; border-radius: 999px; display: inline-block;">
+            ⭐ Write a Review
+          </a>
+        </div>
+      </div>`;
+  }).join("");
+
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+    <div style="font-family: Arial, sans-serif; max-width: 520px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 20px;">
         <span style="font-size: 32px;">⭐ ⭐ ⭐ ⭐ ⭐</span>
         <h2 style="color: #1e293b; margin: 10px 0 0; font-size: 22px;">How Was Your Experience?</h2>
@@ -617,13 +635,9 @@ export const sendReviewReminderEmail = async (to, { userName, orderId, items = [
       </div>
       <p style="color: #334155; font-size: 15px;">Hi <b>${userName || "Customer"}</b>,</p>
       <p style="color: #475569; font-size: 14px; line-height: 1.5;">
-        Your order <b>#${orderId}</b> was delivered recently. We would love to hear what you think about your new purchase${firstItem.name ? ` (<b>${firstItem.name}</b>)` : ""}!
+        Your order <b>#${orderId}</b> was delivered recently. We would love to hear what you think about your purchase — click the button below to go directly to the product page and leave your review!
       </p>
-      <div style="text-align: center; margin: 28px 0;">
-        <a href="${getClientUrl()}/account" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 28px; border-radius: 999px; display: inline-block;">
-          Write a Review
-        </a>
-      </div>
+      ${itemButtons || `<div style="text-align: center; margin: 28px 0;"><a href="${clientUrl}/account" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 12px 28px; border-radius: 999px; display: inline-block;">Write a Review</a></div>`}
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
       <p style="color: #94a3b8; font-size: 11px; text-align: center;">
         You received this email because Review Reminders are enabled for your account.<br/>

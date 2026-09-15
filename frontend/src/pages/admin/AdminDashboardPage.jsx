@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu } from 'lucide-react'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 import OverviewTab from '../../components/admin/tabs/OverviewTab'
@@ -33,12 +33,37 @@ const titles = {
   pages: 'Pages & FAQ',
 }
 
+const VALID_TABS = new Set(Object.keys(titles))
+
+function getTabFromHash() {
+  const hash = window.location.hash.replace('#', '')
+  return VALID_TABS.has(hash) ? hash : 'overview'
+}
+
 export default function AdminDashboardPage() {
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(getTabFromHash)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { admin } = useAdminAuth()
   const { siteAssets } = useShop()
   const adminEmail = admin?.email || 'admin@hashtelicom.com'
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const tab = getTabFromHash()
+      if (tab !== activeTab) {
+        setActiveTab(tab)
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [activeTab])
+
+  useEffect(() => {
+    if (window.location.hash.replace('#', '') !== activeTab) {
+      window.location.hash = activeTab
+    }
+  }, [activeTab])
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

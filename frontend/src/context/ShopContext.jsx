@@ -259,18 +259,36 @@ export function ShopProvider({ children }) {
       .catch((err) => console.error('Failed to load orders:', err.message))
   }, [isAdminAuthenticated])
 
-  const updateOrderStatus = (orderId, newStatus) => {
-    let mongoId = null
+  const updateOrderStatus = async (orderId, newStatus) => {
+    // Find the mongo _id for the API call
+    const target = orders.find((o) => o.id === orderId)
+    if (!target) return
+
+    const mongoId = target._id
+    // Optimistic update
     setOrders((prev) =>
-      prev.map((o) => {
-        if (o.id !== orderId) return o
-        mongoId = o._id
-        if (o.status === newStatus) return o
-        return { ...o, status: newStatus, statusHistory: [...(o.statusHistory || []), { status: newStatus, timestamp: new Date().toISOString() }] }
-      })
+      prev.map((o) =>
+        o.id !== orderId ? o :
+        { ...o, status: newStatus, statusHistory: [...(o.statusHistory || []), { status: newStatus, timestamp: new Date().toISOString() }] }
+      )
     )
     if (mongoId) {
-      adminOrderService.updateOrderStatus(mongoId, newStatus).catch((err) => showToast(err.message))
+      try {
+        const res = await adminOrderService.updateOrderStatus(mongoId, newStatus)
+        // Sync with real backend response (correct timestamp, etc.)
+        const updated = res.data?.order
+        if (updated) {
+          setOrders((prev) =>
+            prev.map((o) => o.id !== orderId ? o : { ...o, status: updated.status, statusHistory: updated.statusHistory || o.statusHistory })
+          )
+        }
+      } catch (err) {
+        // Rollback optimistic update
+        setOrders((prev) =>
+          prev.map((o) => o.id !== orderId ? o : { ...o, status: target.status, statusHistory: target.statusHistory })
+        )
+        throw err
+      }
     }
   }
 

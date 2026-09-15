@@ -108,13 +108,22 @@ export default function OrderDetailModal({ order, onClose }) {
   const [cancelConfirm, setCancelConfirm] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const history = order.statusHistory || []
   const isTerminal = order.status === 'Delivered' || order.status === 'Cancelled'
 
-  const handleAction = (newStatus, message) => {
-    updateOrderStatus(order.id, newStatus)
-    showToast(message)
+  const handleAction = async (newStatus, message) => {
+    if (isUpdating) return
+    setIsUpdating(true)
+    try {
+      await updateOrderStatus(order.id, newStatus)
+      showToast(message)
+    } catch (err) {
+      showToast(err?.message || 'Update failed', 'error')
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   const handleDownloadLabel = () => {
@@ -339,11 +348,13 @@ export default function OrderDetailModal({ order, onClose }) {
                 <div className="space-y-3">
                   {order.status === 'Pending' && (
                     <button
+                      disabled={isUpdating}
                       onClick={() => handleAction('Processing', 'Order moved to Processing')}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all hover:shadow-lg"
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                       style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}
                     >
-                      <ArrowRight size={16} /> Mark as Processing
+                      {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+                      Mark as Processing
                     </button>
                   )}
 
@@ -351,34 +362,40 @@ export default function OrderDetailModal({ order, onClose }) {
                     <>
                       <button
                         onClick={handleDownloadLabel}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-purple-200 text-purple-700 font-bold text-sm hover:bg-purple-50 transition-colors"
+                        disabled={isUpdating}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-purple-200 text-purple-700 font-bold text-sm hover:bg-purple-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         <Download size={16} /> Download Shipping Label
                       </button>
                       <button
+                        disabled={isUpdating}
                         onClick={() => handleAction('Shipped', 'Order marked as Shipped')}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all hover:shadow-lg"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                         style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}
                       >
-                        <Truck size={16} /> Mark as Shipped
+                        {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Truck size={16} />}
+                        Mark as Shipped
                       </button>
                     </>
                   )}
 
                   {order.status === 'Shipped' && (
                     <button
+                      disabled={isUpdating}
                       onClick={() => handleAction('Delivered', 'Order marked as Delivered')}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all hover:shadow-lg"
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                       style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
                     >
-                      <Home size={16} /> Mark as Delivered
+                      {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Home size={16} />}
+                      Mark as Delivered
                     </button>
                   )}
 
                   {!cancelConfirm ? (
                     <button
+                      disabled={isUpdating}
                       onClick={() => setCancelConfirm(true)}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors"
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <Ban size={16} /> Cancel Order
                     </button>
@@ -387,15 +404,18 @@ export default function OrderDetailModal({ order, onClose }) {
                       <p className="text-red-700 text-sm font-semibold">Are you sure you want to cancel this order?</p>
                       <div className="flex gap-2">
                         <button
+                          disabled={isUpdating}
                           onClick={() => setCancelConfirm(false)}
-                          className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50"
+                          className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 disabled:opacity-50"
                         >
                           Keep Order
                         </button>
                         <button
+                          disabled={isUpdating}
                           onClick={() => { handleAction('Cancelled', 'Order cancelled'); setCancelConfirm(false) }}
-                          className="flex-1 py-2 rounded-lg bg-red-500 text-white font-bold text-sm hover:bg-red-600"
+                          className="flex-1 py-2 rounded-lg bg-red-500 text-white font-bold text-sm hover:bg-red-600 flex items-center justify-center gap-1.5 disabled:opacity-60"
                         >
+                          {isUpdating ? <Loader2 size={14} className="animate-spin" /> : null}
                           Yes, Cancel
                         </button>
                       </div>
