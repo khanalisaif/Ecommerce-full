@@ -377,7 +377,8 @@ export const sendAdminLoginAlert = async ({ name, email, time, ip }) => {
       <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${liveTime}</p>
     </div>
   `;
-  return notifyAdmins("Admin Login Alert — HASHTELICOM", html);
+  // Send alert ONLY to the email that just logged in (not to all admins)
+  return sendEmail({ to: email, subject: "Admin Login Alert — HASHTELICOM", html });
 };
 
 export const sendNewOrderAlert = async (order) => {
