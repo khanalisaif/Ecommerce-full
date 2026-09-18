@@ -34,27 +34,27 @@ export const signup = asyncHandler(async (req, res) => {
   const cleanMobile = mobileNumber.trim();
   const formattedGender = gender ? (gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase()) : "";
 
-  const existing = await User.findOne({ $or: [{ email: cleanEmail }, { mobileNumber: cleanMobile }] });
-  if (existing) {
-    if (existing.isEmailVerified) {
-      throw new ApiError(409, "An account already exists with this email or mobile number. Please log in.");
+  // Check for existing verified users with this email or mobile
+  const existingVerified = await User.findOne({
+    $or: [{ email: cleanEmail }, { mobileNumber: cleanMobile }],
+    isEmailVerified: true,
+  });
+
+  if (existingVerified) {
+    if (existingVerified.email === cleanEmail && existingVerified.mobileNumber === cleanMobile) {
+      throw new ApiError(409, "An account already exists with this email and mobile number. Please log in.");
+    } else if (existingVerified.email === cleanEmail) {
+      throw new ApiError(409, "This email address is already registered. Please use a different email or log in.");
+    } else {
+      throw new ApiError(409, "This mobile number is already registered. Please use a different number or log in.");
     }
-    // Update existing unverified record and send fresh OTP
-    existing.fullName = fullName.trim();
-    if (formattedGender) existing.gender = formattedGender;
-    existing.email = cleanEmail;
-    existing.mobileNumber = cleanMobile;
-    existing.password = password; // pre-save will hash
-    const { otp, expiresAt } = generateOtp();
-    existing.otp = { code: otp, expiresAt, purpose: "signup" };
-    await existing.save();
-
-    await dispatchOtp({ mobileNumber: cleanMobile, email: cleanEmail }, otp, TEMPLATES.SIGNUP, "Sign Up");
-
-    return res
-      .status(201)
-      .json(new ApiResponse(201, { userId: existing._id, email: cleanEmail, mobileNumber: cleanMobile }, "OTP sent. Please verify to complete signup."));
   }
+
+  // Remove any stale unverified records with this email or mobile (to avoid unique index conflicts)
+  await User.deleteMany({
+    $or: [{ email: cleanEmail }, { mobileNumber: cleanMobile }],
+    isEmailVerified: false,
+  });
 
   const { otp, expiresAt } = generateOtp();
 
@@ -74,6 +74,7 @@ export const signup = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(201, { userId: user._id, email: cleanEmail, mobileNumber: cleanMobile }, "OTP sent. Please verify to complete signup."));
 });
+
 
 // @route POST /api/user/auth/resend-signup-otp
 export const resendSignupOtp = asyncHandler(async (req, res) => {

@@ -19,8 +19,19 @@ export const errorHandler = (err, req, res, next) => {
   // Mongoose duplicate key
   if (err.code === 11000) {
     statusCode = 409;
-    const field = Object.keys(err.keyValue || {})[0];
-    message = `${field} already exists`;
+    const rawField = Object.keys(err.keyValue || {})[0] || "";
+    // Map MongoDB internal field names to user-friendly messages
+    if (rawField.includes("mobileNumber") || rawField.includes("phone")) {
+      message = "This mobile number is already registered. Please use a different number or log in.";
+    } else if (rawField.includes("email")) {
+      message = "This email address is already registered. Please use a different email or log in.";
+    } else if (rawField.includes("googleId")) {
+      message = "This Google account is already linked to another user.";
+    } else if (rawField.includes("facebookId")) {
+      message = "This Facebook account is already linked to another user.";
+    } else {
+      message = "This value already exists. Please use a different one.";
+    }
   }
 
   // Mongoose validation error
