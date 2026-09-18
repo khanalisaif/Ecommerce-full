@@ -104,17 +104,22 @@ export default function HomePage() {
             {bannerList.map((banner, index) => (
               <div
                 key={banner.id || index}
-                className={`absolute inset-0 transition-all duration-700 ${index === safeBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+                className={`absolute inset-0 transition-all duration-700 group cursor-pointer ${index === safeBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
               >
-                {/* gradient bg */}
-                <div className="h-full w-full bg-gradient-to-br from-purple-200 via-pink-200 to-purple-700 relative overflow-hidden">
-                  {/* right side image */}
+                {/* Full card image with smooth zoom on hover */}
+                <div className="h-full w-full relative overflow-hidden bg-black">
                   <img
                     src={banner.image}
                     alt={banner.title}
-                    className="absolute right-0 top-0 h-full w-1/2 object-cover object-left opacity-80"
+                    className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-100/90 via-pink-100/60 to-transparent" />
+                  {/* Soft subtle tint only behind text on left — zero white haze on image */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(to right, rgba(253, 242, 248, 0.88) 0%, rgba(253, 242, 248, 0.3) 38%, transparent 58%)'
+                    }}
+                  />
 
                   {/* text content */}
                   <div className="relative z-10 h-full flex flex-col justify-center px-5 md:px-12 max-w-[100%] sm:max-w-[90%] md:max-w-[55%] pt-2">
@@ -124,27 +129,29 @@ export default function HomePage() {
                     <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-gray-900 leading-tight mb-1.5 sm:mb-2">
                       {banner.title}
                       <br />
-                      <span className="text-purple-600">{banner.subtitle}</span>
+                      <span className="text-pink-600">{banner.subtitle}</span>
                     </h2>
-                    <p className="text-gray-600 text-[11px] sm:text-sm md:text-base mb-4 sm:mb-6 max-w-[85%] sm:max-w-full leading-snug">
+                    <p className="text-gray-700 text-[11px] sm:text-sm md:text-base mb-4 sm:mb-6 max-w-[85%] sm:max-w-full leading-snug font-medium">
                       {banner.description}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation()
                           window.scrollTo({ top: 0, behavior: 'instant' })
                           navigate('/category/Best-Sellers')
                         }}
-                        className="bg-purple-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-1.5 w-max"
+                        className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 w-max cursor-pointer"
                       >
                         {banner.buttonText || 'Shop Best Sellers'} →
                       </button>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation()
                           window.scrollTo({ top: 0, behavior: 'instant' })
                           navigate('/category/New-Arrivals')
                         }}
-                        className="border-2 border-gray-600 text-gray-800 bg-white/80 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm hover:border-gray-900 transition-colors w-max"
+                        className="border-2 border-gray-600 text-gray-800 bg-white/80 hover:bg-white hover:border-gray-900 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm transition-all w-max cursor-pointer shadow-xs"
                       >
                         Explore Collections
                       </button>
@@ -159,13 +166,13 @@ export default function HomePage() {
               <>
                 <button
                   onClick={prevBanner}
-                  className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 z-20 bg-white/40 md:bg-white/90 hover:bg-white/70 md:hover:bg-white shadow-sm md:shadow p-1.5 md:p-2 rounded-full opacity-60 md:opacity-100 transition-all"
+                  className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 z-20 bg-white/60 md:bg-white/90 hover:bg-white shadow-sm md:shadow p-1.5 md:p-2 rounded-full opacity-80 md:opacity-100 transition-all cursor-pointer"
                 >
                   <ChevronLeft size={16} className="text-gray-800 md:text-gray-700" />
                 </button>
                 <button
                   onClick={nextBanner}
-                  className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 z-20 bg-white/40 md:bg-white/90 hover:bg-white/70 md:hover:bg-white shadow-sm md:shadow p-1.5 md:p-2 rounded-full opacity-60 md:opacity-100 transition-all"
+                  className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 z-20 bg-white/60 md:bg-white/90 hover:bg-white shadow-sm md:shadow p-1.5 md:p-2 rounded-full opacity-80 md:opacity-100 transition-all cursor-pointer"
                 >
                   <ChevronRight size={16} className="text-gray-800 md:text-gray-700" />
                 </button>
@@ -179,7 +186,7 @@ export default function HomePage() {
                   <button
                     key={i}
                     onClick={() => setCurrentBanner(i)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${i === safeBannerIndex ? 'bg-purple-600 w-6' : 'bg-white/70 w-1.5'}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${i === safeBannerIndex ? 'bg-pink-600 w-6' : 'bg-pink-300/80 w-1.5'}`}
                   />
                 ))}
               </div>
@@ -231,27 +238,29 @@ export default function HomePage() {
                   window.scrollTo({ top: 0, behavior: 'instant' })
                   navigate(`/category/${card.slug}`)
                 }}
-                className="relative rounded-3xl overflow-hidden cursor-pointer group h-[220px] md:h-[260px] bg-[#e8e0d5]"
+                className="relative rounded-3xl overflow-hidden cursor-pointer group h-[220px] md:h-[260px] shadow-md hover:shadow-xl transition-shadow duration-300"
               >
+                {/* Full card image with zoom on hover */}
                 <img
                   src={card.image}
                   alt={card.name}
-                  className="absolute right-0 top-0 h-full w-2/3 object-cover object-left group-hover:scale-105 transition-transform duration-500"
+                  className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#e8e0d5] via-[#e8e0d5]/80 to-transparent" />
-                <div className="absolute inset-0 flex flex-col justify-between p-7">
+                {/* Gradient overlay for contrast and sleek readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/25 md:bg-gradient-to-r md:from-black/85 md:via-black/55 md:to-black/20 transition-opacity duration-300" />
+                <div className="absolute inset-0 flex flex-col justify-between p-6 sm:p-7 relative z-10">
                   <div>
-                    <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 mb-1 sm:mb-2 tracking-tight">{card.name}</h3>
-                    <p className="text-gray-700 text-[11px] sm:text-[13px] font-semibold leading-relaxed max-w-[150px] mb-3 sm:mb-4">{card.subtitle}</p>
-                    <button className="border-2 border-gray-800 text-gray-900 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-[10px] sm:text-[12px] hover:bg-gray-900 hover:text-white transition-colors w-max">
+                    <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 sm:mb-2 tracking-tight drop-shadow-md">{card.name}</h3>
+                    <p className="text-gray-200 text-[11px] sm:text-[13px] font-semibold leading-relaxed max-w-[190px] mb-3 sm:mb-4 drop-shadow">{card.subtitle}</p>
+                    <button className="bg-white/90 hover:bg-white text-gray-900 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-[10px] sm:text-[12px] group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-md w-max">
                       {card.cta} →
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-0">
-                    <span className="bg-white/90 backdrop-blur-sm text-gray-800 text-[9px] sm:text-[11px] font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded flex items-center gap-1 shadow-sm w-max">
+                    <span className="bg-black/40 backdrop-blur-md text-white border border-white/20 text-[9px] sm:text-[11px] font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg flex items-center gap-1 shadow-sm w-max">
                       ⚗ {card.styles}
                     </span>
-                    <span className="bg-white/90 backdrop-blur-sm text-gray-800 text-[9px] sm:text-[11px] font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded flex items-center gap-1 shadow-sm w-max">
+                    <span className="bg-black/40 backdrop-blur-md text-white border border-white/20 text-[9px] sm:text-[11px] font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg flex items-center gap-1 shadow-sm w-max">
                       📐 {card.sizes}
                     </span>
                   </div>

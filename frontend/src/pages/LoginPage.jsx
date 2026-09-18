@@ -169,19 +169,22 @@ export default function LoginPage() {
       <AuthTopBar />
 
       {/* Main content */}
-      <div className="flex flex-1">
-        {/* Left side - image */}
-        <div className="hidden lg:block w-1/2 relative">
-          <img
-            src={siteAssets.loginImageUrl}
-            alt="Welcome to He & She"
-            className="absolute inset-0 w-full h-full object-cover object-top"
-          />
-        </div>
+      <div className="flex-1 bg-gray-50 flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-8 lg:gap-14">
+          {/* Left side - image card */}
+          <div className="hidden lg:flex w-full lg:w-[54%] max-w-[550px] justify-start">
+            <div className="w-full rounded-2xl shadow-xl border border-gray-100 overflow-hidden bg-white">
+              <img
+                src={siteAssets.loginImageUrl}
+                alt="Welcome to He & She"
+                className="w-full h-auto block"
+              />
+            </div>
+          </div>
 
-        {/* Right side - Login Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-4 py-6">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full max-w-[480px] px-5 sm:px-7 py-6 min-h-[480px] flex flex-col justify-between transition-all duration-300">
+          {/* Right side - Login Form */}
+          <div className="w-full lg:w-[46%] max-w-[480px] flex justify-center lg:justify-end">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full px-5 sm:px-7 py-6 min-h-[480px] flex flex-col justify-between transition-all duration-300">
             <div>
               {/* Back button for sub-modes */}
               {loginMode !== 'password' && (
@@ -353,9 +356,8 @@ export default function LoginPage() {
                         className="hidden"
                       />
                       <div
-                        className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-colors cursor-pointer ${
-                          rememberMe ? 'bg-purple-600 border-purple-600' : 'border-gray-300 bg-white'
-                        }`}
+                        className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-colors cursor-pointer ${rememberMe ? 'bg-purple-600 border-purple-600' : 'border-gray-300 bg-white'
+                          }`}
                       >
                         {rememberMe && <Check size={9} className="text-white" strokeWidth={3} />}
                       </div>
@@ -537,6 +539,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+    </div>
 
       <AuthFeaturesBar />
       <Footer showFeatures={false} />

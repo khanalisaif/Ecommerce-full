@@ -63,13 +63,13 @@ export function buildInitialFeatureBanners() {
   return [
     normalizeFeatureBanner({
       id: 'fb-1',
-      title: 'Category',
-      subtitle: 'Unleash Your Fantasy,\nOver the horizon.',
-      buttonText: 'Shop Now',
+      title: 'Roleplay Costumes',
+      subtitle: 'Unleash Your Fantasy.\nOwn the Moment.',
+      buttonText: 'Shop Costumes',
       badge1: '50+ Themes',
       badge2: 'Premium Quality',
       image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200&q=80',
-      slug: '',
+      slug: 'for-her',
     }),
   ]
 }

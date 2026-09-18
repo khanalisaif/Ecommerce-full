@@ -49,7 +49,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
   const discount = Math.max(0, originalTotal - subtotal);
   const appliedCouponDiscount = Math.max(0, Number(couponDiscount) || 0);
 
-  let shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING;
+  let shippingCost = subtotal === 0 ? 0 : (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING);
   if (deliveryOption === "express") shippingCost += 79;
 
   const total = Math.max(0, subtotal - appliedCouponDiscount + shippingCost);

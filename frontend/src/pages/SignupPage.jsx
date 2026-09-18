@@ -146,19 +146,22 @@ export default function SignupPage() {
       <AuthTopBar />
 
       {/* Main content */}
-      <div className="flex flex-1">
-        {/* Left side - image */}
-        <div className="hidden lg:block w-1/2 relative">
-          <img
-            src={siteAssets.signupImageUrl}
-            alt="Create your He & She account"
-            className="absolute inset-0 w-full h-full object-cover object-top"
-          />
-        </div>
+      <div className="flex-1 bg-gray-50 flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-8 lg:gap-14">
+          {/* Left side - image card */}
+          <div className="hidden lg:flex w-full lg:w-[54%] max-w-[550px] justify-start">
+            <div className="w-full rounded-2xl shadow-xl border border-gray-100 overflow-hidden bg-white">
+              <img
+                src={siteAssets.signupImageUrl}
+                alt="Create your He & She account"
+                className="w-full h-auto block"
+              />
+            </div>
+          </div>
 
-        {/* Right side - Signup Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-4 py-6">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full max-w-[480px] px-5 sm:px-7 py-6">
+          {/* Right side - Signup Form */}
+          <div className="w-full lg:w-[46%] max-w-[480px] flex justify-center lg:justify-end">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full px-5 sm:px-7 py-6">
             {/* Heading */}
             <div className="text-center mb-4">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-0.5">Create an Account</h1>
@@ -353,6 +356,7 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
+    </div>
 
       <Footer showFeatures={false} />
 

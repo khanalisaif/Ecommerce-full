@@ -35,8 +35,8 @@ export const DEFAULT_TOPBAR_SETTINGS = {
 // Admin-uploaded images (Cloudinary URLs) override these once set on the backend.
 export const DEFAULT_SITE_ASSETS = {
   logoUrl: '/he-and-she-logo.png',
-  loginImageUrl: '/login.png',
-  signupImageUrl: '/signin.png',
+  loginImageUrl: '/auth-side-image.png',
+  signupImageUrl: '/auth-side-image.png',
 }
 
 function loadFromStorage(key, fallback) {

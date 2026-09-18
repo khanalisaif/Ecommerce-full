@@ -42,15 +42,9 @@ export default function AdminSidebar({ activeTab, setActiveTab, isOpen, onClose,
         }`}
         style={{ background: 'linear-gradient(180deg, #581c87 0%, #7e22ce 55%, #9333ea 100%)' }}
       >
-        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
-          <div className="flex items-center gap-2.5">
-            <div className="bg-white/15 p-2 rounded-lg">
-              <img src={siteAssets.logoUrl} alt="Logo" className="h-6 w-auto object-contain" />
-            </div>
-            <div>
-              <p className="font-bold text-sm leading-tight">He &amp; She</p>
-              <p className="text-[11px] text-white/60 leading-tight">Admin Panel</p>
-            </div>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center">
+            <img src={siteAssets.logoUrl} alt="Logo" className="h-10 w-auto object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
           </div>
           <button onClick={onClose} className="lg:hidden text-white/70 hover:text-white">
             <X size={20} />

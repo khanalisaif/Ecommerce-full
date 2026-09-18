@@ -46,12 +46,13 @@ export default function CartPage() {
   const originalTotal = cartOriginalTotal
   const discount = cartDiscount
   
+  const isCartEmpty = cartItems.length === 0 || subtotal === 0
   const FREE_SHIPPING_THRESHOLD = 999
-  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
-  const shippingCost = freeShipping ? 0 : 200
-  const total = subtotal + shippingCost
-  const amountNeeded = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
-  const progressPercent = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100))
+  const freeShipping = !isCartEmpty && subtotal >= FREE_SHIPPING_THRESHOLD
+  const shippingCost = isCartEmpty ? 0 : (freeShipping ? 0 : 200)
+  const total = isCartEmpty ? 0 : (subtotal + shippingCost)
+  const amountNeeded = isCartEmpty ? FREE_SHIPPING_THRESHOLD : Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
+  const progressPercent = isCartEmpty ? 0 : Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100))
   const discountPct = originalTotal > 0 ? Math.round((discount / originalTotal) * 100) : 0
 
   return (
@@ -193,8 +194,8 @@ export default function CartPage() {
                 )}
                 <div className="flex justify-between text-[12px]">
                   <span className="text-gray-500">Shipping Charges</span>
-                  <span className={freeShipping ? 'text-[#00b368] font-bold' : 'text-gray-900 font-medium'}>
-                    {freeShipping ? 'FREE' : `₹${shippingCost}`}
+                  <span className={isCartEmpty ? 'text-gray-900 font-medium' : (freeShipping ? 'text-[#00b368] font-bold' : 'text-gray-900 font-medium')}>
+                    {isCartEmpty ? '₹0' : (freeShipping ? 'FREE' : `₹${shippingCost}`)}
                   </span>
                 </div>
               </div>

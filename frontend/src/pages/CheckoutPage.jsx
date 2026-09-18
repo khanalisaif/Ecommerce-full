@@ -48,14 +48,15 @@ export default function CheckoutPage() {
 
   const selectedAddress = addresses.find((a) => a._id === selectedAddressId)
 
+  const isCartEmpty = cartItems.length === 0 || cartSubtotal === 0
   const FREE_SHIPPING_THRESHOLD = 999
   const subtotal = cartSubtotal
   const originalTotal = cartOriginalTotal
   const discount = cartDiscount
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
-  const standardShippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 200
-  const shippingCost = deliveryOption === 'express' ? standardShippingCost + 79 : standardShippingCost
-  const total = Math.max(0, subtotal - couponDiscount + shippingCost)
+  const standardShippingCost = isCartEmpty ? 0 : (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 200)
+  const shippingCost = isCartEmpty ? 0 : (deliveryOption === 'express' ? standardShippingCost + 79 : standardShippingCost)
+  const total = isCartEmpty ? 0 : Math.max(0, subtotal - couponDiscount + shippingCost)
   const totalSavings = discount + couponDiscount
   const savePercent = originalTotal > 0 ? Math.round((totalSavings / originalTotal) * 100) : 0
 
