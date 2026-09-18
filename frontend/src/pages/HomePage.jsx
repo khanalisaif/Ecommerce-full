@@ -75,11 +75,10 @@ export default function HomePage() {
                     window.scrollTo({ top: 0, behavior: 'instant' })
                     navigate(`/category/${slug}`)
                   }}
-                  className={`flex flex-col items-center gap-2 px-2 pb-3 pt-4 flex-shrink-0 min-w-[72px] border-b-[3px] transition-all duration-200 ${
-                    isActive
+                  className={`flex flex-col items-center gap-2 px-2 pb-3 pt-4 flex-shrink-0 min-w-[72px] border-b-[3px] transition-all duration-200 ${isActive
                       ? 'border-purple-600 text-purple-600'
                       : 'border-transparent text-gray-500 hover:text-gray-800'
-                  }`}
+                    }`}
                 >
                   {cat.image ? (
                     <img src={cat.image} alt="" className={`w-7 h-7 rounded-full object-cover ${isActive ? 'ring-2 ring-purple-600' : ''}`} />
@@ -201,9 +200,9 @@ export default function HomePage() {
               <div
                 key={col.id}
                 onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'instant' })
-                navigate(`/category/${col.slug}`)
-              }}
+                  window.scrollTo({ top: 0, behavior: 'instant' })
+                  navigate(`/category/${col.slug}`)
+                }}
                 className="relative rounded-2xl overflow-hidden cursor-pointer group h-[140px] md:h-[160px]"
               >
                 <img
@@ -248,22 +247,24 @@ export default function HomePage() {
                 />
                 {/* Gradient overlay for contrast and sleek readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/25 md:bg-gradient-to-r md:from-black/85 md:via-black/55 md:to-black/20 transition-opacity duration-300" />
-                <div className="absolute inset-0 flex flex-col justify-between p-6 sm:p-7 relative z-10">
-                  <div>
-                    <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 sm:mb-2 tracking-tight drop-shadow-md">{card.name}</h3>
-                    <p className="text-gray-200 text-[11px] sm:text-[13px] font-semibold leading-relaxed max-w-[190px] mb-3 sm:mb-4 drop-shadow">{card.subtitle}</p>
-                    <button className="bg-white/90 hover:bg-white text-gray-900 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-[10px] sm:text-[12px] group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-md w-max">
-                      {card.cta} →
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-0">
-                    <span className="bg-black/40 backdrop-blur-md text-white border border-white/20 text-[9px] sm:text-[11px] font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg flex items-center gap-1 shadow-sm w-max">
-                      ⚗ {card.styles}
-                    </span>
-                    <span className="bg-black/40 backdrop-blur-md text-white border border-white/20 text-[9px] sm:text-[11px] font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg flex items-center gap-1 shadow-sm w-max">
-                      📐 {card.sizes}
-                    </span>
-                  </div>
+                
+                {/* Top content: Title, Subtitle, Button */}
+                <div className="relative z-10 p-5 sm:p-6">
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 tracking-tight drop-shadow-md">{card.name}</h3>
+                  <p className="text-gray-200 text-xs sm:text-sm font-semibold leading-relaxed max-w-[200px] mb-4 sm:mb-5 drop-shadow">{card.subtitle}</p>
+                  <button className="mt-1 sm:mt-1.5 bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-xs sm:text-sm transition-all shadow-md w-max cursor-pointer">
+                    {card.cta} →
+                  </button>
+                </div>
+
+                {/* Bottom badges: Positioned 2x higher up from the edge */}
+                <div className="absolute bottom-7 sm:bottom-8 left-5 sm:left-6 z-20 flex flex-wrap gap-2">
+                  <span className="bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md w-max">
+                    ⚗ {card.styles}
+                  </span>
+                  <span className="bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md w-max">
+                    📐 {card.sizes}
+                  </span>
                 </div>
               </div>
             ))}
@@ -303,11 +304,10 @@ export default function HomePage() {
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
                   {product.badge && (
-                    <span className={`absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded ${
-                      product.badge === 'Bestseller' ? 'bg-orange-500' :
-                      product.badge === 'Popular' ? 'bg-pink-500' :
-                      product.badge === 'New' ? 'bg-green-500' : 'bg-purple-500'
-                    }`}>
+                    <span className={`absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded ${product.badge === 'Bestseller' ? 'bg-orange-500' :
+                        product.badge === 'Popular' ? 'bg-pink-500' :
+                          product.badge === 'New' ? 'bg-green-500' : 'bg-purple-500'
+                      }`}>
                       {product.badge}
                     </span>
                   )}
