@@ -67,7 +67,7 @@ function downloadShippingLabel(order) {
 <body>
   <div class="label">
     <div class="header">
-      <span class="brand">HASHTELICOM</span>
+      <span class="brand">He &amp; She</span>
       <span class="order-id">${order.id}</span>
     </div>
     <div class="section">

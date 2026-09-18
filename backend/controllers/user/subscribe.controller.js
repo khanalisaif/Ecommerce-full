@@ -3,7 +3,7 @@ import User from "../../models/user/User.model.js";
 import { sendEmail, formatDelhiDateTime, getDelhiYear } from "../../utils/sendEmail.js";
 import { getClientUrl } from "../../utils/urlHelper.js";
 
-const brandName = "HASHTELICOM";
+const brandName = "He & She";
 
 /**
  * POST /api/user/subscribe
@@ -44,7 +44,7 @@ export const subscribe = async (req, res) => {
 
       await sendSubscriptionWelcomeEmail(email, existing.unsubscribeToken);
       return res.status(200).json({
-        message: "Welcome back! You've been re-subscribed to Hashtelicom updates.",
+        message: "Welcome back! You've been re-subscribed to He & She updates.",
       });
     }
 
@@ -126,7 +126,7 @@ const sendSubscriptionWelcomeEmail = async (email, unsubscribeToken = "") => {
     <div style="font-family: Arial, sans-serif; max-width: 520px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 22px;">
         <div style="display: inline-block; background: linear-gradient(135deg, #a855f7, #ec4899); color: #fff; font-size: 28px; font-weight: 900; letter-spacing: 2px; padding: 10px 24px; border-radius: 10px; margin-bottom: 12px;">
-          HASHTELICOM
+          He &amp; She
         </div>
         <h2 style="color: #1e293b; margin: 0; font-size: 22px;">🎉 You're In!</h2>
         <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Thanks for subscribing to our exclusive updates</p>
@@ -156,7 +156,7 @@ const sendSubscriptionWelcomeEmail = async (email, unsubscribeToken = "") => {
 
       <div style="text-align: center; margin: 24px 0;">
         <a href="${clientUrl}" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 13px 32px; border-radius: 999px; display: inline-block;">
-          Shop Now at Hashtelicom
+          Shop Now at He & She
         </a>
       </div>
 

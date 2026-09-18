@@ -151,7 +151,7 @@ export default function SignupPage() {
         <div className="hidden lg:block w-1/2 relative">
           <img
             src={siteAssets.signupImageUrl}
-            alt="Create your Hashtelicom account"
+            alt="Create your He & She account"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
         </div>
@@ -162,7 +162,7 @@ export default function SignupPage() {
             {/* Heading */}
             <div className="text-center mb-4">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-0.5">Create an Account</h1>
-              <p className="text-gray-500 text-xs sm:text-sm">Join Hashtelicom to access exclusive offers and fast checkout</p>
+              <p className="text-gray-500 text-xs sm:text-sm">Join He &amp; She to access exclusive offers and fast checkout</p>
             </div>
 
             {/* Inline Error Alert */}

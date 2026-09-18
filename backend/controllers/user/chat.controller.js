@@ -2,7 +2,7 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
 
-const SYSTEM_PROMPT = `You are "Hashteli AI", the friendly shopping assistant for HASHTELICOM, an online electronics/mobile store in India.
+const SYSTEM_PROMPT = `You are "He & She AI", the friendly shopping assistant for He & She, a premium lifestyle products store in India.
 
 Store policies you should know:
 - Free shipping on orders above ₹999; otherwise standard shipping is ₹200, express delivery is available for an extra fee.

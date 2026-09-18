@@ -389,7 +389,7 @@ export default function OffersUpdatesTab() {
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Email Live Preview</p>
                 <div className="border border-purple-200 rounded-xl p-4 bg-white shadow-inner">
                   <div className="border-b border-gray-100 pb-2 mb-3 text-center">
-                    <p className="font-extrabold text-purple-600 text-sm tracking-wider">HASHTELICOM NEWS</p>
+                    <p className="font-extrabold text-purple-600 text-sm tracking-wider">HE &amp; SHE NEWS</p>
                   </div>
                   {newsBanner && (
                     <img src={newsBanner} alt="Banner" className="w-full h-32 object-cover rounded-lg mb-3" />

@@ -133,7 +133,7 @@ export const sendGraphEmail = async (mailOptions) => {
   }
 
   const mailbox = process.env.MAILBOX || "noreply@digivahan.in";
-  const fromName = process.env.FROM_NAME || "HASHTELICOM";
+  const fromName = process.env.FROM_NAME || "He & She";
 
   const message = {
     subject: mailOptions.subject,
@@ -169,14 +169,14 @@ export const sendGraphEmail = async (mailOptions) => {
     }));
   }
 
-  console.log(`[HASHTELICOM Email Service] Sending email via Graph API to: ${mailOptions.to} (${mailOptions.subject})`);
+  console.log(`[He & She Email Service] Sending email via Graph API to: ${mailOptions.to} (${mailOptions.subject})`);
 
   await client.api(`/users/${mailbox}/sendMail`).post({
     message,
     saveToSentItems: "true",
   });
 
-  console.log(`📧 HASHTELICOM Email sent to ${mailOptions.to} (${mailOptions.subject})`);
+  console.log(`📧 He & She Email sent to ${mailOptions.to} (${mailOptions.subject})`);
   return { messageId: "graph-api-sent" };
 };
 
@@ -188,7 +188,7 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
   try {
     return await sendGraphEmail({ to, subject, html, text, attachments });
   } catch (err) {
-    console.error(`⚠️ HASHTELICOM Email send failed to ${to}:`, err.message);
+    console.error(`⚠️ He & She Email send failed to ${to}:`, err.message);
     if (process.env.NODE_ENV === "development") {
       console.log(`📧 [DEV] Email error handled in development for ${to}`);
       return { messageId: "dev-error-handled" };
@@ -201,8 +201,8 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
  * Branded templates generator for HASHTELICOM
  */
 export const getMailOptions = (templateType, email, otp) => {
-  const fromEmail = process.env.FROM_EMAIL || "support@hashtelicom.com";
-  const brandName = "HASHTELICOM";
+  const fromEmail = process.env.FROM_EMAIL || "support@heshe.com";
+  const brandName = "He & She";
   const liveTime = formatDelhiDateTime();
   const currentYear = getDelhiYear();
 
@@ -326,10 +326,10 @@ export const sendOTPViaEmail = async (email, otp, templateType = "signup") => {
 export const sendPasswordResetLinkEmail = async (to, resetUrl) => {
   const liveTime = formatDelhiDateTime();
   const currentYear = getDelhiYear();
-  const subject = "Reset your HASHTELICOM password";
+  const subject = "Reset your He & She password";
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #eee; border-radius: 12px;">
-      <h2 style="color: #7c3aed;">HASHTELICOM</h2>
+      <h2 style="color: #7c3aed;">He &amp; She</h2>
       <p>We received a request to reset your password. Click the button below to choose a new one:</p>
       <p style="text-align: center; margin: 28px 0;">
         <a href="${resetUrl}" style="background: linear-gradient(135deg, #a855f7, #ec4899); color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-weight: bold; display: inline-block;">Reset Password</a>
@@ -338,7 +338,7 @@ export const sendPasswordResetLinkEmail = async (to, resetUrl) => {
       <p style="color: #666; font-size: 13px;">This link is valid for 1 hour. If you didn't request this, you can safely ignore this email.</p>
       <p style="color: #999; font-size: 11px; word-break: break-all;">Or copy this link: ${resetUrl}</p>
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${liveTime}</p>
+      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} He &amp; She. All rights reserved. &bull; Sent: ${liveTime}</p>
     </div>
   `;
   return sendEmail({ to, subject, html });
@@ -370,15 +370,15 @@ export const sendAdminLoginAlert = async ({ name, email, time, ip }) => {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #eee; border-radius: 12px;">
       <h2 style="color: #7c3aed;">Admin Login Alert</h2>
-      <p><b>${name}</b> (${email}) just logged into the HASHTELICOM admin panel.</p>
+      <p><b>${name}</b> (${email}) just logged into the He &amp; She admin panel.</p>
       <p style="color: #666; font-size: 13px;"><b>Time:</b> ${liveTime}${ip ? `<br/><b>IP:</b> ${ip}` : ""}</p>
       <p style="color: #999; font-size: 12px;">If this wasn't you, change the admin password immediately.</p>
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${liveTime}</p>
+      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} He &amp; She. All rights reserved. &bull; Sent: ${liveTime}</p>
     </div>
   `;
   // Send alert ONLY to the email that just logged in (not to all admins)
-  return sendEmail({ to: email, subject: "Admin Login Alert — HASHTELICOM", html });
+  return sendEmail({ to: email, subject: "Admin Login Alert — He & She", html });
 };
 
 export const sendNewOrderAlert = async (order) => {
@@ -396,10 +396,10 @@ export const sendNewOrderAlert = async (order) => {
       <ul style="color: #444; font-size: 13px;">${itemsHtml}</ul>
       <p style="color: #666; font-size: 13px;">Payment: ${order.paymentMethod?.toUpperCase()} · ${order.paymentStatus}</p>
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 20px 0;" />
-      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${orderTime}</p>
+      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} He &amp; She. All rights reserved. &bull; Sent: ${orderTime}</p>
     </div>
   `;
-  return notifyAdmins(`New Order #${order.orderId} — ₹${order.total} | HASHTELICOM`, html);
+  return notifyAdmins(`New Order #${order.orderId} — ₹${order.total} | He & She`, html);
 };
 
 // Pre-built OTP email template
@@ -419,7 +419,7 @@ export const sendOtpEmail = async (to, otp, purpose = "verification") => {
 export const sendOrderConfirmationEmail = async (to, order) => {
   const orderTime = formatDelhiDateTime(order.createdAt || new Date());
   const currentYear = getDelhiYear();
-  const subject = `Order Confirmed - #${order.orderId} | HASHTELICOM`;
+  const subject = `Order Confirmed - #${order.orderId} | He & She`;
   const itemsHtml = (order.items || [])
     .map(
       (item) => `
@@ -460,7 +460,7 @@ export const sendOrderConfirmationEmail = async (to, order) => {
         <p style="margin: 0; font-size: 16px; font-weight: bold; color: #1e293b;">Total Amount: <span style="color: #7c3aed;">₹${(order.total || 0).toLocaleString("en-IN")}</span></p>
       </div>
       <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0 16px;" />
-      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} HASHTELICOM. All rights reserved. &bull; Sent: ${orderTime}</p>
+      <p style="color: #94a3b8; font-size: 11px; text-align: center;">&copy; ${currentYear} He &amp; She. All rights reserved. &bull; Sent: ${orderTime}</p>
     </div>
   `;
   return sendEmail({ to, subject, html });
@@ -470,7 +470,7 @@ export const sendOrderConfirmationEmail = async (to, order) => {
  * 1. Security Alert Email (New login / password reset)
  */
 export const sendSecurityAlertEmail = async (to, { userName, eventType = "New Login", time, ip, userAgent }) => {
-  const brandName = "HASHTELICOM";
+  const brandName = "He & She";
   const liveTime = formatDelhiDateTime(time || new Date());
   const currentYear = getDelhiYear();
   const subject = `Security Alert: ${eventType} detected on your account | ${brandName}`;
@@ -541,7 +541,7 @@ export const sendSecurityAlertEmail = async (to, { userName, eventType = "New Lo
  * 2. Order Status Update Email (Pending -> Processing -> Shipped -> Delivered -> Cancelled)
  */
 export const sendOrderStatusUpdateEmail = async (to, { userName, orderId, status, total, items = [] }) => {
-  const brandName = "HASHTELICOM";
+  const brandName = "He & She";
   const liveTime = formatDelhiDateTime();
   const currentYear = getDelhiYear();
   const subject = `Order #${orderId} Update: Status is now ${status} | ${brandName}`;
@@ -604,7 +604,7 @@ export const sendOrderStatusUpdateEmail = async (to, { userName, orderId, status
  * 3. Review Reminder Email (Triggered when order is delivered)
  */
 export const sendReviewReminderEmail = async (to, { userName, orderId, items = [] }) => {
-  const brandName = "HASHTELICOM";
+  const brandName = "He & She";
   const liveTime = formatDelhiDateTime();
   const currentYear = getDelhiYear();
   const subject = `How did you like your purchase? Review Order #${orderId} | ${brandName}`;
@@ -653,7 +653,7 @@ export const sendReviewReminderEmail = async (to, { userName, orderId, items = [
  * 4. Wishlist Price Drop Alert Email
  */
 export const sendWishlistPriceDropEmail = async (to, { userName, product, oldPrice, newPrice }) => {
-  const brandName = "HASHTELICOM";
+  const brandName = "He & She";
   const liveTime = formatDelhiDateTime();
   const currentYear = getDelhiYear();
   const subject = `Price Drop Alert: ${product.name} is now on sale! | ${brandName}`;
@@ -700,14 +700,14 @@ export const sendWishlistPriceDropEmail = async (to, { userName, product, oldPri
  * 5. News & Updates Broadcast Email (Admin triggered to all subscribed users)
  */
 export const sendNewsBroadcastEmail = async (to, { title, message, bannerUrl, actionLink }) => {
-  const brandName = "HASHTELICOM";
+  const brandName = "He & She";
   const liveTime = formatDelhiDateTime();
   const currentYear = getDelhiYear();
   const subject = `${title} | ${brandName} News`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 540px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h2 style="color: #7c3aed; margin: 0; font-size: 24px;">HASHTELICOM</h2>
+        <h2 style="color: #7c3aed; margin: 0; font-size: 24px;">He &amp; She</h2>
         <p style="color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;">News & Updates</p>
         <p style="color: #64748b; font-size: 12px; margin-top: 2px;">Published on: <b>${liveTime}</b></p>
       </div>
@@ -740,7 +740,7 @@ export const sendNewsBroadcastEmail = async (to, { title, message, bannerUrl, ac
  * 6. Coupon & Special Offer Email (Admin triggered to all users with offers enabled)
  */
 export const sendCouponOfferEmail = async (to, { coupon }) => {
-  const brandName = "HASHTELICOM";
+  const brandName = "He & She";
   const liveTime = formatDelhiDateTime();
   const currentYear = getDelhiYear();
   const discountText =

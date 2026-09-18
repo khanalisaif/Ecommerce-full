@@ -174,7 +174,7 @@ export default function LoginPage() {
         <div className="hidden lg:block w-1/2 relative">
           <img
             src={siteAssets.loginImageUrl}
-            alt="Welcome to Hashtelicom Mobile"
+            alt="Welcome to He & She"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
         </div>
@@ -508,7 +508,7 @@ export default function LoginPage() {
             <div className="pt-3">
               {loginMode === 'password' ? (
                 <p className="text-center text-gray-500 text-xs sm:text-sm">
-                  New to Hashtelicom?{' '}
+                  New to He &amp; She?{' '}
                   <button
                     type="button"
                     onClick={() => navigate('/signup')}

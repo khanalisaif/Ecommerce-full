@@ -66,7 +66,7 @@ export const DEFAULT_PAGES = [
     title: 'Contact Us',
     slug: 'contact-us',
     content:
-      'We would love to hear from you.\n\nEmail: support@hashtelicom.com\nPhone: +91 98765 43210\nHours: Monday to Saturday, 10 AM - 7 PM\n\nOur customer support team typically responds within 24 hours.',
+      'We would love to hear from you.\n\nEmail: support@heshe.com\nPhone: +91 98765 43210\nHours: Monday to Saturday, 10 AM - 7 PM\n\nOur customer support team typically responds within 24 hours.',
   },
 ]
 

@@ -137,7 +137,7 @@ export default function AdminLoginPage() {
             </div>
             <h1 className="text-xl font-bold text-gray-900">Admin Sign In</h1>
             <p className="text-gray-500 text-xs sm:text-sm mt-1">
-              Secure administrative access for HASHTELICOM
+              Secure administrative access for He &amp; She
             </p>
           </div>
 
@@ -199,7 +199,7 @@ export default function AdminLoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@hashtelicom.com"
+                        placeholder="admin@heshe.com"
                     autoFocus
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-400"
                     required
@@ -253,7 +253,7 @@ export default function AdminLoginPage() {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="admin@hashtelicom.com"
+                            placeholder="admin@heshe.com"
                         autoFocus
                         className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-400"
                         required

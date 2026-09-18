@@ -48,7 +48,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, isOpen, onClose,
               <img src={siteAssets.logoUrl} alt="Logo" className="h-6 w-auto object-contain" />
             </div>
             <div>
-              <p className="font-bold text-sm leading-tight">HASHTELICOM</p>
+              <p className="font-bold text-sm leading-tight">He &amp; She</p>
               <p className="text-[11px] text-white/60 leading-tight">Admin Panel</p>
             </div>
           </div>

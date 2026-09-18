@@ -991,7 +991,7 @@ function NotificationsPanel() {
     { key: 'wishlist', label: 'Wishlist Alerts',    desc: 'Price drops on your wishlist items',     icon: Heart },
     { key: 'reviews',  label: 'Review Reminders',   desc: 'Reminders to review your purchases',     icon: Star },
     { key: 'security', label: 'Security Alerts',    desc: 'Important account security updates',     icon: Shield },
-    { key: 'news',     label: 'News & Updates',     desc: 'Latest news from Hashtelicom',          icon: Bell },
+    { key: 'news',     label: 'News & Updates',     desc: 'Latest news from He & She',          icon: Bell },
   ]
 
   const toggle = (k) => {
@@ -1375,8 +1375,8 @@ export default function AccountPage() {
 
   const handleRefer = async () => {
     const shareData = {
-      title: 'Join Hashtelicom',
-      text: 'Hey! Join me on Hashtelicom and get exclusive rewards on premium lingerie!',
+      title: 'Join He & She',
+      text: 'Hey! Join me on He & She and get exclusive rewards on premium products!',
       url: window.location.origin + '?ref=USER123'
     }
 

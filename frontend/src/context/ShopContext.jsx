@@ -34,7 +34,7 @@ export const DEFAULT_TOPBAR_SETTINGS = {
 // Default (fallback) image paths — these are the original files bundled in /public.
 // Admin-uploaded images (Cloudinary URLs) override these once set on the backend.
 export const DEFAULT_SITE_ASSETS = {
-  logoUrl: '/logo.png',
+  logoUrl: '/he-and-she-logo.png',
   loginImageUrl: '/login.png',
   signupImageUrl: '/signin.png',
 }

@@ -70,8 +70,8 @@ export default function UnsubscribePage() {
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="bg-white max-w-md w-full rounded-2xl shadow-xl border border-gray-100 p-8 text-center">
           {/* Logo badge */}
-          <div className="inline-block bg-gradient-to-r from-purple-600 to-pink-500 text-white font-black text-lg px-5 py-2 rounded-xl mb-6 shadow-md tracking-wider">
-            HASHTELICOM
+          <div className="flex items-center justify-center mb-6">
+            <img src="/he-and-she-logo.png" alt="He & She" className="h-16 w-auto object-contain" />
           </div>
 
           {status === 'loading' && (
