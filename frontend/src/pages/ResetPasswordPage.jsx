@@ -61,17 +61,23 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-white flex flex-col">
       <AuthTopBar />
 
-      <div className="flex flex-1">
-        <div className="hidden lg:block w-1/2 relative">
-          <img
-            src={siteAssets.loginImageUrl}
-            alt="Reset Password"
-            className="absolute inset-0 w-full h-full object-cover object-top"
-          />
-        </div>
+      {/* Main content */}
+      <div className="flex-1 bg-gray-50 flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-8 lg:gap-14">
+          {/* Left side - image card */}
+          <div className="hidden lg:flex w-full lg:w-[54%] max-w-[550px] justify-start">
+            <div className="w-full rounded-2xl shadow-xl border border-gray-100 overflow-hidden bg-white">
+              <img
+                src={siteAssets.loginImageUrl}
+                alt="Reset Password"
+                className="w-full h-auto block"
+              />
+            </div>
+          </div>
 
-        <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-4 py-6">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full max-w-[480px] px-5 sm:px-7 py-6">
+          {/* Right side - Form */}
+          <div className="w-full lg:w-[46%] max-w-[480px] flex justify-center lg:justify-end">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full px-5 sm:px-7 py-6">
             {status === 'checking' && (
               <div className="text-center py-12">
                 <Loader2 size={30} className="animate-spin text-purple-500 mx-auto mb-3" />
@@ -181,6 +187,7 @@ export default function ResetPasswordPage() {
           </div>
         </div>
       </div>
+    </div>
 
       <AuthFeaturesBar />
       <Footer showFeatures={false} />
