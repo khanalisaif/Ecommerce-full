@@ -15,6 +15,11 @@ const iconComponents = {
   Laptop, Tablet, Smartphone, Headphones, Package, ShoppingBag, Watch, Shirt,
 }
 
+// Helper: check if a content item has an image (set by admin)
+function hasContent(item) {
+  return !!(item && item.image && item.image.trim())
+}
+
 export default function HomePage() {
   const navigate = useNavigate()
   const { addToCart, toggleWishlist, isWishlisted, cartCount, products, categories, banners, collections, categoryCards, featureBanners } = useShop()
@@ -22,7 +27,12 @@ export default function HomePage() {
   const [currentBanner, setCurrentBanner] = useState(0)
   const [activeCategory, setActiveCategory] = useState(0)
 
-  const bannerList = banners && banners.length > 0 ? banners : []
+  // Filter sections — only show items where admin has set an image
+  const bannerList = (banners || []).filter(hasContent)
+  const validCollections = (collections || []).filter(hasContent)
+  const validCategoryCards = (categoryCards || []).filter(hasContent)
+  const validFeatureBanners = (featureBanners || []).filter(hasContent)
+  const validCategories = (categories || []).filter((cat) => cat && cat.name && cat.name.trim())
   const safeBannerIndex =
     Number.isFinite(currentBanner) && currentBanner >= 0 && currentBanner < bannerList.length
       ? currentBanner
@@ -60,10 +70,12 @@ export default function HomePage() {
       <Navbar cartCount={cartCount} />
 
       {/* ── Category Tab Strip ─────────────────────────── */}
-      <div className="bg-white border-b border-gray-100 sticky top-[72px] z-40">
-        <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8">
-          <div className="flex justify-between items-center overflow-x-auto scrollbar-hide">
-            {categories.map((cat, idx) => {
+      {/* Auto-hides when admin has not created any categories */}
+      {validCategories.length > 0 && (
+        <div className="bg-white border-b border-gray-100 sticky top-[72px] z-40">
+          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8">
+            <div className="flex justify-between items-center overflow-x-auto scrollbar-hide">
+              {validCategories.map((cat, idx) => {
               const Icon = iconComponents[cat.icon] || Heart
               const slug = cat.slug || cat.name.replace(/\s+/g, '-')
               const isActive = activeCategory === idx
@@ -91,13 +103,15 @@ export default function HomePage() {
                 </button>
               )
             })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <main className="w-full">
 
         {/* ── Hero Banner Carousel ────────────────────────── */}
+        {/* Auto-hides when admin has not added any banners with images */}
         {bannerList.length > 0 && (
           <div className="relative mx-4 md:mx-8 mt-6 rounded-2xl overflow-hidden h-[280px] md:h-[340px]">
             {bannerList.map((banner, index) => (
@@ -194,9 +208,11 @@ export default function HomePage() {
         )}
 
         {/* ── Collections 5-Column Grid ───────────────────── */}
-        <div className="mt-8 px-4 md:px-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {collections.map((col) => (
+        {/* Auto-hides when admin has not added any collections */}
+        {validCollections.length > 0 && (
+          <div className="mt-8 px-4 md:px-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {validCollections.map((col) => (
               <div
                 key={col.id}
                 onClick={() => {
@@ -223,14 +239,17 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Category Cards (Phone / Tab / Laptop) ──────── */}
-        <div className="mt-8 px-4 md:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {categoryCards.map((card) => (
+        {/* Auto-hides when admin has not added any category cards */}
+        {validCategoryCards.length > 0 && (
+          <div className="mt-8 px-4 md:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {validCategoryCards.map((card) => (
               <div
                 key={card.id}
                 onClick={() => {
@@ -267,24 +286,27 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Best Sellers ────────────────────────────────── */}
-        <div className="mt-12 px-4 md:px-8">
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-xl md:text-2xl font-black text-gray-900">Best Sellers</h2>
-            <button
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'instant' })
-                navigate(`/category/Best-Sellers`)
-              }}
-              className="text-purple-600 font-bold text-sm flex items-center gap-1 hover:underline"
-            >
-              View All <span>→</span>
-            </button>
-          </div>
+        {/* Auto-hides when no products are marked as isBestSeller */}
+        {bestSellers.length > 0 && (
+          <div className="mt-12 px-4 md:px-8">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-xl md:text-2xl font-black text-gray-900">Best Sellers</h2>
+              <button
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'instant' })
+                  navigate(`/category/Best-Sellers`)
+                }}
+                className="text-purple-600 font-bold text-sm flex items-center gap-1 hover:underline"
+              >
+                View All <span>→</span>
+              </button>
+            </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {bestSellers.map((product) => (
@@ -344,9 +366,11 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+        )}
 
         {/* ── Feature Banner (Category Promo Strip right above Trust Badges / Footer) ───────────── */}
-        {featureBanners.map((fb) => (
+        {/* Auto-hides when admin has not added any feature banners with images */}
+        {validFeatureBanners.map((fb) => (
           <div key={fb.id} className="mt-16 px-4 md:px-8 pb-12">
             <div
               onClick={() => {

@@ -130,10 +130,10 @@ export function ShopProvider({ children }) {
   const [footerCategoryLinks, setFooterCategoryLinksState] = useState(DEFAULT_FOOTER_CATEGORY_LINKS)
   const [pages, setPagesState] = useState(DEFAULT_PAGES)
   const [faqs, setFaqsState] = useState(DEFAULT_FAQS)
-  const [banners, setBannersState] = useState(() => buildInitialBanners())
-  const [collections, setCollectionsState] = useState(() => buildInitialCollections())
-  const [categoryCards, setCategoryCardsState] = useState(() => buildInitialCategoryCards())
-  const [featureBanners, setFeatureBannersState] = useState(() => buildInitialFeatureBanners())
+  const [banners, setBannersState] = useState([])
+  const [collections, setCollectionsState] = useState([])
+  const [categoryCards, setCategoryCardsState] = useState([])
+  const [featureBanners, setFeatureBannersState] = useState([])
   const [trustBadges, setTrustBadgesState] = useState(DEFAULT_TRUST_BADGES)
 
   // Persists a CMS key to the backend (admin only — silently skipped for
@@ -186,10 +186,12 @@ export function ShopProvider({ children }) {
         if (c.footer_category_links?.length) setFooterCategoryLinksState(c.footer_category_links)
         if (c.pages?.length) setPagesState(c.pages)
         if (c.faqs?.length) setFaqsState(c.faqs)
-        setBannersState(c.banners?.length ? c.banners : buildInitialBanners())
-        setCollectionsState(c.collections?.length ? c.collections : buildInitialCollections())
-        setCategoryCardsState(c.category_cards?.length ? c.category_cards : buildInitialCategoryCards())
-        setFeatureBannersState(c.feature_banners?.length ? c.feature_banners : buildInitialFeatureBanners())
+        // Only fall back to dummy/initial data when the backend has NEVER saved the key (null).
+        // If backend returns [], that means admin intentionally deleted all items — respect that.
+        setBannersState(Array.isArray(c.banners) ? c.banners : buildInitialBanners())
+        setCollectionsState(Array.isArray(c.collections) ? c.collections : buildInitialCollections())
+        setCategoryCardsState(Array.isArray(c.category_cards) ? c.category_cards : buildInitialCategoryCards())
+        setFeatureBannersState(Array.isArray(c.feature_banners) ? c.feature_banners : buildInitialFeatureBanners())
         if (c.trust_badges?.length) setTrustBadgesState(c.trust_badges)
       })
       .catch((err) => console.error('Failed to load site content:', err.message))
