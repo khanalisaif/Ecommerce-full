@@ -19,7 +19,6 @@ export default function CategoryFiltersTab() {
   const [discounts, setDiscounts] = useState([])
   const [ratings, setRatings] = useState([])
   const [priceRange, setPriceRange] = useState({ min: 0, max: 99999 })
-  const [sidebarGroups, setSidebarGroups] = useState([])
 
   // Load config into local state when category changes
   useEffect(() => {
@@ -35,13 +34,6 @@ export default function CategoryFiltersTab() {
     setDiscounts([...(config.discounts || [])])
     setRatings([...(config.ratings || [])])
     setPriceRange({ min: config.priceRange?.min ?? 0, max: config.priceRange?.max ?? 99999 })
-    
-    // Deep clone sidebar categories
-    const groups = (config.sidebarCategories || []).map(g => ({
-      name: g.name,
-      sub: (g.sub || []).map(s => ({ name: s.name })) // drop the count
-    }))
-    setSidebarGroups(groups)
   }, [activeSlug, categoryConfigs])
 
   const handleSave = () => {
@@ -54,41 +46,8 @@ export default function CategoryFiltersTab() {
       discounts: cleanList(discounts),
       ratings: cleanList(ratings),
       priceRange: { min: Number(priceRange.min), max: Number(priceRange.max) },
-      sidebarCategories: sidebarGroups
     })
     showToast('Filters updated')
-  }
-
-  const addSidebarGroup = () => {
-    setSidebarGroups([...sidebarGroups, { name: 'New Group', sub: [] }])
-  }
-
-  const updateGroupName = (idx, name) => {
-    const newG = [...sidebarGroups]
-    newG[idx].name = name
-    setSidebarGroups(newG)
-  }
-
-  const removeGroup = (idx) => {
-    setSidebarGroups(sidebarGroups.filter((_, i) => i !== idx))
-  }
-
-  const addSubItem = (gIdx) => {
-    const newG = [...sidebarGroups]
-    newG[gIdx].sub.push({ name: 'New Item' })
-    setSidebarGroups(newG)
-  }
-
-  const updateSubItem = (gIdx, sIdx, name) => {
-    const newG = [...sidebarGroups]
-    newG[gIdx].sub[sIdx].name = name
-    setSidebarGroups(newG)
-  }
-
-  const removeSubItem = (gIdx, sIdx) => {
-    const newG = [...sidebarGroups]
-    newG[gIdx].sub = newG[gIdx].sub.filter((_, i) => i !== sIdx)
-    setSidebarGroups(newG)
   }
 
   if (!categories.length) {
@@ -168,67 +127,6 @@ export default function CategoryFiltersTab() {
             </div>
           </div>
         </div>
-
-        <div className="pt-6 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <label className="text-gray-800 font-semibold text-sm">Subcategories (Left Sidebar tree)</label>
-              <p className="text-xs text-gray-400">Organize subcategories into expandable groups.</p>
-            </div>
-            <button 
-              onClick={addSidebarGroup}
-              className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1"
-            >
-              <Plus size={14} /> Add Group
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {sidebarGroups.length === 0 && (
-              <div className="text-center py-6 text-sm text-gray-400 border-2 border-dashed border-gray-100 rounded-xl">
-                No subcategories added.
-              </div>
-            )}
-            {sidebarGroups.map((group, gIdx) => (
-              <div key={gIdx} className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
-                <div className="flex items-center gap-3 mb-3">
-                  <input 
-                    value={group.name}
-                    onChange={(e) => updateGroupName(gIdx, e.target.value)}
-                    className="flex-1 font-bold text-sm bg-white border border-gray-300 rounded px-3 py-1.5 focus:border-purple-500 outline-none"
-                    placeholder="Group Name (e.g. Clothing)"
-                  />
-                  <button onClick={() => removeGroup(gIdx)} className="text-red-400 hover:text-red-600 p-1">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                
-                <div className="pl-6 border-l-2 border-purple-100 space-y-2">
-                  {group.sub.map((sub, sIdx) => (
-                    <div key={sIdx} className="flex items-center gap-2">
-                      <input 
-                        value={sub.name}
-                        onChange={(e) => updateSubItem(gIdx, sIdx, e.target.value)}
-                        className="flex-1 text-sm bg-white border border-gray-200 rounded px-3 py-1 focus:border-purple-500 outline-none"
-                        placeholder="Sub item (e.g. T-Shirts)"
-                      />
-                      <button onClick={() => removeSubItem(gIdx, sIdx)} className="text-red-400 hover:text-red-600 p-1">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  <button 
-                    onClick={() => addSubItem(gIdx)}
-                    className="text-[11px] font-bold text-gray-500 hover:text-purple-600 uppercase flex items-center gap-1 mt-2"
-                  >
-                    <Plus size={12} /> Add Item
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
       </div>
       
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">

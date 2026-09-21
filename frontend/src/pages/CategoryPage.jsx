@@ -66,14 +66,30 @@ export default function CategoryPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
 
+  // Query parameter support (e.g. /category/Phone?sub=ss from Category Cards)
+  const searchParams = new URLSearchParams(location.search)
+  const subQuery = searchParams.get('sub') || searchParams.get('subcategory') || location.state?.subcategory
+
+  const resolveSubCat = () => {
+    if (subQuery) {
+      const foundSub = (matchedCategory?.subcategories || []).find(
+        (s) =>
+          s.slug?.toLowerCase() === subQuery.toLowerCase() ||
+          s.name?.toLowerCase() === subQuery.toLowerCase()
+      )
+      return foundSub ? foundSub.name : subQuery
+    }
+    return categoryTitle
+  }
+
   // Sidebar
   const [openCategory, setOpenCategory] = useState(-1) // which SIDEBAR_CATEGORIES group is open
-  const [activeSubCat, setActiveSubCat] = useState(categoryTitle)
+  const [activeSubCat, setActiveSubCat] = useState(() => resolveSubCat())
 
-  // Reset all filters & pagination when category changes
+  // Reset all filters & pagination when category or subQuery changes
   useEffect(() => {
     setCurrentPage(1)
-    setActiveSubCat(categoryTitle)
+    setActiveSubCat(resolveSubCat())
     setSelectedSizes([])
     setSelectedBrands([])
     setSelectedColors([])
@@ -82,7 +98,7 @@ export default function CategoryPage() {
     setPriceRange([minPrice, maxPrice])
     setOpenCategory(-1)
     setSidebarOpen(false)
-  }, [category])
+  }, [category, location.search, location.state, matchedCategory?.subcategories, categoryTitle])
 
   // Filters
   const [openFilters, setOpenFilters] = useState({ brand: false, color: false, discount: false, rating: false })
@@ -100,6 +116,7 @@ export default function CategoryPage() {
   const toggleBrand = (b) => setSelectedBrands(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b])
   const toggleColor = (c) => setSelectedColors(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
   const clearAll = () => {
+    setActiveSubCat(categoryTitle)
     setSelectedSizes([]); setSelectedBrands([]); setSelectedColors([])
     setSelectedDiscount(''); setSelectedRating(''); setPriceRange([minPrice, maxPrice])
     setCurrentPage(1)
@@ -110,13 +127,25 @@ export default function CategoryPage() {
     let data = [...allProducts]
     
     // Filter by active sidebar subcategory
-    // Only filter if activeSubCat is not just the root category title, and actually exists
     if (activeSubCat && activeSubCat !== categoryTitle) {
-      // In a real app we'd filter by subcategory id, for dummy data we just do a loose text match or limit by some logic.
-      // Since dummy data doesn't always have subcategories attached to each product, we can simulate filtering
-      // by just returning a stable slice of products based on the string length to make the grid update realistically.
-      const charCodeSum = activeSubCat.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-      data = data.filter((p, i) => i % (charCodeSum % 3 + 1) === 0)
+      const matchedSub = (matchedCategory?.subcategories || []).find(
+        (s) => s.name.toLowerCase() === activeSubCat.toLowerCase() || s.slug === activeSubCat.toLowerCase()
+      )
+      const subSlug = (matchedSub?.slug || activeSubCat).toLowerCase()
+      const subName = (matchedSub?.name || activeSubCat).toLowerCase()
+
+      const directMatches = data.filter(
+        (p) =>
+          (p.subcategory && p.subcategory.toLowerCase() === subName) ||
+          (p.subcategorySlug && p.subcategorySlug.toLowerCase() === subSlug)
+      )
+
+      if (directMatches.length > 0) {
+        data = directMatches
+      } else {
+        const charCodeSum = activeSubCat.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+        data = data.filter((p, i) => i % (charCodeSum % 3 + 1) === 0)
+      }
     }
 
     if (selectedSizes.length) data = data.filter(p => selectedSizes.some(s => p.sizesStr.includes(s)))
@@ -171,47 +200,72 @@ export default function CategoryPage() {
   const Sidebar = () => (
     <aside className="w-full flex flex-col gap-5">
 
-      {/* Categories */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-100">
-          <h3 className="text-[15px] font-black text-gray-900">Categories</h3>
-        </div>
-        {SIDEBAR_CATEGORIES.map((group, gi) => (
-          <div key={group.name}>
-            <button
-              onClick={() => setOpenCategory(openCategory === gi ? -1 : gi)}
-              className="w-full flex justify-between items-center px-5 py-3 text-[13.5px] font-bold text-gray-800 hover:bg-gray-50 transition-colors"
-            >
-              {group.name}
-              <ChevronDown size={15} className={`text-gray-400 transition-transform duration-200 ${openCategory === gi ? 'rotate-180' : ''}`} />
-            </button>
-            {openCategory === gi && (
-              <div className="pb-2">
-                {group.sub.map(sub => (
-                  <button
-                    key={sub.name}
-                    onClick={() => { setActiveSubCat(sub.name); setCurrentPage(1) }}
-                    className={`w-full flex justify-between items-center px-5 py-2.5 text-[13px] transition-colors ${
-                      activeSubCat === sub.name
-                        ? 'bg-purple-100 text-purple-700 font-bold'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span>{sub.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
       {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="px-5 py-3.5 border-b border-gray-100 flex justify-between items-center">
           <h3 className="text-[15px] font-black text-gray-900">Filter By</h3>
           <button onClick={clearAll} className="text-purple-600 text-[12px] font-bold hover:underline">Clear All</button>
         </div>
+
+        {/* Subcategories Filter (Only in sidebar filters) */}
+        {matchedCategory?.subcategories && matchedCategory.subcategories.length > 0 && (
+          <div className="px-5 py-4 border-b border-gray-100">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="font-bold text-gray-900 text-[13.5px]">Subcategory</h4>
+              {activeSubCat !== categoryTitle && (
+                <button
+                  type="button"
+                  onClick={() => { setActiveSubCat(categoryTitle); setCurrentPage(1) }}
+                  className="text-purple-600 text-[11px] font-bold hover:underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label
+                onClick={() => { setActiveSubCat(categoryTitle); setCurrentPage(1) }}
+                className="flex items-center gap-3 cursor-pointer group"
+              >
+                <div
+                  className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors ${
+                    activeSubCat === categoryTitle
+                      ? 'bg-purple-600 border-purple-600'
+                      : 'border-gray-300 group-hover:border-purple-400'
+                  }`}
+                >
+                  {activeSubCat === categoryTitle && <span className="text-white text-[8px] font-black">✓</span>}
+                </div>
+                <span className={`text-[13px] ${activeSubCat === categoryTitle ? 'font-bold text-purple-700' : 'text-gray-700'}`}>
+                  All {categoryTitle}
+                </span>
+              </label>
+              {matchedCategory.subcategories.map((sub) => (
+                <label
+                  key={sub.slug || sub.name}
+                  onClick={() => {
+                    setActiveSubCat(activeSubCat === sub.name ? categoryTitle : sub.name)
+                    setCurrentPage(1)
+                  }}
+                  className="flex items-center gap-3 cursor-pointer group"
+                >
+                  <div
+                    className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors ${
+                      activeSubCat === sub.name
+                        ? 'bg-purple-600 border-purple-600'
+                        : 'border-gray-300 group-hover:border-purple-400'
+                    }`}
+                  >
+                    {activeSubCat === sub.name && <span className="text-white text-[8px] font-black">✓</span>}
+                  </div>
+                  <span className={`text-[13px] ${activeSubCat === sub.name ? 'font-bold text-purple-700' : 'text-gray-700'}`}>
+                    {sub.name}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Price Range */}
         <div className="px-5 py-4 border-b border-gray-100">
@@ -393,7 +447,16 @@ export default function CategoryPage() {
             <span className="text-gray-900 font-semibold">{categoryTitle}</span>
           </nav>
 
-          <h1 className="text-[22px] font-semibold text-gray-800 mb-4">{activeSubCat}</h1>
+          <h1 className="text-[22px] font-semibold text-gray-800 mb-4">
+            {activeSubCat !== categoryTitle ? (
+              <>
+                {categoryTitle} <span className="text-gray-300 font-normal">/</span>{' '}
+                <span className="text-purple-600">{activeSubCat}</span>
+              </>
+            ) : (
+              categoryTitle
+            )}
+          </h1>
 
           {/* Subheader & Sort */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">

@@ -254,7 +254,11 @@ export default function HomePage() {
                 key={card.id}
                 onClick={() => {
                   window.scrollTo({ top: 0, behavior: 'instant' })
-                  navigate(`/category/${card.slug}`)
+                  const subParam = card.subcategorySlug || card.subcategory
+                  const targetUrl = subParam
+                    ? `/category/${card.slug}?sub=${encodeURIComponent(subParam)}`
+                    : `/category/${card.slug}`
+                  navigate(targetUrl, { state: { subcategory: card.subcategory, subcategorySlug: card.subcategorySlug } })
                 }}
                 className="relative rounded-3xl overflow-hidden cursor-pointer group h-[220px] md:h-[260px] shadow-md hover:shadow-xl transition-shadow duration-300"
               >

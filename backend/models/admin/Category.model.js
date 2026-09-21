@@ -11,6 +11,14 @@ const categorySchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     displayOrder: { type: Number, default: 0 },
 
+    // Subcategories (embedded for simplicity — no extra collection needed)
+    subcategories: [
+      {
+        name: { type: String, required: true, trim: true },
+        slug: { type: String, required: true },
+      },
+    ],
+
     // Filter config shown on the category listing sidebar (frontend CATEGORY_CONFIG)
     title: { type: String, default: "" },
     brands: [{ type: String }],

@@ -97,7 +97,7 @@ export default function HomepageTab() {
 
       <Section icon={Layers} title="Category Cards" subtitle="The large feature cards further down the homepage" onAdd={() => { setEditingCard(null); setCardModal(true) }}>
         {categoryCards.map((c, idx) => (
-          <Row key={c.id} image={c.image} title={c.name} subtitle={c.subtitle}
+          <Row key={c.id} image={c.image} title={c.name} subtitle={`${c.subtitle || ''}${c.subcategory ? ` • Subcategory: ${c.subcategory}` : ''}`}
             idx={idx} total={categoryCards.length}
             onUp={() => reorderCategoryCard(c.id, 'up')} onDown={() => reorderCategoryCard(c.id, 'down')}
             onEdit={() => { setEditingCard(c); setCardModal(true) }}

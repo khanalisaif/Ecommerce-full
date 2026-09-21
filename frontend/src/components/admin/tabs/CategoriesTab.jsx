@@ -94,8 +94,27 @@ export default function CategoriesTab() {
                 )}
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 text-sm truncate">{cat.name}</p>
-                  <p className="text-gray-500 text-sm font-mono">/category/{cat.slug}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-gray-800 text-sm truncate">{cat.name}</p>
+                    {cat.subcategories && cat.subcategories.length > 0 && (
+                      <span className="text-[11px] font-medium bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
+                        {cat.subcategories.length} subcategor{cat.subcategories.length === 1 ? 'y' : 'ies'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-500 text-xs font-mono">/category/{cat.slug}</p>
+                  {cat.subcategories && cat.subcategories.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {cat.subcategories.map((sub) => (
+                        <span
+                          key={sub.slug || sub.name}
+                          className="inline-flex items-center text-[11px] bg-gray-100 text-gray-600 rounded-md px-2 py-0.5 font-medium"
+                        >
+                          {sub.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 shrink-0">

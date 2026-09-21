@@ -82,9 +82,18 @@ export default function Navbar() {
       const name = (p.name || '').toLowerCase()
       const brand = (p.brand_name || p.brand || '').toLowerCase()
       const category = (p.category || '').toLowerCase()
+      const subcategory = (p.subcategory || '').toLowerCase()
       const tags = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : ''
+      const keywords = Array.isArray(p.keywords) ? p.keywords.join(' ').toLowerCase() : ''
 
-      if (name.includes(q) || brand.includes(q) || category.includes(q) || tags.includes(q)) {
+      if (
+        name.includes(q) ||
+        brand.includes(q) ||
+        category.includes(q) ||
+        subcategory.includes(q) ||
+        tags.includes(q) ||
+        keywords.includes(q)
+      ) {
         list.push(p)
       }
     }

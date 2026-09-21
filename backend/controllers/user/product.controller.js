@@ -14,6 +14,10 @@ const toStorefront = (p) => {
     brand: obj.brand,
     brand_name: obj.brandName || obj.brand,
     category: obj.categorySlug,
+    subcategory: obj.subcategory || "",
+    subcategorySlug: obj.subcategorySlug || "",
+    keywords: obj.keywords || obj.tags || [],
+    tags: obj.tags || obj.keywords || [],
     price: obj.price,
     originalPrice: obj.originalPrice,
     discount: obj.discount || "",
@@ -37,10 +41,13 @@ const toStorefront = (p) => {
 
 // @route GET /api/user/products
 export const getProducts = asyncHandler(async (req, res) => {
-  const { category, brand, color, minPrice, maxPrice, minRating, sort = "newest", page = 1, limit = 200 } = req.query;
+  const { category, subcategory, brand, color, minPrice, maxPrice, minRating, sort = "newest", page = 1, limit = 200 } = req.query;
 
   const filter = { isActive: true };
   if (category) filter.categorySlug = category;
+  if (subcategory) {
+    filter.$or = [{ subcategorySlug: subcategory }, { subcategory: new RegExp(`^${subcategory}$`, "i") }];
+  }
   if (brand) filter.brand = new RegExp(`^${brand}$`, "i");
   if (color) filter.colors = new RegExp(`^${color}$`, "i");
   if (minRating) filter.rating = { $gte: Number(minRating) };
@@ -101,6 +108,9 @@ export const searchProducts = asyncHandler(async (req, res) => {
       { brand: regex },
       { brandName: regex },
       { categorySlug: regex },
+      { subcategory: regex },
+      { subcategorySlug: regex },
+      { keywords: regex },
       { tags: regex },
     ],
   }).limit(30);

@@ -10,6 +10,8 @@ const productSchema = new mongoose.Schema(
 
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
     categorySlug: { type: String, required: true }, // denormalized for fast storefront filtering
+    subcategory: { type: String, default: "" }, // subcategory display name
+    subcategorySlug: { type: String, default: "" }, // subcategory slug for filtering
 
     price: { type: Number, required: true },
     originalPrice: { type: Number, required: true },
@@ -27,8 +29,10 @@ const productSchema = new mongoose.Schema(
 
     isAssured: { type: Boolean, default: true },
     isBestSeller: { type: Boolean, default: false },
-    isNewArrival: { type: Boolean, default: false },
     badge: { type: String, default: "" },
+
+    keywords: [{ type: String, trim: true }],
+    tags: [{ type: String, trim: true }],
 
     isActive: { type: Boolean, default: true },
   },
@@ -51,7 +55,7 @@ productSchema.pre("save", function (next) {
 });
 
 productSchema.set("toJSON", { virtuals: true });
-productSchema.index({ name: "text", brand: "text", brandName: "text" });
+productSchema.index({ name: "text", brand: "text", brandName: "text", keywords: "text", tags: "text" });
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;

@@ -7,7 +7,17 @@ const MAX_MB = 2
 
 export default function CategoryCardFormModal({ card, onClose, onSave }) {
   const { categories } = useShop()
-  const [form, setForm] = useState({ name: '', subtitle: '', image: '', slug: '', styles: '', sizes: '', cta: 'Shop Now' })
+  const [form, setForm] = useState({
+    name: '',
+    subtitle: '',
+    image: '',
+    slug: '',
+    subcategory: '',
+    subcategorySlug: '',
+    styles: '',
+    sizes: '',
+    cta: 'Shop Now',
+  })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
@@ -18,14 +28,43 @@ export default function CategoryCardFormModal({ card, onClose, onSave }) {
       subtitle: card?.subtitle || '',
       image: card?.image || '',
       slug: card?.slug || categories[0]?.slug || '',
+      subcategory: card?.subcategory || '',
+      subcategorySlug: card?.subcategorySlug || '',
       styles: card?.styles || '',
       sizes: card?.sizes || '',
       cta: card?.cta || 'Shop Now',
     })
     setError('')
-  }, [card])
+  }, [card, categories])
 
   const field = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
+
+  const selectedCategory = categories.find((c) => c.slug === form.slug || c.name === form.slug)
+  const availableSubcategories = selectedCategory?.subcategories || []
+
+  const handleCategoryChange = (e) => {
+    const nextSlug = e.target.value
+    setForm((f) => ({
+      ...f,
+      slug: nextSlug,
+      subcategory: '',
+      subcategorySlug: '',
+    }))
+  }
+
+  const handleSubcategoryChange = (e) => {
+    const val = e.target.value
+    if (!val) {
+      setForm((f) => ({ ...f, subcategory: '', subcategorySlug: '' }))
+      return
+    }
+    const matched = availableSubcategories.find((s) => (s.slug || s.name) === val || s.name === val)
+    setForm((f) => ({
+      ...f,
+      subcategory: matched ? matched.name : val,
+      subcategorySlug: matched ? (matched.slug || matched.name) : val,
+    }))
+  }
 
   const handleFile = async (file) => {
     if (!file) return
@@ -79,9 +118,53 @@ export default function CategoryCardFormModal({ card, onClose, onSave }) {
           </div>
           <div>
             <label className="block text-gray-800 font-semibold text-sm mb-1.5">Links to Category</label>
-            <select value={form.slug} onChange={field('slug')} className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white">
-              {categories.map((c) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+            <select
+              value={form.slug}
+              onChange={handleCategoryChange}
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white"
+            >
+              {categories.map((c) => (
+                <option key={c.id || c.slug} value={c.slug}>{c.name}</option>
+              ))}
             </select>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-gray-800 font-semibold text-sm">
+                Links to Subcategory <span className="text-gray-400 font-normal text-xs">(Optional)</span>
+              </label>
+              {form.subcategory && (
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, subcategory: '', subcategorySlug: '' }))}
+                  className="text-xs text-purple-600 hover:underline font-medium"
+                >
+                  Clear subcategory
+                </button>
+              )}
+            </div>
+            <select
+              value={form.subcategorySlug || form.subcategory || ''}
+              onChange={handleSubcategoryChange}
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white"
+            >
+              <option value="">All / Entire Category (No specific subcategory)</option>
+              {availableSubcategories.map((sub) => (
+                <option key={sub.slug || sub.name} value={sub.slug || sub.name}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
+            {availableSubcategories.length === 0 ? (
+              <p className="text-[11px] text-gray-400 mt-1">
+                No subcategories created for this category yet. Clicking the card will open the main category page.
+              </p>
+            ) : form.subcategory ? (
+              <p className="text-[11px] text-purple-600 font-medium mt-1">
+                Card click will open: <strong>{selectedCategory?.name || form.slug} → {form.subcategory}</strong>
+              </p>
+            ) : null}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

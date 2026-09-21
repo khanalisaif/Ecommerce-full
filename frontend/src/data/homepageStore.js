@@ -28,6 +28,8 @@ export function normalizeCategoryCard(raw) {
     subtitle: raw.subtitle || '',
     image: raw.image || '',
     slug: raw.slug || '',
+    subcategory: raw.subcategory || '',
+    subcategorySlug: raw.subcategorySlug || '',
     styles: raw.styles || '',
     sizes: raw.sizes || '',
     cta: raw.cta || 'Shop Now',

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, UploadCloud, Trash2, Loader2, Plus } from 'lucide-react'
+import { X, UploadCloud, Trash2, Loader2, Plus, Search, Tag } from 'lucide-react'
 import { useShop } from '../../context/ShopContext'
 import { normalizeColorList, getSwatchStyle } from '../../data/colorUtils'
 import { compressImage } from '../../utils/imageCompression'
@@ -10,10 +10,25 @@ import VariantDetailsModal from './VariantDetailsModal'
 const MAX_IMAGE_MB = 2
 const MAX_IMAGES = 5
 
+const PRESET_KEYWORDS = [
+  'New Arrival',
+  'Best Seller',
+  'Trending',
+  'Featured',
+  'Premium Quality',
+  'Top Rated',
+  'Hot Deal',
+  'Special Offer',
+  'Popular',
+]
+
 const emptyForm = {
   name: '',
   brand: '',
   category: '',
+  subcategory: '',
+  subcategorySlug: '',
+  keywords: [],
   price: '',
   originalPrice: '',
   stock: '50',
@@ -25,13 +40,17 @@ const emptyForm = {
 }
 
 export default function ProductFormModal({ product, onClose, onSave }) {
-  const { categories } = useShop()
+  const { categories, addSubcategory } = useShop()
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [colorPickerOpen, setColorPickerOpen] = useState(false)
   const [promptColor, setPromptColor] = useState(null)
   const [detailsColor, setDetailsColor] = useState(null)
+  const [isAddingSubcategory, setIsAddingSubcategory] = useState(false)
+  const [newSubName, setNewSubName] = useState('')
+  const [submittingSub, setSubmittingSub] = useState(false)
+  const [newKeyword, setNewKeyword] = useState('')
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -40,6 +59,9 @@ export default function ProductFormModal({ product, onClose, onSave }) {
         name: product.name || '',
         brand: product.brand_name || product.brand || '',
         category: product.category || categories[0]?.slug || '',
+        subcategory: product.subcategory || '',
+        subcategorySlug: product.subcategorySlug || '',
+        keywords: Array.isArray(product.keywords) ? product.keywords : Array.isArray(product.tags) ? product.tags : [],
         price: String(product.price ?? ''),
         originalPrice: String(product.originalPrice ?? ''),
         stock: String(product.stock ?? '50'),
@@ -53,7 +75,54 @@ export default function ProductFormModal({ product, onClose, onSave }) {
       setForm({ ...emptyForm, category: categories[0]?.slug || '' })
     }
     setError('')
+    setIsAddingSubcategory(false)
+    setNewSubName('')
+    setNewKeyword('')
   }, [product])
+
+  const selectedCategoryDoc = categories.find((c) => c.slug === form.category || c.id === form.category)
+  const availableSubcategories = selectedCategoryDoc?.subcategories || []
+
+  const handleCategoryChange = (e) => {
+    const newCatSlug = e.target.value
+    setForm((f) => ({ ...f, category: newCatSlug, subcategory: '', subcategorySlug: '' }))
+    setIsAddingSubcategory(false)
+  }
+
+  const handleQuickAddSubcategory = async () => {
+    if (!newSubName.trim() || !selectedCategoryDoc) return
+    setSubmittingSub(true)
+    try {
+      const updatedCat = await addSubcategory(selectedCategoryDoc.id, { name: newSubName.trim() })
+      const added = (updatedCat?.subcategories || []).find(
+        (s) => s.name.toLowerCase() === newSubName.trim().toLowerCase()
+      )
+      if (added) {
+        setForm((f) => ({ ...f, subcategory: added.name, subcategorySlug: added.slug }))
+      }
+      setNewSubName('')
+      setIsAddingSubcategory(false)
+    } catch (err) {
+      setError(err.message || 'Failed to add subcategory')
+    } finally {
+      setSubmittingSub(false)
+    }
+  }
+
+  const handleAddKeyword = (kwToAdd) => {
+    const val = (kwToAdd !== undefined ? kwToAdd : newKeyword).trim()
+    if (!val) return
+    if (form.keywords.some((k) => k.toLowerCase() === val.toLowerCase())) {
+      setNewKeyword('')
+      return
+    }
+    setForm((f) => ({ ...f, keywords: [...f.keywords, val] }))
+    setNewKeyword('')
+  }
+
+  const handleRemoveKeyword = (idx) => {
+    setForm((f) => ({ ...f, keywords: f.keywords.filter((_, i) => i !== idx) }))
+  }
 
   const field = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
 
@@ -128,6 +197,10 @@ export default function ProductFormModal({ product, onClose, onSave }) {
       brand: form.brand.trim() || 'Generic',
       brand_name: form.brand.trim() || 'Generic',
       category: form.category,
+      subcategory: form.subcategory,
+      subcategorySlug: form.subcategorySlug,
+      keywords: form.keywords,
+      tags: form.keywords,
       price: Number(form.price),
       originalPrice: form.originalPrice ? Number(form.originalPrice) : Number(form.price),
       stock: Number(form.stock),
@@ -223,13 +296,184 @@ export default function ProductFormModal({ product, onClose, onSave }) {
               <label className="block text-gray-800 font-semibold text-sm mb-1.5">Category</label>
               <select
                 value={form.category}
-                onChange={field('category')}
+                onChange={handleCategoryChange}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.slug}>{c.name}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-gray-800 font-semibold text-sm">
+                Subcategory <span className="text-gray-400 font-normal text-xs">(Optional)</span>
+              </label>
+              {!isAddingSubcategory && selectedCategoryDoc && (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingSubcategory(true)}
+                  className="text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 transition"
+                >
+                  <Plus size={13} /> Add New Subcategory
+                </button>
+              )}
+            </div>
+
+            {isAddingSubcategory ? (
+              <div className="flex items-center gap-2 p-2 bg-purple-50/70 border border-purple-200 rounded-lg">
+                <input
+                  value={newSubName}
+                  onChange={(e) => setNewSubName(e.target.value)}
+                  placeholder={`New subcategory for ${selectedCategoryDoc?.name || 'Category'}...`}
+                  autoFocus
+                  className="flex-1 px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-md focus:outline-none focus:border-purple-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleQuickAddSubcategory()
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={submittingSub || !newSubName.trim()}
+                  onClick={handleQuickAddSubcategory}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-md text-xs font-bold transition flex items-center gap-1 shrink-0"
+                >
+                  {submittingSub ? <Loader2 size={13} className="animate-spin" /> : 'Add'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsAddingSubcategory(false); setNewSubName('') }}
+                  className="px-2.5 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-xs font-semibold transition shrink-0"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <select
+                value={form.subcategorySlug}
+                onChange={(e) => {
+                  const slug = e.target.value
+                  const matched = availableSubcategories.find((s) => s.slug === slug)
+                  setForm((f) => ({
+                    ...f,
+                    subcategorySlug: slug,
+                    subcategory: matched ? matched.name : '',
+                  }))
+                }}
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500 bg-white"
+              >
+                <option value="">-- No Subcategory / None --</option>
+                {availableSubcategories.map((s) => (
+                  <option key={s.slug || s.id || s._id} value={s.slug}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            {availableSubcategories.length === 0 && !isAddingSubcategory && (
+              <p className="text-gray-400 text-[11px] mt-1">
+                No subcategories created for this category yet. Click "+ Add New Subcategory" to add one right here.
+              </p>
+            )}
+          </div>
+
+          {/* ── Product Keywords / Search Tags (Matches screenshot design) ── */}
+          <div className="bg-gradient-to-br from-purple-50/50 via-white to-pink-50/30 border border-purple-100 rounded-2xl p-4 shadow-xs">
+            <div className="flex items-center gap-2.5 mb-2">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-xs"
+                style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}
+              >
+                <Search size={15} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-gray-900 leading-tight">Product Keywords / Search Tags</h4>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  Suggested terms shown when someone taps the search bar or searches this product
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Add Suggestions */}
+            <div className="mb-3 pt-1">
+              <span className="text-[11px] font-bold text-gray-400 block mb-1.5 uppercase tracking-wider">
+                Quick Add Suggestions:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {PRESET_KEYWORDS.map((preset) => {
+                  const isAdded = form.keywords.some((k) => k.toLowerCase() === preset.toLowerCase())
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      disabled={isAdded}
+                      onClick={() => handleAddKeyword(preset)}
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ${
+                        isAdded
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                          : 'bg-white text-purple-700 border-purple-200 hover:bg-purple-100/70 hover:border-purple-300 shadow-2xs active:scale-95'
+                      }`}
+                    >
+                      <Plus size={11} /> {preset}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Active Keywords list (pill tags matching screenshot) */}
+            {form.keywords.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mb-3 max-h-36 overflow-y-auto p-1 bg-white/80 rounded-xl border border-purple-50">
+                {form.keywords.map((kw, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-semibold border border-purple-200/80 shadow-2xs group"
+                  >
+                    <span>{kw}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveKeyword(idx)}
+                      className="text-purple-400 hover:text-red-500 rounded-full transition-colors ml-0.5"
+                      title="Remove keyword"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-xs italic mb-3">No keywords added yet. Choose from suggestions above or type your own below.</p>
+            )}
+
+            {/* Add Search Term Input Row (Input + Gradient '+ Add' button) */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newKeyword}
+                onChange={(e) => setNewKeyword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddKeyword()
+                  }
+                }}
+                placeholder="Add a search term..."
+                className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all placeholder:text-gray-400"
+              />
+              <button
+                type="button"
+                onClick={() => handleAddKeyword()}
+                disabled={!newKeyword.trim()}
+                className="px-5 py-2.5 text-white font-bold text-sm rounded-xl transition-all hover:shadow-md disabled:opacity-50 disabled:hover:shadow-none flex items-center gap-1.5 shrink-0"
+                style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}
+              >
+                <Plus size={16} strokeWidth={2.5} /> Add
+              </button>
             </div>
           </div>
 

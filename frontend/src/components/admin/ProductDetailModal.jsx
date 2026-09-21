@@ -89,6 +89,12 @@ export default function ProductDetailModal({ product, onClose }) {
               <span className="text-gray-500 font-medium w-20">Category:</span>
               <span className="text-gray-900 font-semibold">{product.category?.replace(/-/g, ' ') || 'N/A'}</span>
             </div>
+            {product.subcategory && (
+              <div className="flex items-center gap-2.5 text-sm">
+                <span className="text-gray-500 font-medium w-20 pl-6">Subcategory:</span>
+                <span className="text-gray-900 font-semibold">{product.subcategory}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2.5 text-sm">
               <Package size={15} className="text-gray-400 shrink-0" />
               <span className="text-gray-500 font-medium w-20">SKU:</span>
@@ -98,6 +104,19 @@ export default function ProductDetailModal({ product, onClose }) {
                <span className="text-gray-500 font-medium w-20 pl-6">Sizes:</span>
                <span className="text-gray-900 font-semibold">{sizes}</span>
             </div>
+            {((product.keywords && product.keywords.length > 0) || (product.tags && product.tags.length > 0)) && (
+              <div className="flex items-start gap-2.5 text-sm pt-1">
+                <Tag size={15} className="text-gray-400 shrink-0 mt-0.5" />
+                <span className="text-gray-500 font-medium w-20">Keywords:</span>
+                <div className="flex flex-wrap gap-1.5 flex-1">
+                  {(product.keywords?.length ? product.keywords : product.tags).map((kw, i) => (
+                    <span key={i} className="text-[11px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full font-semibold">
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Colors */}

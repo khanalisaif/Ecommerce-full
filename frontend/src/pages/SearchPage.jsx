@@ -46,12 +46,18 @@ export default function SearchPage() {
   // 1. Filter by search query first
   const baseProducts = useMemo(() => {
     const q = initialQuery.trim().toLowerCase()
-    if (!q) return allProducts
-    return allProducts.filter(p => 
-      p.name.toLowerCase().includes(q) || 
-      (p.brand_name && p.brand_name.toLowerCase().includes(q)) ||
-      (p.category && p.category.toLowerCase().includes(q))
-    )
+    return allProducts.filter((p) => {
+      const nameMatch = p.name && p.name.toLowerCase().includes(q)
+      const brandMatch = p.brand_name && p.brand_name.toLowerCase().includes(q)
+      const categoryMatch = p.category && p.category.toLowerCase().includes(q)
+      const subcategoryMatch = p.subcategory && p.subcategory.toLowerCase().includes(q)
+      const keywordsMatch =
+        Array.isArray(p.keywords) && p.keywords.some((k) => String(k).toLowerCase().includes(q))
+      const tagsMatch =
+        Array.isArray(p.tags) && p.tags.some((t) => String(t).toLowerCase().includes(q))
+
+      return nameMatch || brandMatch || categoryMatch || subcategoryMatch || keywordsMatch || tagsMatch
+    })
   }, [allProducts, initialQuery])
 
   // Extract dynamic filters from baseProducts

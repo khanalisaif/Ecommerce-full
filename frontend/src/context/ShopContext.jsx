@@ -68,6 +68,8 @@ function mapBackendProduct(doc) {
     brand: doc.brand,
     brand_name: doc.brandName || doc.brand_name || doc.brand,
     category: doc.categorySlug || doc.category,
+    subcategory: doc.subcategory || '',
+    subcategorySlug: doc.subcategorySlug || '',
     price: doc.price,
     originalPrice: doc.originalPrice ?? doc.price,
     discount: doc.discount || '',
@@ -86,6 +88,8 @@ function mapBackendProduct(doc) {
     isBestSeller: !!doc.isBestSeller,
     isNewArrival: !!doc.isNewArrival,
     sku: doc.sku || '',
+    keywords: Array.isArray(doc.keywords) ? doc.keywords : Array.isArray(doc.tags) ? doc.tags : [],
+    tags: Array.isArray(doc.tags) ? doc.tags : Array.isArray(doc.keywords) ? doc.keywords : [],
   }
 }
 
@@ -445,6 +449,36 @@ export function ShopProvider({ children }) {
     return adminCategoryService.deleteCategory(id).catch((err) => { showToast(err.message); throw err })
   }
 
+  const addSubcategory = (categoryId, data) => {
+    return adminCategoryService
+      .addSubcategory(categoryId, data)
+      .then((res) => {
+        setCategories((prev) => prev.map((c) => (c.id === categoryId ? res.data.category : c)))
+        return res.data.category
+      })
+      .catch((err) => { showToast(err.message); throw err })
+  }
+
+  const updateSubcategory = (categoryId, subId, data) => {
+    return adminCategoryService
+      .updateSubcategory(categoryId, subId, data)
+      .then((res) => {
+        setCategories((prev) => prev.map((c) => (c.id === categoryId ? res.data.category : c)))
+        return res.data.category
+      })
+      .catch((err) => { showToast(err.message); throw err })
+  }
+
+  const deleteSubcategory = (categoryId, subId) => {
+    return adminCategoryService
+      .deleteSubcategory(categoryId, subId)
+      .then((res) => {
+        setCategories((prev) => prev.map((c) => (c.id === categoryId ? res.data.category : c)))
+        return res.data.category
+      })
+      .catch((err) => { showToast(err.message); throw err })
+  }
+
   const reorderCategory = (id, direction) => reorderList(setCategories, id, direction)
 
   const updateCategoryConfig = (slug, updates) => {
@@ -687,6 +721,7 @@ export function ShopProvider({ children }) {
     products, addProduct, updateProduct, deleteProduct, getProductById, refreshProducts,
 
     categories, addCategory, updateCategory, deleteCategory, reorderCategory, refreshCategories,
+    addSubcategory, updateSubcategory, deleteSubcategory,
 
     categoryConfigs, updateCategoryConfig,
 

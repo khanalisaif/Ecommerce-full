@@ -4,6 +4,7 @@ import ApiResponse from "../../utils/ApiResponse.js";
 import Product from "../../models/admin/Product.model.js";
 import Category from "../../models/admin/Category.model.js";
 import { resolveImages } from "../../config/cloudinary.js";
+import slugify from "slugify";
 
 const resolveCategory = async (categoryInput) => {
   // Accepts either a category slug (what the admin form sends) or a raw ObjectId.
@@ -22,9 +23,17 @@ const mongooseIdLike = (val) => typeof val === "string" && /^[0-9a-fA-F]{24}$/.t
 
 // @route GET /api/admin/products
 export const getAllProducts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 100, search = "" } = req.query;
   const filter = search
-    ? { $or: [{ name: new RegExp(search, "i") }, { brand: new RegExp(search, "i") }, { sku: new RegExp(search, "i") }] }
+    ? {
+        $or: [
+          { name: new RegExp(search, "i") },
+          { brand: new RegExp(search, "i") },
+          { sku: new RegExp(search, "i") },
+          { subcategory: new RegExp(search, "i") },
+          { keywords: new RegExp(search, "i") },
+          { tags: new RegExp(search, "i") },
+        ],
+      }
     : {};
 
   const skip = (Number(page) - 1) * Number(limit);
@@ -49,6 +58,8 @@ export const getProductById = asyncHandler(async (req, res) => {
 export const createProduct = asyncHandler(async (req, res) => {
   const {
     name, brand, brand_name, brandName, description, category,
+    subcategory, subcategorySlug,
+    keywords, tags,
     price, originalPrice, stock, colors, sizes, images,
     isAssured, isBestSeller, isNewArrival, badge, sku, discount, rating, reviews,
   } = req.body;
@@ -60,6 +71,11 @@ export const createProduct = asyncHandler(async (req, res) => {
   const categoryDoc = await resolveCategory(category);
   const resolvedImages = await resolveImages(images, "hashtelicom/products");
 
+  const finalSubcategorySlug = subcategorySlug || (subcategory ? slugify(subcategory, { strict: true, lower: true }) : "");
+
+  const rawKeywords = Array.isArray(keywords) ? keywords : Array.isArray(tags) ? tags : [];
+  const cleanKeywords = rawKeywords.map((k) => String(k).trim()).filter(Boolean);
+
   const product = await Product.create({
     name,
     brand: String(brand).toUpperCase(),
@@ -68,6 +84,10 @@ export const createProduct = asyncHandler(async (req, res) => {
     sku,
     category: categoryDoc._id,
     categorySlug: categoryDoc.slug,
+    subcategory: subcategory || "",
+    subcategorySlug: finalSubcategorySlug,
+    keywords: cleanKeywords,
+    tags: cleanKeywords,
     price: Number(price),
     originalPrice: originalPrice ? Number(originalPrice) : Number(price),
     discount: discount || "",
@@ -93,6 +113,8 @@ export const updateProduct = asyncHandler(async (req, res) => {
 
   const {
     name, brand, brand_name, brandName, description, category,
+    subcategory, subcategorySlug,
+    keywords, tags,
     price, originalPrice, stock, colors, sizes, images,
     isAssured, isBestSeller, isNewArrival, badge, sku, discount, isActive, rating, reviews,
   } = req.body;
@@ -123,6 +145,22 @@ export const updateProduct = asyncHandler(async (req, res) => {
     const categoryDoc = await resolveCategory(category);
     product.category = categoryDoc._id;
     product.categorySlug = categoryDoc.slug;
+  }
+
+  if (subcategory !== undefined) {
+    product.subcategory = subcategory;
+    product.subcategorySlug = subcategorySlug !== undefined
+      ? subcategorySlug
+      : (subcategory ? slugify(subcategory, { strict: true, lower: true }) : "");
+  } else if (subcategorySlug !== undefined) {
+    product.subcategorySlug = subcategorySlug;
+  }
+
+  if (keywords !== undefined || tags !== undefined) {
+    const rawKeywords = Array.isArray(keywords) ? keywords : Array.isArray(tags) ? tags : [];
+    const cleanKeywords = rawKeywords.map((k) => String(k).trim()).filter(Boolean);
+    product.keywords = cleanKeywords;
+    product.tags = cleanKeywords;
   }
 
   if (Array.isArray(images)) {

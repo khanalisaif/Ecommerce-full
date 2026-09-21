@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   X, Loader2, Home, User, PersonStanding, Heart, List, Flower2, Droplet,
   Camera, Music, Gift, Sparkles, Flame, Laptop, Tablet, Smartphone,
-  Headphones, Package, ShoppingBag, Watch, Shirt, UploadCloud, Trash2,
+  Headphones, Package, ShoppingBag, Watch, Shirt, UploadCloud, Trash2, Plus,
 } from 'lucide-react'
 import { CATEGORY_ICON_OPTIONS, slugify } from '../../data/categoryStore'
 
@@ -19,6 +19,8 @@ export default function CategoryFormModal({ category, onClose, onSave }) {
   const [icon, setIcon] = useState(CATEGORY_ICON_OPTIONS[0])
   const [image, setImage] = useState('')
   const [mode, setMode] = useState('icon') // 'icon' | 'image'
+  const [subcategories, setSubcategories] = useState([])
+  const [newSubName, setNewSubName] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
@@ -29,14 +31,34 @@ export default function CategoryFormModal({ category, onClose, onSave }) {
       setIcon(category.icon || CATEGORY_ICON_OPTIONS[0])
       setImage(category.image || '')
       setMode(category.image ? 'image' : 'icon')
+      setSubcategories(category.subcategories || [])
     } else {
       setName('')
       setIcon(CATEGORY_ICON_OPTIONS[0])
       setImage('')
       setMode('icon')
+      setSubcategories([])
     }
+    setNewSubName('')
     setError('')
   }, [category])
+
+  const handleAddSubcategory = () => {
+    const trimmed = newSubName.trim()
+    if (!trimmed) return
+    const subSlug = slugify(trimmed)
+    if (subcategories.some((s) => s.name.toLowerCase() === trimmed.toLowerCase() || s.slug === subSlug)) {
+      setError('Subcategory already added')
+      return
+    }
+    setSubcategories((prev) => [...prev, { name: trimmed, slug: subSlug }])
+    setNewSubName('')
+    setError('')
+  }
+
+  const handleRemoveSubcategory = (indexToRemove) => {
+    setSubcategories((prev) => prev.filter((_, idx) => idx !== indexToRemove))
+  }
 
   const handleFile = (file) => {
     if (!file) return
@@ -59,7 +81,14 @@ export default function CategoryFormModal({ category, onClose, onSave }) {
     }
     setSaving(true)
     setError('')
-    Promise.resolve(onSave({ name: name.trim(), icon, image: mode === 'image' ? image : '' }))
+    Promise.resolve(
+      onSave({
+        name: name.trim(),
+        icon,
+        image: mode === 'image' ? image : '',
+        subcategories,
+      })
+    )
       .then(() => setSaving(false))
       .catch((err) => {
         setSaving(false)
@@ -156,6 +185,56 @@ export default function CategoryFormModal({ category, onClose, onSave }) {
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
               </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-gray-800 font-semibold text-sm mb-1.5">
+              Subcategories <span className="text-gray-400 font-normal text-xs">({subcategories.length})</span>
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input
+                value={newSubName}
+                onChange={(e) => setNewSubName(e.target.value)}
+                placeholder="e.g. Wireless, Wired, Gaming"
+                className="flex-1 px-3.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddSubcategory()
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddSubcategory}
+                disabled={!newSubName.trim()}
+                className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-1 shrink-0"
+              >
+                <Plus size={14} /> Add
+              </button>
+            </div>
+
+            {subcategories.length > 0 ? (
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 bg-gray-50 border border-gray-100 rounded-lg">
+                {subcategories.map((sub, idx) => (
+                  <span
+                    key={sub.slug || idx}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white text-purple-700 border border-purple-200 rounded-full text-xs font-semibold shadow-xs"
+                  >
+                    {sub.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSubcategory(idx)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-[11px]">No subcategories added yet.</p>
             )}
           </div>
 
