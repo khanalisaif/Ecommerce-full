@@ -162,6 +162,8 @@ export default function VariantStockModal({ product, onSave, onClose }) {
     cur.stock = curSizes.reduce((sum, s) => sum + (s.qty || 0), 0)
     next[selectedColorIdx] = cur
     setColors(next)
+    // Keep product-level sizes in sync when editing the primary color
+    if (selectedColorIdx === 0) setSizes(curSizes)
   }
 
   // Active Color Sizes: update size name
@@ -173,6 +175,8 @@ export default function VariantStockModal({ product, onSave, onClose }) {
     cur.sizes = curSizes
     next[selectedColorIdx] = cur
     setColors(next)
+    // Keep product-level sizes in sync when editing the primary color
+    if (selectedColorIdx === 0) setSizes(curSizes)
   }
 
   // Active Color Sizes: add row
@@ -185,6 +189,8 @@ export default function VariantStockModal({ product, onSave, onClose }) {
     cur.stock = curSizes.reduce((sum, s) => sum + (s.qty || 0), 0)
     next[selectedColorIdx] = cur
     setColors(next)
+    // Keep product-level sizes in sync when editing the primary color
+    if (selectedColorIdx === 0) setSizes(curSizes)
   }
 
   // Active Color Sizes: quick add chip
@@ -205,6 +211,8 @@ export default function VariantStockModal({ product, onSave, onClose }) {
       : (cur.stock || 0)
     next[selectedColorIdx] = cur
     setColors(next)
+    // Keep product-level sizes in sync when editing the primary color
+    if (selectedColorIdx === 0) setSizes(curSizes)
   }
 
   // Copy parent sizes to active color
@@ -212,10 +220,13 @@ export default function VariantStockModal({ product, onSave, onClose }) {
     if (!parentSizes.length) return
     const next = [...colors]
     const cur = { ...next[selectedColorIdx] }
-    cur.sizes = parentSizes.map((s) => ({ size: s, qty: 0 }))
+    const newSizes = parentSizes.map((s) => ({ size: s, qty: 0 }))
+    cur.sizes = newSizes
     cur.stock = 0
     next[selectedColorIdx] = cur
     setColors(next)
+    // Keep product-level sizes in sync when editing the primary color
+    if (selectedColorIdx === 0) setSizes(newSizes)
   }
 
   // Product-level sizes handlers (when product has NO colors)
@@ -281,7 +292,12 @@ export default function VariantStockModal({ product, onSave, onClose }) {
         }
       })
 
-      // Aggregate sizes across all colors for global filtering & backward compatibility
+      // Use the PRIMARY color's exact sizes as the product-level sizes.
+      // This allows ProductFormModal to re-initialize form.sizes from colors[0].sizes
+      // on next open, creating a clean two-way sync between Inventory and Product Edit.
+      const primarySizes = cleanedColors[0]?.sizes || []
+
+      // Also build a full aggregated map for storefront filtering across all variants
       const aggMap = new Map()
       cleanedColors.forEach((c) => {
         c.sizes.forEach((s) => {
@@ -290,12 +306,13 @@ export default function VariantStockModal({ product, onSave, onClose }) {
           }
         })
       })
-      const aggregatedSizes = Array.from(aggMap.entries()).map(([size, qty]) => ({ size, qty }))
+      // aggregatedSizes is used for backward-compat storefront queries; we still send it
+      // but the canonical sizes field is set to primary color's sizes for ProductFormModal sync
       const finalTotalStock = cleanedColors.reduce((sum, c) => sum + (c.stock || 0), 0)
 
       onSave(product.id, {
         colors: cleanedColors,
-        sizes: aggregatedSizes,
+        sizes: primarySizes,
         stock: finalTotalStock,
       })
     } else {
