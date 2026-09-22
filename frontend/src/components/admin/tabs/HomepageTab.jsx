@@ -84,7 +84,7 @@ export default function HomepageTab() {
         {!banners.length && <div className="px-6 py-8 text-center text-gray-400 text-sm">No banners yet</div>}
       </Section>
 
-      <Section icon={LayoutGrid} title="Collections Grid" subtitle="The 5-column image grid below the hero banner" onAdd={() => { setEditingCollection(null); setCollectionModal(true) }}>
+      <Section icon={LayoutGrid} title="Category Cards" subtitle="The 5-column image grid below the hero banner" onAdd={() => { setEditingCollection(null); setCollectionModal(true) }}>
         {collections.map((c, idx) => (
           <Row key={c.id} image={c.image} title={c.name} subtitle={c.subtitle}
             idx={idx} total={collections.length}
@@ -95,7 +95,7 @@ export default function HomepageTab() {
         {!collections.length && <div className="px-6 py-8 text-center text-gray-400 text-sm">No collections yet</div>}
       </Section>
 
-      <Section icon={Layers} title="Category Cards" subtitle="The large feature cards further down the homepage" onAdd={() => { setEditingCard(null); setCardModal(true) }}>
+      <Section icon={Layers} title="Sub Category Cards" subtitle="The large feature cards further down the homepage" onAdd={() => { setEditingCard(null); setCardModal(true) }}>
         {categoryCards.map((c, idx) => (
           <Row key={c.id} image={c.image} title={c.name} subtitle={`${c.subtitle || ''}${c.subcategory ? ` • Subcategory: ${c.subcategory}` : ''}`}
             idx={idx} total={categoryCards.length}

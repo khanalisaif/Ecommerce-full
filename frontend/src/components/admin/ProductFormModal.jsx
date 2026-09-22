@@ -33,7 +33,7 @@ const emptyForm = {
   originalPrice: '',
   stock: '50',
   colors: [],
-  sizes: '',
+  sizes: [{ size: '', qty: '' }],
   description: '',
   isBestSeller: false,
   images: [],
@@ -55,6 +55,29 @@ export default function ProductFormModal({ product, onClose, onSave }) {
 
   useEffect(() => {
     if (product) {
+      let initialSizes = []
+      if (Array.isArray(product.sizesWithQty) && product.sizesWithQty.length > 0) {
+        initialSizes = product.sizesWithQty.map((s) => ({
+          size: s.size || '',
+          qty: String(s.qty ?? ''),
+        }))
+      } else if (Array.isArray(product.sizes) && product.sizes.length > 0) {
+        initialSizes = product.sizes.map((s) => {
+          if (typeof s === 'object' && s !== null) {
+            return { size: s.size || '', qty: String(s.qty ?? '') }
+          }
+          return { size: String(s), qty: '' }
+        })
+      } else if (typeof product.sizes === 'string' && product.sizes.trim()) {
+        initialSizes = product.sizes
+          .split(',')
+          .map((s) => ({ size: s.trim(), qty: '' }))
+          .filter((s) => s.size)
+      }
+      if (!initialSizes.length) {
+        initialSizes = [{ size: '', qty: '' }]
+      }
+
       setForm({
         name: product.name || '',
         brand: product.brand_name || product.brand || '',
@@ -66,7 +89,7 @@ export default function ProductFormModal({ product, onClose, onSave }) {
         originalPrice: String(product.originalPrice ?? ''),
         stock: String(product.stock ?? '50'),
         colors: normalizeColorList(product.colors),
-        sizes: (product.sizes || []).join(', '),
+        sizes: initialSizes,
         description: product.description || '',
         isBestSeller: !!product.isBestSeller,
         images: product.images && product.images.length ? product.images : [product.image].filter(Boolean),
@@ -175,13 +198,51 @@ export default function ProductFormModal({ product, onClose, onSave }) {
   }
 
   const handleSaveVariantDetails = (colorWithDetails) => {
-    setForm((f) => ({ ...f, colors: [...f.colors, colorWithDetails] }))
+    setForm((f) => {
+      const existingIdx = f.colors.findIndex((c) => c.name === colorWithDetails.name)
+      if (existingIdx >= 0) {
+        const nextColors = [...f.colors]
+        nextColors[existingIdx] = colorWithDetails
+        return { ...f, colors: nextColors }
+      }
+      return { ...f, colors: [...f.colors, colorWithDetails] }
+    })
     setDetailsColor(null)
   }
 
   const removeColor = (idx) => {
     setForm((f) => ({ ...f, colors: f.colors.filter((_, i) => i !== idx) }))
   }
+
+  const addSizeRow = (sizeName = '', qty = '') => {
+    setForm((f) => ({
+      ...f,
+      sizes: [...(f.sizes || []), { size: sizeName, qty: String(qty) }],
+    }))
+  }
+
+  const updateSizeRow = (index, fieldName, value) => {
+    setForm((f) => {
+      const updated = [...(f.sizes || [])]
+      if (updated[index]) {
+        updated[index] = { ...updated[index], [fieldName]: value }
+      }
+      return { ...f, sizes: updated }
+    })
+  }
+
+  const removeSizeRow = (index) => {
+    setForm((f) => {
+      const filtered = (f.sizes || []).filter((_, i) => i !== index)
+      return {
+        ...f,
+        sizes: filtered.length > 0 ? filtered : [{ size: '', qty: '' }],
+      }
+    })
+  }
+
+  const validSizes = (form.sizes || []).filter((s) => s.size && s.size.trim())
+  const totalSizeQty = validSizes.reduce((sum, s) => sum + (parseInt(s.qty, 10) || 0), 0)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -192,6 +253,66 @@ export default function ProductFormModal({ product, onClose, onSave }) {
     if (!form.images.length) return setError('Please add at least one product image')
 
     setSaving(true)
+
+    const cleanSizes = (form.sizes || [])
+      .filter((s) => s.size && s.size.trim())
+      .map((s) => ({
+        size: s.size.trim(),
+        qty: Math.max(0, parseInt(s.qty, 10) || 0),
+      }))
+
+    let finalColors = form.colors
+    if (Array.isArray(finalColors) && finalColors.length > 0) {
+      finalColors = finalColors.map((c, idx) => {
+        if (idx === 0) {
+          // Parent color inherits main product sizes & stock
+          return {
+            ...c,
+            sizes: cleanSizes,
+            stock: cleanSizes.reduce((acc, s) => acc + s.qty, 0),
+          }
+        }
+        // Variant colors (dd, etc.) keep their configured sizes & stock
+        const cSizes = (c.sizes || [])
+          .filter((s) => s.size && s.size.trim())
+          .map((s) => ({
+            size: s.size.trim(),
+            qty: Math.max(0, Number(s.qty) || 0),
+          }))
+        const cStock = cSizes.length > 0
+          ? cSizes.reduce((acc, s) => acc + s.qty, 0)
+          : Math.max(0, Number(c.stock) || 0)
+        return {
+          ...c,
+          sizes: cSizes,
+          stock: cStock,
+        }
+      })
+    }
+
+    let finalStock = 0
+    if (finalColors.length > 0) {
+      finalStock = finalColors.reduce((sum, c) => sum + (c.stock || 0), 0)
+    } else if (cleanSizes.length > 0) {
+      finalStock = cleanSizes.reduce((acc, s) => acc + s.qty, 0)
+    } else {
+      finalStock = Math.max(0, parseInt(form.stock, 10) || 0)
+    }
+
+    const aggMap = new Map()
+    if (finalColors.length > 0) {
+      finalColors.forEach((c) => {
+        (c.sizes || []).forEach((s) => {
+          if (s.size) {
+            aggMap.set(s.size, (aggMap.get(s.size) || 0) + (s.qty || 0))
+          }
+        })
+      })
+    }
+    const aggregatedSizes = aggMap.size > 0
+      ? Array.from(aggMap.entries()).map(([size, qty]) => ({ size, qty }))
+      : cleanSizes
+
     const payload = {
       name: form.name.trim(),
       brand: form.brand.trim() || 'Generic',
@@ -203,9 +324,9 @@ export default function ProductFormModal({ product, onClose, onSave }) {
       tags: form.keywords,
       price: Number(form.price),
       originalPrice: form.originalPrice ? Number(form.originalPrice) : Number(form.price),
-      stock: Number(form.stock),
-      colors: form.colors,
-      sizes: form.sizes.split(',').map((s) => s.trim()).filter(Boolean),
+      stock: finalStock,
+      colors: finalColors,
+      sizes: aggregatedSizes,
       description: form.description.trim(),
       isBestSeller: form.isBestSeller,
       images: form.images,
@@ -477,9 +598,9 @@ export default function ProductFormModal({ product, onClose, onSave }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-gray-800 font-semibold text-sm mb-1.5">Price (₹)</label>
+              <label className="block text-gray-800 font-semibold text-sm mb-1.5">Price (₹) *</label>
               <input
                 type="number"
                 min="0"
@@ -500,38 +621,50 @@ export default function ProductFormModal({ product, onClose, onSave }) {
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500"
               />
             </div>
-            <div>
-              <label className="block text-gray-800 font-semibold text-sm mb-1.5">Stock</label>
-              <input
-                type="number"
-                min="0"
-                value={form.stock}
-                onChange={field('stock')}
-                placeholder="50"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500"
-              />
-            </div>
           </div>
 
           <div>
             <label className="block text-gray-800 font-semibold text-sm mb-2">Colors</label>
             <div className="flex flex-wrap gap-2 mb-2">
-              {form.colors.map((c, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full pl-1 pr-2 py-1"
-                >
-                  <div className="w-6 h-6 rounded-full border border-gray-200 shrink-0" style={getSwatchStyle(c, idx)} />
-                  <span className="text-xs font-semibold text-gray-700">{c.name} {c.stock !== undefined ? `(${c.stock})` : ''}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeColor(idx)}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
+              {form.colors.map((c, idx) => {
+                const isParent = idx === 0
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-center gap-2 border rounded-full pl-1.5 pr-2 py-1 transition-all ${
+                      isParent
+                        ? 'bg-purple-50 border-purple-300 text-purple-900 cursor-default shadow-2xs'
+                        : 'bg-gray-50 border-gray-200 hover:bg-purple-50 hover:border-purple-300 cursor-pointer text-gray-700'
+                    }`}
+                    onClick={() => {
+                      if (!isParent) {
+                        setDetailsColor(c)
+                      }
+                    }}
+                    title={
+                      isParent
+                        ? 'Parent / Primary color (uses main product images and sizes above)'
+                        : `Click to configure photos & size-wise stock for ${c.name}`
+                    }
                   >
-                    <X size={13} />
-                  </button>
-                </div>
-              ))}
+                    <div className="w-5 h-5 rounded-full border border-gray-200 shrink-0 shadow-2xs" style={getSwatchStyle(c, idx)} />
+                    <span className="text-xs font-semibold">
+                      {c.name} {isParent ? '(Primary)' : c.stock !== undefined && c.stock > 0 ? `(${c.stock} units)` : c.images?.length > 0 ? `(${c.images.length} photos)` : ''}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeColor(idx)
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors p-0.5 rounded-full"
+                      title="Remove color"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                )
+              })}
               <button
                 type="button"
                 onClick={() => setColorPickerOpen(true)}
@@ -542,15 +675,101 @@ export default function ProductFormModal({ product, onClose, onSave }) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-gray-800 font-semibold text-sm mb-1.5">Sizes</label>
-            <input
-              value={form.sizes}
-              onChange={field('sizes')}
-              placeholder="S, M, L, XL"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-500"
-            />
-            <p className="text-gray-400 text-[10px] mt-1">Comma separated</p>
+          <div className="border border-purple-100 bg-purple-50/30 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-gray-900 font-semibold text-sm">Sizes & Quantities</label>
+                <p className="text-gray-500 text-xs mt-0.5">Size ka naam aur us size ka stock/quantity enter karein</p>
+              </div>
+              {validSizes.length > 0 && (
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                  Total Units: {totalSizeQty}
+                </span>
+              )}
+            </div>
+
+            {/* Quick Add Preset Sizes */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+              <span className="text-xs text-gray-500 font-medium">Quick Add:</span>
+              {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'].map((preset) => {
+                const alreadyAdded = form.sizes?.some((s) => s.size?.toUpperCase() === preset.toUpperCase())
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    disabled={alreadyAdded}
+                    onClick={() => {
+                      if (!alreadyAdded) {
+                        if (form.sizes?.length === 1 && !form.sizes[0].size && !form.sizes[0].qty) {
+                          updateSizeRow(0, 'size', preset)
+                        } else {
+                          addSizeRow(preset, '')
+                        }
+                      }
+                    }}
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors ${
+                      alreadyAdded
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white text-purple-700 hover:bg-purple-100 border-purple-200 shadow-sm'
+                    }`}
+                  >
+                    +{preset}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Size + Qty 2-Input Rows */}
+            <div className="space-y-2 pt-1">
+              <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 px-1">
+                <span className="col-span-6">Size (Input 1)</span>
+                <span className="col-span-4">Quantity (Input 2)</span>
+                <span className="col-span-2 text-center">Action</span>
+              </div>
+
+              {(form.sizes || []).map((row, idx) => (
+                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-6">
+                    <input
+                      type="text"
+                      placeholder="e.g. S, M, 32B"
+                      value={row.size}
+                      onChange={(e) => updateSizeRow(idx, 'size', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-purple-500 font-medium"
+                    />
+                  </div>
+                  <div className="col-span-4">
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 10"
+                      value={row.qty}
+                      onChange={(e) => updateSizeRow(idx, 'qty', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div className="col-span-2 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => removeSizeRow(idx)}
+                      disabled={(form.sizes || []).length <= 1 && !row.size && !row.qty}
+                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-md hover:bg-red-50 transition-colors disabled:opacity-30"
+                      title="Remove row"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => addSizeRow('', '')}
+              className="flex items-center gap-1.5 text-xs font-bold text-purple-700 hover:text-purple-900 bg-white hover:bg-purple-50 border border-purple-200 rounded-xl px-4 py-2.5 transition-all shadow-sm w-full justify-center"
+            >
+              <Plus size={15} strokeWidth={2.5} /> Add Another Size & Quantity
+            </button>
           </div>
 
           <div>
@@ -610,6 +829,7 @@ export default function ProductFormModal({ product, onClose, onSave }) {
       {detailsColor && (
         <VariantDetailsModal
           color={detailsColor}
+          parentSizes={validSizes.map((s) => s.size)}
           onSave={handleSaveVariantDetails}
           onClose={() => setDetailsColor(null)}
         />

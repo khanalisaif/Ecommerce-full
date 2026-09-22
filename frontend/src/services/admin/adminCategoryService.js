@@ -5,6 +5,7 @@ import api from '../api'
 export const adminCategoryService = {
   getAllCategories: () => api.get('/admin/categories'),
   createCategory: (payload) => api.post('/admin/categories', payload), // { name, icon, image, subcategories }
+  reorderCategories: (orderedIds) => api.put('/admin/categories/reorder', { orderedIds }),
   updateCategory: (id, payload) => api.put(`/admin/categories/${id}`, payload),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
   addSubcategory: (id, payload) => api.post(`/admin/categories/${id}/subcategories`, payload), // { name, slug }

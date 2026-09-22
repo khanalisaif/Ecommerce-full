@@ -27,8 +27,21 @@ const toStorefront = (p) => {
     images: obj.images || [],
     color: (obj.colors?.[0] && typeof obj.colors[0] === 'object') ? (obj.colors[0].name || '') : (obj.colors?.[0] || ""),
     colors: obj.colors || [],
-    sizes: obj.sizes || [],
-    sizesStr: (obj.sizes || []).join(", "),
+    sizes: Array.isArray(obj.sizes)
+      ? obj.sizes.map((s) => (typeof s === "object" && s !== null ? s.size : String(s))).filter(Boolean)
+      : [],
+    sizesWithQty: Array.isArray(obj.sizes)
+      ? obj.sizes.map((s) =>
+          typeof s === "object" && s !== null
+            ? { size: s.size || "", qty: Number(s.qty) || 0 }
+            : { size: String(s), qty: 0 }
+        )
+      : [],
+    sizesStr: Array.isArray(obj.sizes)
+      ? obj.sizes.map((s) => (typeof s === "object" && s !== null ? s.size : String(s))).filter(Boolean).join(", ")
+      : typeof obj.sizes === "string"
+      ? obj.sizes
+      : "",
     stock: obj.stock,
     stockInfo: obj.stock > 0 ? "In Stock" : "Out of Stock",
     isAssured: obj.isAssured,

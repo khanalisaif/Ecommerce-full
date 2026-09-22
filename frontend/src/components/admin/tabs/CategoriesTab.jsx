@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Plus, Pencil, Trash2, ChevronUp, ChevronDown, FolderTree,
+  Plus, Pencil, Trash2, ChevronUp, ChevronDown, FolderTree, GripVertical,
   Home, User, PersonStanding, Heart, List, Flower2, Droplet, Camera, Music,
   Gift, Sparkles, Flame, Laptop, Tablet, Smartphone, Headphones, Package,
   ShoppingBag, Watch, Shirt,
@@ -15,12 +15,69 @@ const iconComponents = {
 }
 
 export default function CategoriesTab() {
-  const { categories, addCategory, updateCategory, deleteCategory, reorderCategory, products, showToast } = useShop()
+  const { categories, addCategory, updateCategory, deleteCategory, reorderCategory, reorderCategoriesList, products, showToast } = useShop()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [draggedIdx, setDraggedIdx] = useState(null)
+  const [dragOverIdx, setDragOverIdx] = useState(null)
+  const [isReordering, setIsReordering] = useState(false)
 
   const productCountFor = (slug) => products.filter((p) => p.category === slug).length
+
+  const handleMove = async (catId, direction) => {
+    try {
+      setIsReordering(true)
+      await reorderCategory(catId, direction)
+      showToast('Category order saved', 'success')
+    } catch {
+      // toast shown in context
+    } finally {
+      setIsReordering(false)
+    }
+  }
+
+  const handleDragStart = (e, index) => {
+    setDraggedIdx(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+  }
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (dragOverIdx !== index) {
+      setDragOverIdx(index)
+    }
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null)
+    setDragOverIdx(null)
+  }
+
+  const handleDrop = async (e, targetIdx) => {
+    e.preventDefault()
+    if (draggedIdx === null || draggedIdx === targetIdx) {
+      setDraggedIdx(null)
+      setDragOverIdx(null)
+      return
+    }
+    const updated = [...categories]
+    const [moved] = updated.splice(draggedIdx, 1)
+    updated.splice(targetIdx, 0, moved)
+    setDraggedIdx(null)
+    setDragOverIdx(null)
+    try {
+      setIsReordering(true)
+      await reorderCategoriesList(updated)
+      showToast('Category order saved', 'success')
+    } catch {
+      // toast shown in context
+    } finally {
+      setIsReordering(false)
+    }
+  }
 
   const openAddModal = () => { setEditingCategory(null); setModalOpen(true) }
   const openEditModal = (cat) => { setEditingCategory(cat); setModalOpen(true) }
@@ -47,7 +104,14 @@ export default function CategoriesTab() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-gray-100">
           <div>
-            <h3 className="font-bold text-gray-900">Categories <span className="text-gray-400 font-medium">({categories.length})</span></h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-gray-900">Categories <span className="text-gray-400 font-medium">({categories.length})</span></h3>
+              {isReordering && (
+                <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full animate-pulse">
+                  Saving order…
+                </span>
+              )}
+            </div>
             <p className="text-gray-500 text-sm mt-0.5">Controls the category strip, footer links and product category options</p>
           </div>
           <button
@@ -64,18 +128,31 @@ export default function CategoriesTab() {
             const IconComp = iconComponents[cat.icon] || FolderTree
             const count = productCountFor(cat.slug)
             return (
-              <div key={cat.id} className="flex items-center gap-4 px-5 sm:px-6 py-3.5">
-                <div className="flex flex-col">
+              <div
+                key={cat.id}
+                className={`flex items-center gap-4 px-5 sm:px-6 py-3.5 transition-all ${
+                  dragOverIdx === idx ? 'bg-purple-50 border-l-2 border-purple-400' : ''
+                } ${draggedIdx === idx ? 'opacity-40' : ''}`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDragEnd={handleDragEnd}
+                onDrop={(e) => handleDrop(e, idx)}
+              >
+                <div className="flex flex-col items-center gap-0.5">
                   <button
-                    disabled={idx === 0}
-                    onClick={() => reorderCategory(cat.id, 'up')}
+                    disabled={idx === 0 || isReordering}
+                    onClick={() => handleMove(cat.id, 'up')}
+                    title="Move up"
                     className="text-gray-300 hover:text-purple-600 disabled:opacity-30 disabled:hover:text-gray-300 transition-colors"
                   >
                     <ChevronUp size={15} />
                   </button>
+                  <GripVertical size={13} className="text-gray-300 cursor-grab active:cursor-grabbing" />
                   <button
-                    disabled={idx === categories.length - 1}
-                    onClick={() => reorderCategory(cat.id, 'down')}
+                    disabled={idx === categories.length - 1 || isReordering}
+                    onClick={() => handleMove(cat.id, 'down')}
+                    title="Move down"
                     className="text-gray-300 hover:text-purple-600 disabled:opacity-30 disabled:hover:text-gray-300 transition-colors"
                   >
                     <ChevronDown size={15} />

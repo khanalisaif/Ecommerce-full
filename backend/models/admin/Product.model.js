@@ -19,9 +19,20 @@ const productSchema = new mongoose.Schema(
 
     images: [{ type: String }], // Cloudinary URLs, first = primary thumbnail
 
-    colors: [{ type: mongoose.Schema.Types.Mixed }], // string, or rich { name, hex, image, images, stock }
-    sizes: [{ type: String }],
+    colors: [{ type: mongoose.Schema.Types.Mixed }], // string, or rich { name, hex, image, images, stock, sizes:[{size,qty}] }
 
+    // Sizes with per-size quantity — e.g. [{ size: "S", qty: 10 }, { size: "M", qty: 5 }]
+    // For color-variant products each color carries its own sizes array; this field
+    // stores the union of all size names for filtering/display purposes.
+    sizes: [
+      {
+        size: { type: String, default: "" },
+        qty:  { type: Number, default: 0 },
+      },
+    ],
+
+    // Total stock — auto-computed by the controller as sum of size qtys / color stocks.
+    // Stored here for fast inventory queries and legacy compatibility.
     stock: { type: Number, default: 0 },
 
     rating: { type: Number, default: 4.5, min: 0, max: 5 },

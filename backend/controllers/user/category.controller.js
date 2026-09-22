@@ -10,6 +10,7 @@ const toClient = (c) => {
     slug: obj.slug,
     icon: obj.icon || "Package",
     image: obj.image || "",
+    displayOrder: obj.displayOrder ?? 0,
     subcategories: (obj.subcategories || []).map((s) => ({
       id: String(s._id || s.id),
       _id: String(s._id || s.id),

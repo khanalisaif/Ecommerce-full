@@ -21,8 +21,72 @@ const resolveCategory = async (categoryInput) => {
 
 const mongooseIdLike = (val) => typeof val === "string" && /^[0-9a-fA-F]{24}$/.test(val);
 
+const normalizeSizes = (sizes) => {
+  if (!sizes) return [];
+  let arr = sizes;
+  if (typeof sizes === "string") {
+    try {
+      arr = JSON.parse(sizes);
+    } catch {
+      arr = sizes.split(",").map((s) => ({ size: s.trim(), qty: 0 })).filter((s) => s.size);
+    }
+  }
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((item) => {
+      if (typeof item === "string") {
+        const trimmed = item.trim();
+        return trimmed ? { size: trimmed, qty: 0 } : null;
+      }
+      if (typeof item === "object" && item !== null) {
+        const sizeName = String(item.size || item.label || "").trim();
+        if (!sizeName) return null;
+        return {
+          size: sizeName,
+          qty: Math.max(0, Number(item.qty ?? item.quantity ?? item.stock ?? 0) || 0),
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
+};
+
+const computeTotalStock = (cleanSizes, colors, fallbackStock) => {
+  // If colors have sizes or stock, colors is the primary source of truth for variant products
+  if (Array.isArray(colors) && colors.length > 0) {
+    let colorSum = 0;
+    let hasColorStock = false;
+    for (const c of colors) {
+      if (typeof c === "object" && c !== null) {
+        if (Array.isArray(c.sizes) && c.sizes.length > 0) {
+          const cSum = c.sizes.reduce((acc, s) => acc + (Number(s.qty) || 0), 0);
+          c.stock = cSum;
+          colorSum += cSum;
+          hasColorStock = true;
+        } else if (c.stock !== undefined && c.stock !== null && !isNaN(Number(c.stock))) {
+          colorSum += Number(c.stock);
+          hasColorStock = true;
+        }
+      }
+    }
+    if (hasColorStock) return colorSum;
+  }
+
+  // If no colors, check product-level sizes
+  if (Array.isArray(cleanSizes) && cleanSizes.length > 0) {
+    const sum = cleanSizes.reduce((acc, s) => acc + (Number(s.qty) || 0), 0);
+    return sum;
+  }
+
+  if (fallbackStock !== undefined && fallbackStock !== null && !isNaN(Number(fallbackStock))) {
+    return Math.max(0, Number(fallbackStock));
+  }
+  return 0;
+};
+
 // @route GET /api/admin/products
 export const getAllProducts = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 50, search } = req.query;
   const filter = search
     ? {
         $or: [
@@ -76,6 +140,21 @@ export const createProduct = asyncHandler(async (req, res) => {
   const rawKeywords = Array.isArray(keywords) ? keywords : Array.isArray(tags) ? tags : [];
   const cleanKeywords = rawKeywords.map((k) => String(k).trim()).filter(Boolean);
 
+  const cleanSizes = normalizeSizes(sizes);
+  let parsedColors = Array.isArray(colors) ? colors : [];
+  if (typeof colors === "string") {
+    try { parsedColors = JSON.parse(colors); } catch { parsedColors = []; }
+  }
+  parsedColors = parsedColors.map((c) => {
+    if (typeof c === "object" && c !== null && Array.isArray(c.sizes)) {
+      const cNormSizes = normalizeSizes(c.sizes);
+      const cStock = cNormSizes.reduce((acc, s) => acc + (Number(s.qty) || 0), 0);
+      return { ...c, sizes: cNormSizes, stock: cStock };
+    }
+    return c;
+  });
+  const computedStock = computeTotalStock(cleanSizes, parsedColors, stock);
+
   const product = await Product.create({
     name,
     brand: String(brand).toUpperCase(),
@@ -92,9 +171,9 @@ export const createProduct = asyncHandler(async (req, res) => {
     originalPrice: originalPrice ? Number(originalPrice) : Number(price),
     discount: discount || "",
     images: resolvedImages,
-    colors: Array.isArray(colors) ? colors : [],
-    sizes: Array.isArray(sizes) ? sizes : [],
-    stock: stock !== undefined ? Number(stock) : 0,
+    colors: parsedColors,
+    sizes: cleanSizes,
+    stock: computedStock,
     rating: rating !== undefined ? Number(rating) : undefined,
     reviews: reviews !== undefined ? Number(reviews) : undefined,
     isAssured: isAssured !== undefined ? !!isAssured : true,
@@ -130,9 +209,55 @@ export const updateProduct = asyncHandler(async (req, res) => {
   if (price !== undefined) product.price = Number(price);
   if (originalPrice !== undefined) product.originalPrice = Number(originalPrice);
   if (discount !== undefined) product.discount = discount;
-  if (Array.isArray(colors)) product.colors = colors;
-  if (Array.isArray(sizes)) product.sizes = sizes;
-  if (stock !== undefined) product.stock = Number(stock);
+
+  let cleanSizes = sizes !== undefined ? normalizeSizes(sizes) : undefined;
+  let parsedColors = Array.isArray(colors)
+    ? colors
+    : (typeof colors === "string"
+        ? (() => { try { return JSON.parse(colors); } catch { return []; } })()
+        : undefined);
+
+  if (Array.isArray(parsedColors)) {
+    parsedColors = parsedColors.map((c) => {
+      if (typeof c === "object" && c !== null && Array.isArray(c.sizes)) {
+        const cNormSizes = normalizeSizes(c.sizes);
+        const cStock = cNormSizes.reduce((acc, s) => acc + (Number(s.qty) || 0), 0);
+        return { ...c, sizes: cNormSizes, stock: cStock };
+      }
+      return c;
+    });
+    product.colors = parsedColors;
+    product.markModified("colors");
+
+    // If sizes was not explicitly passed, aggregate from color sizes
+    if (cleanSizes === undefined) {
+      const aggMap = new Map();
+      parsedColors.forEach((c) => {
+        if (c && Array.isArray(c.sizes)) {
+          c.sizes.forEach((s) => {
+            if (s && s.size) {
+              aggMap.set(s.size, (aggMap.get(s.size) || 0) + (Number(s.qty) || 0));
+            }
+          });
+        }
+      });
+      if (aggMap.size > 0) {
+        product.sizes = Array.from(aggMap.entries()).map(([size, qty]) => ({ size, qty }));
+        product.markModified("sizes");
+      }
+    }
+  }
+
+  if (cleanSizes !== undefined) {
+    product.sizes = cleanSizes;
+    product.markModified("sizes");
+  }
+
+  if (cleanSizes !== undefined || parsedColors !== undefined) {
+    product.stock = computeTotalStock(product.sizes, product.colors, stock !== undefined ? stock : product.stock);
+  } else if (stock !== undefined) {
+    product.stock = Math.max(0, Number(stock));
+  }
   if (rating !== undefined) product.rating = Number(rating);
   if (reviews !== undefined) product.reviews = Number(reviews);
   if (isAssured !== undefined) product.isAssured = !!isAssured;
@@ -212,13 +337,67 @@ export const deleteProduct = asyncHandler(async (req, res) => {
 
 // @route PUT /api/admin/products/:id/stock  (quick stock-only update, used by the Inventory tab)
 export const updateStock = asyncHandler(async (req, res) => {
-  const { stock } = req.body;
-  if (stock === undefined) throw new ApiError(400, "stock is required");
+  const { stock, sizes, colors } = req.body;
 
   const product = await Product.findById(req.params.id);
   if (!product) throw new ApiError(404, "Product not found");
 
-  product.stock = Math.max(0, Number(stock));
+  let parsedColors = Array.isArray(colors)
+    ? colors
+    : (typeof colors === "string"
+        ? (() => { try { return JSON.parse(colors); } catch { return []; } })()
+        : undefined);
+
+  if (Array.isArray(parsedColors)) {
+    parsedColors = parsedColors.map((c) => {
+      if (typeof c === "object" && c !== null) {
+        if (Array.isArray(c.sizes)) {
+          const cNormSizes = normalizeSizes(c.sizes);
+          const cStock = cNormSizes.length > 0
+            ? cNormSizes.reduce((acc, s) => acc + (Number(s.qty) || 0), 0)
+            : Math.max(0, Number(c.stock) || 0);
+          return { ...c, sizes: cNormSizes, stock: cStock };
+        } else if (c.stock !== undefined) {
+          return { ...c, sizes: [], stock: Math.max(0, Number(c.stock) || 0) };
+        }
+      }
+      return c;
+    });
+    product.colors = parsedColors;
+    product.markModified("colors");
+
+    // Aggregate sizes across all colors if sizes wasn't explicitly passed
+    if (sizes === undefined) {
+      const aggMap = new Map();
+      parsedColors.forEach((c) => {
+        if (c && Array.isArray(c.sizes)) {
+          c.sizes.forEach((s) => {
+            if (s && s.size) {
+              aggMap.set(s.size, (aggMap.get(s.size) || 0) + (Number(s.qty) || 0));
+            }
+          });
+        }
+      });
+      if (aggMap.size > 0) {
+        product.sizes = Array.from(aggMap.entries()).map(([size, qty]) => ({ size, qty }));
+        product.markModified("sizes");
+      }
+    }
+  }
+
+  if (sizes !== undefined) {
+    product.sizes = normalizeSizes(sizes);
+    product.markModified("sizes");
+  }
+
+  if (product.colors?.length > 0 || product.sizes?.length > 0) {
+    product.stock = computeTotalStock(product.sizes, product.colors, stock);
+  } else if (stock !== undefined) {
+    product.stock = Math.max(0, Number(stock));
+  } else {
+    throw new ApiError(400, "stock, sizes, or colors is required");
+  }
+
   await product.save();
 
   res.status(200).json(new ApiResponse(200, { product }, "Stock updated"));

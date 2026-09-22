@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import asyncHandler from "../../utils/asyncHandler.js";
 import ApiError from "../../utils/ApiError.js";
 import ApiResponse from "../../utils/ApiResponse.js";
@@ -13,6 +14,7 @@ const toClient = (c) => {
     slug: obj.slug,
     icon: obj.icon || "Package",
     image: obj.image || "",
+    displayOrder: obj.displayOrder ?? 0,
     subcategories: (obj.subcategories || []).map((s) => ({
       id: String(s._id || s.id),
       _id: String(s._id || s.id),
@@ -47,10 +49,13 @@ export const createCategory = asyncHandler(async (req, res) => {
       .filter(Boolean);
   }
 
+  const lastCategory = await Category.findOne().sort({ displayOrder: -1 }).select("displayOrder");
+  const nextOrder = lastCategory && typeof lastCategory.displayOrder === "number" ? lastCategory.displayOrder + 1 : 0;
   const category = await Category.create({
     name,
     icon: icon || "Package",
     image: resolvedImage,
+    displayOrder: nextOrder,
     subcategories: formattedSubs,
   });
   res.status(201).json(new ApiResponse(201, { category: toClient(category) }, "Category created successfully"));
@@ -148,4 +153,29 @@ export const deleteSubcategory = asyncHandler(async (req, res) => {
   await category.save();
 
   res.status(200).json(new ApiResponse(200, { category: toClient(category) }, "Subcategory deleted successfully"));
+});
+
+// @route PUT /api/admin/categories/reorder (JSON body: { orderedIds: [id1, id2, ...] })
+export const reorderCategories = asyncHandler(async (req, res) => {
+  const { orderedIds } = req.body;
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+    throw new ApiError(400, "orderedIds array is required");
+  }
+
+  const bulkOps = orderedIds.map((id, index) => {
+    const filterId = mongoose.Types.ObjectId.isValid(id)
+      ? new mongoose.Types.ObjectId(id)
+      : id;
+    return {
+      updateOne: {
+        filter: { _id: filterId },
+        update: { $set: { displayOrder: index } },
+      },
+    };
+  });
+
+  await Category.bulkWrite(bulkOps);
+
+  const categories = await Category.find().sort({ displayOrder: 1, createdAt: 1 });
+  res.status(200).json(new ApiResponse(200, { categories: categories.map(toClient) }, "Categories reordered successfully"));
 });

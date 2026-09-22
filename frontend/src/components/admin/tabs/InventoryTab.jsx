@@ -8,8 +8,70 @@ import Pagination from '../Pagination'
 const FILTERS = ['All', 'In Stock', 'Low Stock', 'Out of Stock']
 const PER_PAGE = 10
 
-function stockStatus(stock) {
+function getLowStockDetails(product) {
+  if (!product) return { items: [], hasLow: false, hasOut: false }
+  const items = []
+
+  // 1. Color variants and their per-color sizes
+  if (Array.isArray(product.colors) && product.colors.length > 0) {
+    product.colors.forEach((c) => {
+      const colorName = typeof c === 'object' ? c.name || 'Color' : String(c)
+      if (typeof c === 'object' && c !== null) {
+        if (Array.isArray(c.sizes) && c.sizes.length > 0) {
+          c.sizes.forEach((s) => {
+            const sizeName = typeof s === 'object' ? s.size : String(s)
+            const qty = typeof s === 'object' ? Number(s.qty) || 0 : 0
+            if (qty === 0) {
+              items.push({ color: colorName, size: sizeName, qty: 0, type: 'out', label: `${colorName} (${sizeName}): 0 left` })
+            } else if (qty <= 3) {
+              items.push({ color: colorName, size: sizeName, qty, type: 'low', label: `${colorName} (${sizeName}): ${qty} left` })
+            }
+          })
+        } else if (c.stock !== undefined) {
+          const colorStock = Number(c.stock) || 0
+          if (colorStock === 0) {
+            items.push({ color: colorName, qty: 0, type: 'out', label: `${colorName}: 0 left` })
+          } else if (colorStock <= 3) {
+            items.push({ color: colorName, qty: colorStock, type: 'low', label: `${colorName}: ${colorStock} left` })
+          }
+        }
+      }
+    })
+  }
+
+  // 2. Product-level sizes (if product has sizes)
+  const sizesList = Array.isArray(product.sizesWithQty) && product.sizesWithQty.length > 0
+    ? product.sizesWithQty
+    : Array.isArray(product.sizes) && typeof product.sizes[0] === 'object'
+    ? product.sizes
+    : []
+
+  if (sizesList.length > 0) {
+    sizesList.forEach((s) => {
+      const sizeName = s.size || ''
+      const qty = Number(s.qty) || 0
+      if (qty === 0) {
+        items.push({ size: sizeName, qty: 0, type: 'out', label: `Size ${sizeName}: 0 left` })
+      } else if (qty <= 3) {
+        items.push({ size: sizeName, qty, type: 'low', label: `Size ${sizeName}: ${qty} left` })
+      }
+    })
+  }
+
+  const hasOut = items.some((i) => i.type === 'out') || Number(product.stock) === 0
+  const hasLow = items.some((i) => i.type === 'low') || (Number(product.stock) > 0 && Number(product.stock) <= 3)
+
+  return { items, hasLow, hasOut }
+}
+
+function stockStatus(product) {
+  const stock = typeof product === 'object' && product !== null ? Number(product.stock) || 0 : Number(product) || 0
   if (stock === 0) return 'Out of Stock'
+  if (typeof product === 'object' && product !== null) {
+    const details = getLowStockDetails(product)
+    if (details.hasLow) return 'Low Stock'
+    if (details.hasOut && stock > 0) return 'Low Stock'
+  }
   if (stock <= 3) return 'Low Stock'
   return 'In Stock'
 }
@@ -31,12 +93,18 @@ export default function InventoryTab() {
   const [currentPage, setCurrentPage] = useState(1)
 
   const totalUnits = products.reduce((sum, p) => sum + (p.stock || 0), 0)
-  const lowStockCount = products.filter((p) => p.stock > 0 && p.stock <= 3).length
-  const outOfStockCount = products.filter((p) => p.stock === 0).length
+  const lowStockCount = products.filter((p) => stockStatus(p) === 'Low Stock' || getLowStockDetails(p).hasLow).length
+  const outOfStockCount = products.filter((p) => stockStatus(p) === 'Out of Stock').length
 
   const filtered = products
     .filter((p) => p.name.toLowerCase().includes(query.toLowerCase()) || p.sku.toLowerCase().includes(query.toLowerCase()))
-    .filter((p) => activeFilter === 'All' || stockStatus(p.stock) === activeFilter)
+    .filter((p) => {
+      if (activeFilter === 'All') return true
+      if (activeFilter === 'Out of Stock') return stockStatus(p) === 'Out of Stock'
+      if (activeFilter === 'Low Stock') return stockStatus(p) === 'Low Stock' || getLowStockDetails(p).hasLow
+      if (activeFilter === 'In Stock') return stockStatus(p) === 'In Stock'
+      return true
+    })
 
   useEffect(() => { setCurrentPage(1) }, [query, activeFilter])
 
@@ -133,7 +201,8 @@ export default function InventoryTab() {
             </thead>
             <tbody>
               {paginated.map((p) => {
-                const status = stockStatus(p.stock)
+                const status = stockStatus(p)
+                const lowDetails = getLowStockDetails(p)
                 return (
                   <tr key={p.id} className="border-t border-gray-50 hover:bg-gray-50/70 cursor-pointer" onClick={() => setViewProduct(p)}>
                     <td className="px-5 sm:px-6 py-3">
@@ -162,15 +231,41 @@ export default function InventoryTab() {
                       </div>
                     </td>
                     <td className="px-5 sm:px-6 py-3">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusBadgeClass(status)}`}>{status}</span>
+                      <div className="space-y-1">
+                        <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${statusBadgeClass(status)}`}>
+                          {status}
+                        </span>
+                        {lowDetails.items.length > 0 && (
+                          <div className="flex flex-col gap-1 mt-1">
+                            {lowDetails.items.slice(0, 3).map((item, idx) => (
+                              <span
+                                key={idx}
+                                className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border w-fit ${
+                                  item.type === 'out'
+                                    ? 'bg-red-50 text-red-700 border-red-200'
+                                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                                }`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${item.type === 'out' ? 'bg-red-500' : 'bg-amber-500'}`} />
+                                {item.label}
+                              </span>
+                            ))}
+                            {lowDetails.items.length > 3 && (
+                              <span className="text-[10px] text-gray-500 font-medium pl-1">
+                                +{lowDetails.items.length - 3} more low items
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 sm:px-6 py-3" onClick={(e) => e.stopPropagation()}>
-                      {p.colors && p.colors.length > 0 ? (
+                      {(p.colors && p.colors.length > 0) || (p.sizesWithQty && p.sizesWithQty.length > 0) ? (
                         <button
                           onClick={() => setVariantStockProduct(p)}
                           className="px-3 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors whitespace-nowrap"
                         >
-                          Manage Variants ({p.stock})
+                          {p.colors && p.colors.length > 0 ? `Manage Variants (${p.stock})` : `Manage Sizes (${p.stock})`}
                         </button>
                       ) : (
                         <div className="flex items-center gap-2">

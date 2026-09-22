@@ -23,6 +23,7 @@ export function normalizeColorEntry(raw, index = 0) {
       image: raw.image || null,
       images: raw.images || [],
       stock: raw.stock !== undefined ? raw.stock : undefined,
+      sizes: Array.isArray(raw.sizes) ? raw.sizes : [],
     }
   }
   const name = String(raw || 'Color')
@@ -32,6 +33,7 @@ export function normalizeColorEntry(raw, index = 0) {
     image: null,
     images: [],
     stock: undefined,
+    sizes: [],
   }
 }
 

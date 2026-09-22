@@ -79,8 +79,21 @@ function mapBackendProduct(doc) {
     images,
     color: firstColor && typeof firstColor === 'object' ? firstColor.name || '' : firstColor || '',
     colors,
-    sizes: doc.sizes || [],
-    sizesStr: (doc.sizes || []).join(', '),
+    sizes: Array.isArray(doc.sizes)
+      ? doc.sizes.map((s) => (typeof s === 'object' && s !== null ? s.size : String(s))).filter(Boolean)
+      : [],
+    sizesWithQty: Array.isArray(doc.sizes)
+      ? doc.sizes.map((s) =>
+          typeof s === 'object' && s !== null
+            ? { size: s.size || '', qty: Number(s.qty) || 0 }
+            : { size: String(s), qty: 0 }
+        )
+      : [],
+    sizesStr: Array.isArray(doc.sizes)
+      ? doc.sizes.map((s) => (typeof s === 'object' && s !== null ? s.size : String(s))).filter(Boolean).join(', ')
+      : typeof doc.sizes === 'string'
+      ? doc.sizes
+      : '',
     stock: doc.stock != null ? doc.stock : 0,
     stockInfo: doc.stock > 0 ? 'In Stock' : 'Out of Stock',
     isAssured: doc.isAssured != null ? doc.isAssured : true,
@@ -217,6 +230,45 @@ export function ShopProvider({ children }) {
       .then((res) => setCategories(res.data.categories || []))
       .catch((err) => console.error('Failed to load categories:', err.message))
   }
+
+  const notifyCategoryChange = () => {
+    try {
+      localStorage.setItem('hashtelicom_categories_updated', Date.now().toString())
+      if (typeof BroadcastChannel !== 'undefined') {
+        const ch = new BroadcastChannel('hashtelicom_categories')
+        ch.postMessage('CATEGORIES_UPDATED')
+        ch.close()
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'hashtelicom_categories_updated') {
+        refreshCategories()
+      }
+    }
+    let channel = null
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        channel = new BroadcastChannel('hashtelicom_categories')
+        channel.onmessage = (event) => {
+          if (event.data === 'CATEGORIES_UPDATED') {
+            refreshCategories()
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => {
+      if (channel) channel.close()
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
 
   useEffect(() => {
     refreshProducts()
@@ -429,6 +481,7 @@ export function ShopProvider({ children }) {
       .createCategory({ name: data.name, icon: data.icon || 'Package', image: data.image || '' })
       .then((res) => {
         setCategories((prev) => [...prev, res.data.category])
+        notifyCategoryChange()
         return res.data.category
       })
       .catch((err) => { showToast(err.message); throw err })
@@ -439,6 +492,7 @@ export function ShopProvider({ children }) {
       .updateCategory(id, updates)
       .then((res) => {
         setCategories((prev) => prev.map((c) => (c.id === id ? res.data.category : c)))
+        notifyCategoryChange()
         return res.data.category
       })
       .catch((err) => { showToast(err.message); throw err })
@@ -446,7 +500,12 @@ export function ShopProvider({ children }) {
 
   const deleteCategory = (id) => {
     setCategories((prev) => prev.filter((c) => c.id !== id))
-    return adminCategoryService.deleteCategory(id).catch((err) => { showToast(err.message); throw err })
+    return adminCategoryService
+      .deleteCategory(id)
+      .then(() => {
+        notifyCategoryChange()
+      })
+      .catch((err) => { showToast(err.message); throw err })
   }
 
   const addSubcategory = (categoryId, data) => {
@@ -454,6 +513,7 @@ export function ShopProvider({ children }) {
       .addSubcategory(categoryId, data)
       .then((res) => {
         setCategories((prev) => prev.map((c) => (c.id === categoryId ? res.data.category : c)))
+        notifyCategoryChange()
         return res.data.category
       })
       .catch((err) => { showToast(err.message); throw err })
@@ -464,6 +524,7 @@ export function ShopProvider({ children }) {
       .updateSubcategory(categoryId, subId, data)
       .then((res) => {
         setCategories((prev) => prev.map((c) => (c.id === categoryId ? res.data.category : c)))
+        notifyCategoryChange()
         return res.data.category
       })
       .catch((err) => { showToast(err.message); throw err })
@@ -474,12 +535,58 @@ export function ShopProvider({ children }) {
       .deleteSubcategory(categoryId, subId)
       .then((res) => {
         setCategories((prev) => prev.map((c) => (c.id === categoryId ? res.data.category : c)))
+        notifyCategoryChange()
         return res.data.category
       })
       .catch((err) => { showToast(err.message); throw err })
   }
 
-  const reorderCategory = (id, direction) => reorderList(setCategories, id, direction)
+  const reorderCategory = async (id, direction) => {
+    let nextList = null
+    setCategories((prev) => {
+      const idx = prev.findIndex((x) => x.id === id)
+      const swapWith = direction === 'up' ? idx - 1 : idx + 1
+      if (idx < 0 || swapWith < 0 || swapWith >= prev.length) return prev
+      const next = [...prev]
+      ;[next[idx], next[swapWith]] = [next[swapWith], next[idx]]
+      nextList = next
+      return next
+    })
+
+    if (nextList && nextList.length > 0) {
+      try {
+        const orderedIds = nextList.map((c) => c.id || c._id)
+        const res = await adminCategoryService.reorderCategories(orderedIds)
+        if (res?.data?.categories) {
+          setCategories(res.data.categories)
+        }
+        notifyCategoryChange()
+        return res?.data?.categories || nextList
+      } catch (err) {
+        showToast(err.message || 'Failed to reorder categories', 'error')
+        refreshCategories()
+        throw err
+      }
+    }
+  }
+
+  const reorderCategoriesList = async (newOrderedList) => {
+    if (!Array.isArray(newOrderedList) || newOrderedList.length === 0) return
+    setCategories(newOrderedList)
+    try {
+      const orderedIds = newOrderedList.map((c) => c.id || c._id)
+      const res = await adminCategoryService.reorderCategories(orderedIds)
+      if (res?.data?.categories) {
+        setCategories(res.data.categories)
+      }
+      notifyCategoryChange()
+      return res?.data?.categories || newOrderedList
+    } catch (err) {
+      showToast(err.message || 'Failed to reorder categories', 'error')
+      refreshCategories()
+      throw err
+    }
+  }
 
   const updateCategoryConfig = (slug, updates) => {
     setCategoryConfigs((prev) => ({ ...prev, [slug]: { ...prev[slug], ...updates } }))
@@ -720,7 +827,7 @@ export function ShopProvider({ children }) {
 
     products, addProduct, updateProduct, deleteProduct, getProductById, refreshProducts,
 
-    categories, addCategory, updateCategory, deleteCategory, reorderCategory, refreshCategories,
+    categories, addCategory, updateCategory, deleteCategory, reorderCategory, reorderCategoriesList, refreshCategories,
     addSubcategory, updateSubcategory, deleteSubcategory,
 
     categoryConfigs, updateCategoryConfig,

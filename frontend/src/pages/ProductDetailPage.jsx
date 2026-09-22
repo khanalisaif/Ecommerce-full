@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -15,7 +15,10 @@ export default function ProductDetailPage() {
   const navigate = useNavigate()
   const { addToCart, toggleWishlist, isWishlisted, showToast, products } = useShop()
 
-  const foundProduct = products.find(p => p.id === String(id))
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0)
+  const [activeThumb, setActiveThumb] = useState(0)
+
+  const foundProduct = products.find(p => String(p.id) === String(id))
   const [fetchedProduct, setFetchedProduct] = useState(null)
 
   useEffect(() => {
@@ -32,42 +35,90 @@ export default function ProductDetailPage() {
   }, [id])
 
   const product = foundProduct || fetchedProduct || {
-    id: id || 'demo-1',
-    name: 'Item Name',
-    description: 'Product Description',
-    price: 999,
-    originalPrice: 1499,
+    id: id || '1',
+    name: 'Wireless Noise Canceling Headphones',
+    price: 1999,
+    originalPrice: 2999,
+    rating: 4.8,
+    reviews: 124,
+    description: 'Experience pure sound with industry-leading noise cancellation technology.',
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
     colors: ['Black', 'Silver'],
     sizes: ['Standard'],
     category: 'Gadget'
   }
 
-  const parsedSizes = Array.isArray(product.sizes) ? product.sizes : (product.sizes ? product.sizes.split(',').map(s=>s.trim()) : ['XS', 'S', 'M', 'L', 'XL', 'XXL'])
   const parsedColors = normalizeColorList(Array.isArray(product.colors) ? product.colors : (product.color ? [product.color] : ['Black', 'Grey', 'White']))
+  const currentColorVariant = parsedColors[selectedColorIndex]
+  const selectedColorName = currentColorVariant?.name || 'Black'
 
-  const [selectedColorIndex, setSelectedColorIndex] = useState(0)
-  const [selectedSize, setSelectedSize] = useState(parsedSizes[0] || 'M')
-  const [activeThumb, setActiveThumb] = useState(0)
+  // Only the sizes that belong to the currently selected color!
+  const currentColorSizes = useMemo(() => {
+    if (currentColorVariant && Array.isArray(currentColorVariant.sizes) && currentColorVariant.sizes.length > 0) {
+      return currentColorVariant.sizes.map((s) => {
+        if (typeof s === 'object' && s !== null) {
+          return { size: s.size || '', qty: Number(s.qty) || 0 }
+        }
+        return { size: String(s), qty: 1 }
+      }).filter((s) => s.size)
+    }
+    // Fallback to product-level sizes if color doesn't have custom sizes
+    if (Array.isArray(product.sizesWithQty) && product.sizesWithQty.length > 0) {
+      return product.sizesWithQty.map((s) => ({ size: s.size || '', qty: Number(s.qty) || 0 }))
+    }
+    if (Array.isArray(product.sizes) && product.sizes.length > 0) {
+      return product.sizes.map((s) => {
+        if (typeof s === 'object' && s !== null) {
+          return { size: s.size || '', qty: Number(s.qty) || 0 }
+        }
+        return { size: String(s), qty: 1 }
+      }).filter((s) => s.size)
+    }
+    if (typeof product.sizes === 'string' && product.sizes.trim()) {
+      return product.sizes.split(',').map((s) => ({ size: s.trim(), qty: 1 })).filter((s) => s.size)
+    }
+    return [{ size: 'Free Size', qty: product.stock ?? 1 }]
+  }, [currentColorVariant, product])
+
+  const [selectedSize, setSelectedSize] = useState(() => currentColorSizes[0]?.size || 'M')
 
   useEffect(() => {
     setSelectedColorIndex(0)
-    setSelectedSize(parsedSizes[0] || 'M')
   }, [id, product])
+
+  // When color changes, automatically pick the first in-stock size of that color
+  useEffect(() => {
+    if (currentColorSizes.length > 0) {
+      const matchInStock = currentColorSizes.find((s) => s.size === selectedSize && s.qty > 0)
+      if (!matchInStock) {
+        const firstInStock = currentColorSizes.find((s) => s.qty > 0)
+        setSelectedSize(firstInStock ? firstInStock.size : currentColorSizes[0].size)
+      }
+    }
+  }, [selectedColorIndex, currentColorSizes])
 
   useEffect(() => {
     setActiveThumb(0)
   }, [selectedColorIndex])
 
-  const currentColorVariant = parsedColors[selectedColorIndex]
-  const selectedColorName = currentColorVariant?.name || 'Black'
-  
   const displayImages = (currentColorVariant && currentColorVariant.images && currentColorVariant.images.length > 0)
     ? currentColorVariant.images
     : (product.images && product.images.length > 0 ? product.images : [product.image, product.image, product.image, product.image, product.image].filter(Boolean))
-    
-  const displayStock = currentColorVariant?.stock !== undefined ? currentColorVariant.stock : (product.stock || 0)
-  const stockInfo = displayStock > 0 ? 'In Stock' : 'Out of Stock'
+
+  const selectedSizeObj = currentColorSizes.find((s) => s.size === selectedSize)
+  const currentSizeStock = selectedSizeObj !== undefined
+    ? selectedSizeObj.qty
+    : (currentColorVariant?.stock !== undefined ? currentColorVariant.stock : (product.stock || 0))
+
+  const isSizeOutOfStock = currentSizeStock === 0
+  const isSizeLowStock = currentSizeStock > 0 && currentSizeStock <= 3
+  const displayStock = currentSizeStock
+
+  const stockInfo = isSizeOutOfStock
+    ? 'Out of Stock'
+    : isSizeLowStock
+    ? `Only ${currentSizeStock} left in stock - order soon`
+    : 'In Stock'
 
   useEffect(() => {
     if (window.location.hash === '#reviews') {
@@ -233,27 +284,53 @@ export default function ProductDetailPage() {
             {/* Sizes */}
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
-                <p className="text-xs text-gray-800">Size: <span className="font-semibold">{selectedSize}</span></p>
+                <p className="text-xs text-gray-800">
+                  Size: <span className="font-semibold text-purple-700">{selectedSize}</span>
+                  {selectedSizeObj?.qty !== undefined && (
+                    <span className="text-gray-400 font-normal ml-1.5">
+                      ({selectedSizeObj.qty > 0 ? `${selectedSizeObj.qty} in stock` : 'Out of stock'})
+                    </span>
+                  )}
+                </p>
                 <button className="text-purple-600 text-[10px] font-bold hover:underline">Size Guide</button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {parsedSizes.map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
-                    className={`min-w-[42px] px-2 h-9 rounded border flex items-center justify-center text-xs font-semibold transition-all ${
-                      selectedSize === s ? 'border-purple-600 text-purple-600 bg-purple-50/50' : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {currentColorSizes.map(({ size: s, qty }) => {
+                  const isOut = qty === 0
+                  const isSelected = selectedSize === s
+                  const isLow = qty > 0 && qty <= 3
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => !isOut && setSelectedSize(s)}
+                      disabled={isOut}
+                      title={isOut ? `${s} (Out of stock)` : isLow ? `${s} (Only ${qty} left)` : s}
+                      className={`relative min-w-[44px] px-3 h-9 rounded-lg border flex items-center justify-center text-xs font-semibold transition-all ${
+                        isOut
+                          ? 'border-gray-200 text-gray-300 bg-gray-50 cursor-not-allowed line-through'
+                          : isSelected
+                          ? 'border-purple-600 text-purple-600 bg-purple-50 shadow-xs font-bold'
+                          : 'border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50/40'
+                      }`}
+                    >
+                      {s}
+                      {isLow && (
+                        <span className="absolute -top-1.5 -right-1 px-1 bg-amber-500 text-white text-[9px] font-bold rounded-full leading-tight shadow-2xs">
+                          {qty}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
+              {currentColorSizes.length === 0 && (
+                <p className="text-xs text-gray-400 italic mt-1">No sizes available for {selectedColorName}</p>
+              )}
             </div>
 
             <div className="flex items-center gap-2 text-xs mb-6">
-              <div className={`w-2 h-2 rounded-full ${displayStock === 0 ? 'bg-red-500' : 'bg-green-500'}`} />
-              <span className={`font-semibold ${displayStock === 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <div className={`w-2 h-2 rounded-full ${displayStock === 0 ? 'bg-red-500' : isSizeLowStock ? 'bg-amber-500' : 'bg-green-500'}`} />
+              <span className={`font-semibold ${displayStock === 0 ? 'text-red-600' : isSizeLowStock ? 'text-amber-700' : 'text-green-600'}`}>
                 {stockInfo}
               </span>
               {displayStock > 0 && <span className="text-gray-400">Ships within 24 hours</span>}

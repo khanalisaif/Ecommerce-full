@@ -12,7 +12,17 @@ export default function ProductDetailModal({ product, onClose }) {
   if (!product) return null
 
   const colors = normalizeColorList(product.colors)
-  const sizes = Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || 'N/A')
+  const sizesDisplay = (() => {
+    if (Array.isArray(product.sizesWithQty) && product.sizesWithQty.length > 0) {
+      return product.sizesWithQty.map((s) => `${s.size} (${s.qty ?? 0})`).join(', ')
+    }
+    if (Array.isArray(product.sizes) && product.sizes.length > 0) {
+      return product.sizes
+        .map((s) => (typeof s === 'object' && s !== null ? `${s.size} (${s.qty ?? 0})` : String(s)))
+        .join(', ')
+    }
+    return product.sizes || 'N/A'
+  })()
 
   const [selectedIndex, setSelectedIndex] = useState(0)
 
@@ -102,7 +112,7 @@ export default function ProductDetailModal({ product, onClose }) {
             </div>
             <div className="flex items-center gap-2.5 text-sm">
                <span className="text-gray-500 font-medium w-20 pl-6">Sizes:</span>
-               <span className="text-gray-900 font-semibold">{sizes}</span>
+               <span className="text-gray-900 font-semibold">{sizesDisplay}</span>
             </div>
             {((product.keywords && product.keywords.length > 0) || (product.tags && product.tags.length > 0)) && (
               <div className="flex items-start gap-2.5 text-sm pt-1">

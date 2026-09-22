@@ -7,6 +7,7 @@ import {
   addSubcategory,
   updateSubcategory,
   deleteSubcategory,
+  reorderCategories,
 } from "../../controllers/admin/category.controller.js";
 import { protectAdmin } from "../../middleware/adminAuth.js";
 
@@ -16,6 +17,7 @@ router.use(protectAdmin);
 
 router.get("/", getAllCategories);
 router.post("/", createCategory);
+router.put("/reorder", reorderCategories);
 router.put("/:id", updateCategory);
 router.delete("/:id", deleteCategory);
 
