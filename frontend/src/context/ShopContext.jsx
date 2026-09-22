@@ -605,7 +605,39 @@ export function ShopProvider({ children }) {
   }
 
   const updateProduct = (id, updates) => {
-    setProducts((prev) => prev.map((p) => (p.id === String(id) ? { ...p, ...updates } : p))) // optimistic
+    // Build a richer optimistic patch that re-derives sizesWithQty / sizesStr / stock
+    // immediately so the Inventory tab shows accurate data without waiting for the backend.
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== String(id)) return p
+        const patch = { ...p, ...updates }
+
+        // Re-derive sizesWithQty and sizesStr from the incoming sizes array
+        if (Array.isArray(updates.sizes)) {
+          patch.sizesWithQty = updates.sizes.map((s) =>
+            typeof s === 'object' && s !== null
+              ? { size: s.size || '', qty: Number(s.qty) || 0 }
+              : { size: String(s), qty: 0 }
+          )
+          patch.sizesStr = patch.sizesWithQty.map((s) => s.size).filter(Boolean).join(', ')
+          patch.sizes = patch.sizesWithQty.map((s) => s.size).filter(Boolean)
+        }
+
+        // Re-derive total stock from colors (if provided) or sizes
+        if (Array.isArray(updates.colors) && updates.colors.length > 0) {
+          patch.stock = updates.colors.reduce((sum, c) => {
+            if (Array.isArray(c.sizes) && c.sizes.length > 0) {
+              return sum + c.sizes.reduce((acc, s) => acc + (Number(s.qty) || 0), 0)
+            }
+            return sum + (Number(c.stock) || 0)
+          }, 0)
+        } else if (Array.isArray(updates.sizes) && updates.sizes.length > 0) {
+          patch.stock = updates.sizes.reduce((sum, s) => sum + (Number(s.qty) || 0), 0)
+        }
+
+        return patch
+      })
+    )
     return adminProductService
       .updateProduct(id, updates)
       .then((res) => {

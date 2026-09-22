@@ -56,7 +56,19 @@ export default function ProductFormModal({ product, onClose, onSave }) {
   useEffect(() => {
     if (product) {
       let initialSizes = []
-      if (Array.isArray(product.sizesWithQty) && product.sizesWithQty.length > 0) {
+
+      const normalizedColors = normalizeColorList(product.colors)
+      const primaryColorSizes = normalizedColors.length > 0 && Array.isArray(normalizedColors[0].sizes)
+        ? normalizedColors[0].sizes
+        : []
+
+      if (primaryColorSizes.length > 0) {
+        // Primary color's sizes (set via InventoryTab) are the source of truth
+        initialSizes = primaryColorSizes.map((s) => ({
+          size: typeof s === 'object' ? (s.size || '') : String(s),
+          qty: String(typeof s === 'object' ? (s.qty ?? '') : ''),
+        }))
+      } else if (Array.isArray(product.sizesWithQty) && product.sizesWithQty.length > 0) {
         initialSizes = product.sizesWithQty.map((s) => ({
           size: s.size || '',
           qty: String(s.qty ?? ''),
@@ -88,7 +100,7 @@ export default function ProductFormModal({ product, onClose, onSave }) {
         price: String(product.price ?? ''),
         originalPrice: String(product.originalPrice ?? ''),
         stock: String(product.stock ?? '50'),
-        colors: normalizeColorList(product.colors),
+        colors: normalizedColors,
         sizes: initialSizes,
         description: product.description || '',
         isBestSeller: !!product.isBestSeller,
@@ -102,6 +114,7 @@ export default function ProductFormModal({ product, onClose, onSave }) {
     setNewSubName('')
     setNewKeyword('')
   }, [product])
+
 
   const selectedCategoryDoc = categories.find((c) => c.slug === form.category || c.id === form.category)
   const availableSubcategories = selectedCategoryDoc?.subcategories || []
