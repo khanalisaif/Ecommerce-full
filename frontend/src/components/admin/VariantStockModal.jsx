@@ -5,19 +5,20 @@ const QUICK_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size']
 
 // Helper: Extract valid parent size names from product, filtering out any color names
 function getProductParentSizes(product) {
-  const colorNamesLower = new Set(
+  // Use EXACT (case-sensitive) matching so that size "S" is NOT confused with color "s"
+  const colorNamesExact = new Set(
     (Array.isArray(product?.colors) ? product.colors : [])
       .map((c) => (typeof c === 'object' ? c.name : String(c)))
       .filter(Boolean)
-      .map((n) => n.trim().toLowerCase())
+      .map((n) => n.trim())
   )
 
   const names = []
   const add = (rawSize) => {
     const s = String(rawSize || '').trim()
     if (!s) return
-    // Ignore any size name that matches a color name
-    if (colorNamesLower.has(s.toLowerCase())) return
+    // Ignore a size only when it is the EXACT same string as a color name (case-sensitive)
+    if (colorNamesExact.has(s)) return
     if (!names.some((n) => n.toLowerCase() === s.toLowerCase())) {
       names.push(s)
     }
@@ -48,21 +49,22 @@ export default function VariantStockModal({ product, onSave, onClose }) {
 
   // Initialize colors & sizes from product prop
   useEffect(() => {
-    const colorNamesLower = new Set(
+    // Use EXACT (case-sensitive) matching — size "S" must NOT be confused with color "s"
+    const colorNamesExact = new Set(
       (Array.isArray(product?.colors) ? product.colors : [])
         .map((c) => (typeof c === 'object' ? c.name : String(c)))
         .filter(Boolean)
-        .map((n) => n.trim().toLowerCase())
+        .map((n) => n.trim())
     )
 
     if (hasColors) {
       const initialColors = JSON.parse(JSON.stringify(product.colors))
 
       initialColors.forEach((c, idx) => {
-        // Filter out any sizes that accidentally match a color name (e.g. size: 'a')
+        // Filter out sizes that are the EXACT same string as a color name (case-sensitive)
         const existingColorSizes = (Array.isArray(c.sizes) ? c.sizes : []).filter((s) => {
           const sName = typeof s === 'object' ? s.size : String(s)
-          return sName && !colorNamesLower.has(String(sName).trim().toLowerCase())
+          return sName && !colorNamesExact.has(String(sName).trim())
         })
 
         const sizeMap = new Map()
@@ -108,7 +110,7 @@ export default function VariantStockModal({ product, onSave, onClose }) {
       let initialSizes = []
       if (Array.isArray(product?.sizesWithQty) && product.sizesWithQty.length > 0) {
         initialSizes = product.sizesWithQty
-          .filter((s) => s.size && !colorNamesLower.has(s.size.trim().toLowerCase()))
+          .filter((s) => s.size && !colorNamesExact.has(s.size.trim()))
           .map((s) => ({
             size: s.size.trim(),
             qty: Math.max(0, Number(s.qty) || 0),
@@ -121,7 +123,7 @@ export default function VariantStockModal({ product, onSave, onClose }) {
             }
             return { size: String(s).trim(), qty: 0 }
           })
-          .filter((s) => s.size && !colorNamesLower.has(s.size.toLowerCase()))
+          .filter((s) => s.size && !colorNamesExact.has(s.size))
       } else if (parentSizes.length > 0) {
         initialSizes = parentSizes.map((s) => ({ size: s, qty: 0 }))
       }
