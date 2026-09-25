@@ -63,6 +63,31 @@ const orderSchema = new mongoose.Schema(
       default: "Pending",
     },
     statusHistory: [statusHistorySchema],
+
+    // ── Delhivery shipment lifecycle ──────────────────────────────────────────
+    delhivery: {
+      // waybill = AWB number assigned by Delhivery when shipment is created
+      waybill:        { type: String, default: "" },
+      // sort_code returned by Delhivery (e.g. "NDLH-DEL")
+      sortCode:       { type: String, default: "" },
+      // When shipment was booked on Delhivery
+      shipmentCreatedAt: { type: Date },
+      // PDF URL of the packing slip / shipping label
+      labelUrl:       { type: String, default: "" },
+      // Whether label has been fetched from Delhivery
+      labelFetched:   { type: Boolean, default: false },
+      // Pickup request ID from First Mile API
+      pickupId:       { type: String, default: "" },
+      pickupScheduledAt: { type: Date },
+      // Current status as last seen from Delhivery tracking API
+      delhiveryStatus: { type: String, default: "" },
+      // Full tracking scans (last fetched)
+      trackingScans:  { type: Array, default: [] },
+      trackingFetchedAt: { type: Date },
+      // Was the shipment cancelled on Delhivery?
+      cancelled:      { type: Boolean, default: false },
+    },
+    // ──────────────────────────────────────────────────────────────────────────
   },
   { timestamps: true }
 );

@@ -19,6 +19,7 @@ import categoryRoutes from "./user/category.routes.js";
 import siteContentRoutes from "./user/siteContent.routes.js";
 import chatRoutes from "./user/chat.routes.js";
 import subscribeRoutes from "./user/subscribe.routes.js";
+import deliveryRoutes from "./user/delivery.routes.js";
 
 // admin-side (auth-protected except /admin/auth)
 import adminAuthRoutes from "./admin/auth.routes.js";
@@ -54,6 +55,7 @@ router.use("/content", siteContentRoutes); // /content, /content/:key — generi
 router.use("/chat", chatRoutes); // /chat — AI shopping assistant
 router.use("/user/subscribe", subscribeRoutes); // /user/subscribe — newsletter email subscription (public)
 router.use("/user/unsubscribe", subscribeRoutes); // /user/unsubscribe/:token — direct unsubscribe alias
+router.use("/user/delivery", deliveryRoutes); // /user/delivery/tat, /user/delivery/serviceability — Delhivery TAT & pincode check (public)
 
 // ---------- Admin ----------
 router.use("/admin/auth", adminAuthRoutes);

@@ -1,13 +1,15 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { Heart, ShoppingCart, Zap, Check, Maximize2, ChevronRight, ShieldCheck, Box, RotateCcw, Lock, X, Star } from 'lucide-react'
+import { Heart, ShoppingCart, Zap, Check, Maximize2, ChevronRight, ShieldCheck, Box, RotateCcw, Lock, X, Star, MapPin, Truck, ArrowRight, Loader } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
 import { normalizeColorList, getSwatchStyle } from '../data/colorUtils'
 import reviewService from '../services/reviewService'
 import productService from '../services/productService'
+import addressService from '../services/addressService'
+import deliveryService from '../services/deliveryService'
 import { trackProductView } from './AccountPage'
 
 export default function ProductDetailPage() {
@@ -158,6 +160,70 @@ export default function ProductDetailPage() {
   const maxBreakdown = Math.max(1, ...ratingBreakdown.map(r => r.count))
 
   const relatedProducts = products.filter(p => p.isBestSeller && p.id !== product.id).slice(0, 4)
+
+  // ── Delivery estimate widget ──────────────────────────────────────────────
+  const [deliveryPincode, setDeliveryPincode]   = useState('')
+  const [pincodeInput, setPincodeInput]         = useState('')
+  const [deliveryInfo, setDeliveryInfo]         = useState(null)
+  const [deliveryLoading, setDeliveryLoading]   = useState(false)
+  const [deliveryError, setDeliveryError]       = useState('')
+  const [showPincodeInput, setShowPincodeInput] = useState(false)
+
+  // Weight in grams from product (default 50g)
+  const productWeightGrams = Math.round((product.weight || 0.05) * 1000)
+
+  const fetchDeliveryInfo = useCallback(async (pincode) => {
+    if (!pincode || String(pincode).length !== 6) return
+    setDeliveryLoading(true)
+    setDeliveryError('')
+    setDeliveryInfo(null)
+    try {
+      const res = await deliveryService.getDeliveryInfo(pincode, {
+        weight: productWeightGrams,
+        mode: product.shippingMode === 'Express' ? 'E' : 'S',
+      })
+      // api.js unwraps { success, data } -> data is directly the response body
+      const info = res?.data || res
+      setDeliveryInfo(info)
+      setDeliveryPincode(String(pincode))
+    } catch {
+      setDeliveryError('Could not fetch delivery info. Please try again.')
+    } finally {
+      setDeliveryLoading(false)
+    }
+  }, [productWeightGrams, product.shippingMode])
+
+  // Auto-fetch on page load: try to get user's default address pincode
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowPincodeInput(true)
+      return
+    }
+    addressService.getAddresses()
+      .then((res) => {
+        // api.js unwraps — res is { addresses } or { data: { addresses } }
+        const addresses = res?.addresses || res?.data?.addresses || []
+        const defaultAddr = addresses.find(a => a.isDefault) || addresses[0]
+        if (defaultAddr?.pincode) {
+          setDeliveryPincode(String(defaultAddr.pincode))
+          fetchDeliveryInfo(defaultAddr.pincode)
+        } else {
+          setShowPincodeInput(true)
+        }
+      })
+      .catch(() => setShowPincodeInput(true))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, id])
+
+  const handleCheckDelivery = () => {
+    const pin = pincodeInput.trim()
+    if (pin.length !== 6 || isNaN(Number(pin))) {
+      setDeliveryError('Please enter a valid 6-digit pincode')
+      return
+    }
+    fetchDeliveryInfo(pin)
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   const [showAllReviews, setShowAllReviews] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
@@ -335,6 +401,131 @@ export default function ProductDetailPage() {
               </span>
               {displayStock > 0 && <span className="text-gray-400">Ships within 24 hours</span>}
             </div>
+
+            {/* ── Delivery Estimate Widget ─────────────────────────── */}
+            <div className="border border-blue-100 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 rounded-2xl p-4 mb-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)' }}>
+                  <Truck size={14} className="text-white" />
+                </div>
+                <span className="text-sm font-bold text-gray-900">Delivery Estimate</span>
+                {deliveryPincode && !showPincodeInput && (
+                  <button
+                    onClick={() => setShowPincodeInput(true)}
+                    className="ml-auto text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1"
+                  >
+                    <MapPin size={11} /> Change Pincode
+                  </button>
+                )}
+              </div>
+
+              {/* Pincode input */}
+              {(showPincodeInput || !deliveryPincode) && (
+                <div className="flex gap-2 mb-3">
+                  <div className="flex-1 relative">
+                    <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={pincodeInput}
+                      onChange={(e) => { setPincodeInput(e.target.value.replace(/\D/g, '')); setDeliveryError('') }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleCheckDelivery() }}
+                      placeholder="Enter delivery pincode"
+                      className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 bg-white"
+                    />
+                  </div>
+                  <button
+                    onClick={handleCheckDelivery}
+                    disabled={deliveryLoading || pincodeInput.length !== 6}
+                    className="px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 flex items-center gap-1.5"
+                    style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)' }}
+                  >
+                    {deliveryLoading ? <Loader size={14} className="animate-spin" /> : <><ArrowRight size={14} /> Check</>}
+                  </button>
+                </div>
+              )}
+
+              {/* Loading state */}
+              {deliveryLoading && !showPincodeInput && (
+                <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
+                  <Loader size={14} className="animate-spin text-blue-500" />
+                  Checking delivery to {deliveryPincode}...
+                </div>
+              )}
+
+              {/* Error */}
+              {deliveryError && (
+                <p className="text-xs text-red-500 font-medium">{deliveryError}</p>
+              )}
+
+              {/* Result */}
+              {deliveryInfo && !deliveryLoading && (
+                deliveryInfo.isServiceable ? (
+                  <div className="space-y-2.5">
+                    {/* Pincode badge */}
+                    {!showPincodeInput && (
+                      <div className="flex items-center gap-1.5">
+                        <MapPin size={11} className="text-blue-500" />
+                        <span className="text-xs text-gray-500">Delivering to <span className="font-bold text-gray-800">{deliveryInfo.pincode}</span></span>
+                      </div>
+                    )}
+
+                    {/* Expected delivery date highlight */}
+                    <div className="bg-white border border-green-200 rounded-xl p-3 flex items-center gap-3 shadow-xs">
+                      <div className="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
+                        <Truck size={18} className="text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Estimated Delivery</p>
+                        <p className="text-sm font-black text-green-700">
+                          {deliveryInfo.expectedDate || 'Within 3–5 Business Days'}
+                        </p>
+                        {deliveryInfo.tatDays && (
+                          <p className="text-[11px] text-gray-500 font-medium">
+                            Expected in <span className="font-bold text-gray-700">{deliveryInfo.tatDays} days</span> from today
+                          </p>
+                        )}
+                      </div>
+                      <div className="shrink-0">
+                        <span className="text-[11px] font-black bg-green-100 text-green-800 px-2.5 py-1 rounded-full border border-green-200">
+                          FREE
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Service assurance tags */}
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="flex items-center gap-1.5 text-[11px] text-gray-600 bg-white/80 rounded-lg px-2.5 py-1.5 border border-blue-100">
+                        <Check size={12} className="text-green-600 shrink-0" />
+                        <span className="font-medium">
+                          {deliveryInfo.hasCOD ? 'Cash on Delivery Available' : 'Prepaid Only'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] text-gray-600 bg-white/80 rounded-lg px-2.5 py-1.5 border border-blue-100">
+                        <Check size={12} className="text-blue-600 shrink-0" />
+                        <span className="font-medium">Fast Delhivery Dispatch</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2.5 border border-red-100">
+                    <X size={14} />
+                    <span className="font-medium">Delivery not available at <strong>{deliveryInfo.pincode}</strong></span>
+                  </div>
+                )
+              )}
+
+              {/* Not logged in hint */}
+              {!isAuthenticated && !deliveryPincode && !deliveryInfo && !deliveryLoading && (
+                <p className="text-[11px] text-gray-400 text-center pt-1">
+                  <span
+                    className="text-blue-500 font-semibold cursor-pointer hover:underline"
+                    onClick={() => navigate('/login')}
+                  >Log in</span> to auto-detect delivery pincode from your saved address
+                </p>
+              )}
+            </div>
+            {/* ────────────────────────────────────────────────────── */}
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">

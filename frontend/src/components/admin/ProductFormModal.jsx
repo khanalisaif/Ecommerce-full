@@ -37,6 +37,12 @@ const emptyForm = {
   description: '',
   isBestSeller: false,
   images: [],
+  // Delhivery shipping dimensions
+  weight: '0.05',
+  length: '10',
+  width: '10',
+  height: '5',
+  shippingMode: 'Surface',
 }
 
 export default function ProductFormModal({ product, onClose, onSave }) {
@@ -105,6 +111,12 @@ export default function ProductFormModal({ product, onClose, onSave }) {
         description: product.description || '',
         isBestSeller: !!product.isBestSeller,
         images: product.images && product.images.length ? product.images : [product.image].filter(Boolean),
+        // Delhivery shipping dimensions
+        weight: String(product.weight ?? '0.05'),
+        length: String(product.length ?? '10'),
+        width: String(product.width ?? '10'),
+        height: String(product.height ?? '5'),
+        shippingMode: product.shippingMode || 'Surface',
       })
     } else {
       setForm({ ...emptyForm, category: categories[0]?.slug || '' })
@@ -344,6 +356,12 @@ export default function ProductFormModal({ product, onClose, onSave }) {
       isBestSeller: form.isBestSeller,
       images: form.images,
       image: form.images[0],
+      // Delhivery shipping dimensions
+      weight: parseFloat(form.weight) || 0.05,
+      length: parseFloat(form.length) || 10,
+      width:  parseFloat(form.width)  || 10,
+      height: parseFloat(form.height) || 5,
+      shippingMode: form.shippingMode || 'Surface',
     }
 
     Promise.resolve(onSave(payload))
@@ -783,6 +801,94 @@ export default function ProductFormModal({ product, onClose, onSave }) {
             >
               <Plus size={15} strokeWidth={2.5} /> Add Another Size & Quantity
             </button>
+          </div>
+
+          <div className="border border-orange-100 bg-orange-50/30 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-2.5 mb-1">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-xs"
+                   style={{ background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)' }}>
+                <span className="text-white text-xs font-black">📦</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 leading-tight">Shipping Dimensions</h4>
+                <p className="text-[11px] text-gray-500 mt-0.5">Delhivery delivery estimate ke liye required — weight aur box size</p>
+              </div>
+            </div>
+
+            {/* Weight + Mode row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-gray-700 font-semibold text-xs mb-1.5">
+                  Weight <span className="text-gray-400 font-normal">(kg, e.g. 0.5)</span>
+                </label>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={form.weight}
+                  onChange={field('weight')}
+                  placeholder="0.05"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-400 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold text-xs mb-1.5">Shipping Mode</label>
+                <select
+                  value={form.shippingMode}
+                  onChange={field('shippingMode')}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-400 bg-white"
+                >
+                  <option value="Surface">🚛 Surface (2–5 days)</option>
+                  <option value="Express">✈️ Express (1–2 days)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* L × W × H */}
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="block text-gray-700 font-semibold text-xs mb-1.5">
+                  Length <span className="text-gray-400 font-normal">(cm)</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.length}
+                  onChange={field('length')}
+                  placeholder="10"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-400 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold text-xs mb-1.5">
+                  Width <span className="text-gray-400 font-normal">(cm)</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.width}
+                  onChange={field('width')}
+                  placeholder="10"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-400 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold text-xs mb-1.5">
+                  Height <span className="text-gray-400 font-normal">(cm)</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.height}
+                  onChange={field('height')}
+                  placeholder="5"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-400 bg-white"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400">
+              📍 These values auto-populate the Delhivery TAT estimate on the product page for customers.
+            </p>
           </div>
 
           <div>

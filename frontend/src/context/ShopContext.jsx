@@ -103,6 +103,12 @@ function mapBackendProduct(doc) {
     sku: doc.sku || '',
     keywords: Array.isArray(doc.keywords) ? doc.keywords : Array.isArray(doc.tags) ? doc.tags : [],
     tags: Array.isArray(doc.tags) ? doc.tags : Array.isArray(doc.keywords) ? doc.keywords : [],
+    // Delhivery shipping dimensions
+    weight:       doc.weight       ?? 0.05,
+    length:       doc.length       ?? 10,
+    width:        doc.width        ?? 10,
+    height:       doc.height       ?? 5,
+    shippingMode: doc.shippingMode || 'Surface',
   }
 }
 
@@ -309,6 +315,8 @@ export function ShopProvider({ children }) {
       shippingCost: o.shippingCost ?? 0,
       deliveryOption: o.deliveryOption,
       orderNotes: o.orderNotes || '',
+      // ── Delhivery ────────────────────────────────────────────────────────────
+      delhivery: o.delhivery || {},
     }
   }
 
@@ -389,6 +397,70 @@ export function ShopProvider({ children }) {
   }
 
   const getOrderById = (orderId) => orders.find((o) => o.id === orderId)
+
+  // ── Delhivery admin actions ─────────────────────────────────────────────────
+  const refreshOrder = async (mongoId, frontendId) => {
+    try {
+      const res = await adminOrderService.getOrderById(mongoId)
+      const updated = mapAdminOrder(res.data?.order || res.order)
+      setOrders((prev) => prev.map((o) => (o.id === (frontendId || updated.id) ? updated : o)))
+      return updated
+    } catch {}
+  }
+
+  const findTargetOrder = (orderId) =>
+    orders.find((o) => o.id === orderId || o._id === orderId || String(o._id) === String(orderId))
+
+  const confirmOrderWithDelhivery = async (orderId) => {
+    const target = findTargetOrder(orderId)
+    if (!target?._id) throw new Error('Order not found')
+    const res = await adminOrderService.confirmWithDelhivery(target._id)
+    const updated = mapAdminOrder(res.data?.order)
+    if (updated) setOrders((prev) => prev.map((o) => (o.id === target.id || o._id === target._id ? updated : o)))
+    return res.data
+  }
+
+  const resendOrderToDelhivery = async (orderId) => {
+    const target = findTargetOrder(orderId)
+    if (!target?._id) throw new Error('Order not found')
+    const res = await adminOrderService.resendToDelhivery(target._id)
+    await refreshOrder(target._id, target.id)
+    return res.data
+  }
+
+  const cancelOrderOnDelhivery = async (orderId) => {
+    const target = findTargetOrder(orderId)
+    if (!target?._id) throw new Error('Order not found')
+    const res = await adminOrderService.cancelOnDelhivery(target._id)
+    const updated = mapAdminOrder(res.data?.order)
+    if (updated) setOrders((prev) => prev.map((o) => (o.id === target.id || o._id === target._id ? updated : o)))
+    return res.data
+  }
+
+  const getOrderDelhiveryLabel = async (orderId) => {
+    const target = findTargetOrder(orderId)
+    if (!target?._id) throw new Error('Order not found')
+    const res = await adminOrderService.getDelhiveryLabel(target._id)
+    // Update labelUrl in local state
+    setOrders((prev) => prev.map((o) =>
+      o.id !== target.id && o._id !== target._id ? o :
+      { ...o, delhivery: { ...(o.delhivery || {}), labelUrl: res.data?.labelUrl || '', labelFetched: true } }
+    ))
+    return res.data
+  }
+
+  const trackOrderOnDelhivery = async (orderId) => {
+    const target = findTargetOrder(orderId)
+    if (!target?._id) throw new Error('Order not found')
+    const res = await adminOrderService.trackOnDelhivery(target._id)
+    return res.data
+  }
+
+  const scheduleDelhiveryPickup = async (payload) => {
+    const res = await adminOrderService.schedulePickup(payload)
+    return res.data
+  }
+  // ────────────────────────────────────────────────────────────────────────────
 
   function reorderList(setter, id, direction) {
     setter((prev) => {
@@ -888,6 +960,13 @@ export function ShopProvider({ children }) {
     trustBadges, addTrustBadge, updateTrustBadge, deleteTrustBadge, reorderTrustBadge,
 
     orders, updateOrderStatus, updatePaymentStatus, deleteOrder, getOrderById,
+    // Delhivery admin actions
+    confirmOrderWithDelhivery,
+    resendOrderToDelhivery,
+    cancelOrderOnDelhivery,
+    getOrderDelhiveryLabel,
+    trackOrderOnDelhivery,
+    scheduleDelhiveryPickup,
   }
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>

@@ -6,6 +6,7 @@ import Cart from "../../models/user/Cart.model.js";
 import Product from "../../models/admin/Product.model.js";
 import User from "../../models/user/User.model.js";
 import { sendOrderConfirmationEmail, sendNewOrderAlert } from "../../utils/sendEmail.js";
+import { cancelShipment, trackPackage, DELHIVERY_PUBLIC_TRACK_URL } from "../../utils/delhivery.js";
 
 const FREE_SHIPPING_THRESHOLD = 999;
 const STANDARD_SHIPPING = 200;
@@ -62,16 +63,16 @@ export const placeOrder = asyncHandler(async (req, res) => {
     user: req.user._id,
     items,
     shippingAddress: {
-      fullName: address.fullName,
-      mobile: address.mobile,
-      pincode: address.pincode,
+      fullName:    address.fullName,
+      mobile:      address.mobile,
+      pincode:     address.pincode,
       addressLine: address.addressLine,
-      landmark: address.landmark,
-      city: address.city,
-      state: address.state,
+      landmark:    address.landmark,
+      city:        address.city,
+      state:       address.state,
     },
-    paymentMethod: paymentMethod.toLowerCase(),
-    paymentStatus: paymentMethod.toLowerCase() === "cod" ? "pending" : "paid",
+    paymentMethod:      paymentMethod.toLowerCase(),
+    paymentStatus:      paymentMethod.toLowerCase() === "cod" ? "pending" : "paid",
     razorpayOrderId,
     razorpayPaymentId,
     razorpaySignature,
@@ -79,13 +80,13 @@ export const placeOrder = asyncHandler(async (req, res) => {
     orderNotes,
     subtotal,
     discount,
-    couponCode: couponCode ? couponCode.trim().toUpperCase() : "",
-    couponDiscount: appliedCouponDiscount,
+    couponCode:      couponCode ? couponCode.trim().toUpperCase() : "",
+    couponDiscount:  appliedCouponDiscount,
     shippingCost,
     total,
   });
 
-  // Decrement stock (best-effort; not fully transactional but fine for this scale)
+  // Decrement stock
   for (const item of cart.items) {
     const product = await Product.findById(item.product._id);
     if (!product) continue;
@@ -105,7 +106,6 @@ export const placeOrder = asyncHandler(async (req, res) => {
   cart.items = [];
   await cart.save();
 
-  // Send Order Confirmation email if user hasn't opted out of order updates
   if (user.preferences?.notifications?.orders !== false) {
     sendOrderConfirmationEmail(user.email, order).catch(() => {});
   }
@@ -136,11 +136,22 @@ export const cancelOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, `Order cannot be cancelled once it is ${order.status}`);
   }
 
+  // Cancel on Delhivery if waybill exists (best-effort)
+  const waybill = order.delhivery?.waybill;
+  if (waybill) {
+    try {
+      await cancelShipment(waybill);
+      order.delhivery.cancelled = true;
+    } catch (err) {
+      console.error("Delhivery cancel failed (user-initiated):", err?.response?.data || err.message);
+    }
+  }
+
   order.status = "Cancelled";
   order.statusHistory.push({ status: "Cancelled", timestamp: new Date() });
   await order.save();
 
-  // Restore inventory for cancelled order items
+  // Restore inventory
   for (const item of order.items) {
     if (item.product) {
       await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
@@ -148,4 +159,65 @@ export const cancelOrder = asyncHandler(async (req, res) => {
   }
 
   res.status(200).json(new ApiResponse(200, { order }, "Order cancelled"));
+});
+
+/**
+ * @route GET /api/user/orders/:orderId/track
+ * @desc  Live Delhivery tracking for the authenticated user's order
+ */
+export const trackOrder = asyncHandler(async (req, res) => {
+  const order = await Order.findOne({ _id: req.params.orderId, user: req.user._id });
+  if (!order) throw new ApiError(404, "Order not found");
+
+  const waybill = order.delhivery?.waybill;
+  if (!waybill) {
+    // Return our own status history if no Delhivery waybill yet
+    return res.status(200).json(
+      new ApiResponse(200, {
+        waybill:        null,
+        publicTrackUrl: null,
+        status:         order.status,
+        scans:          [],
+        statusHistory:  order.statusHistory,
+        message:        "Shipment not yet handed to Delhivery",
+      }, "Order status from internal records")
+    );
+  }
+
+  let delRes;
+  try {
+    delRes = await trackPackage(waybill);
+  } catch (err) {
+    // Fallback to cached data
+    return res.status(200).json(
+      new ApiResponse(200, {
+        waybill,
+        publicTrackUrl:  `${DELHIVERY_PUBLIC_TRACK_URL}/${waybill}`,
+        status:          order.delhivery?.delhiveryStatus || order.status,
+        scans:           order.delhivery?.trackingScans   || [],
+        statusHistory:   order.statusHistory,
+        cached:          true,
+      }, "Tracking data (cached)")
+    );
+  }
+
+  const shipData  = delRes?.ShipmentData?.[0]?.Shipment || {};
+  const scans     = shipData?.Scans  || [];
+  const delStatus = shipData?.Status?.Status || "";
+
+  // Update cache
+  order.delhivery.delhiveryStatus   = delStatus;
+  order.delhivery.trackingScans     = scans;
+  order.delhivery.trackingFetchedAt = new Date();
+  await order.save();
+
+  res.status(200).json(
+    new ApiResponse(200, {
+      waybill,
+      publicTrackUrl: `${DELHIVERY_PUBLIC_TRACK_URL}/${waybill}`,
+      status:         delStatus,
+      scans,
+      statusHistory:  order.statusHistory,
+    }, "Tracking data fetched")
+  );
 });

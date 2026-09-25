@@ -126,6 +126,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     keywords, tags,
     price, originalPrice, stock, colors, sizes, images,
     isAssured, isBestSeller, isNewArrival, badge, sku, discount, rating, reviews,
+    weight, length, width, height, shippingMode,
   } = req.body;
 
   if (!name || !brand || !category || price === undefined) {
@@ -180,6 +181,12 @@ export const createProduct = asyncHandler(async (req, res) => {
     isBestSeller: !!isBestSeller,
     isNewArrival: !!isNewArrival,
     badge: badge || "",
+    // Delhivery shipping dimensions
+    weight: weight !== undefined ? Number(weight) : undefined,
+    length: length !== undefined ? Number(length) : undefined,
+    width:  width  !== undefined ? Number(width)  : undefined,
+    height: height !== undefined ? Number(height) : undefined,
+    shippingMode: shippingMode || "Surface",
   });
 
   res.status(201).json(new ApiResponse(201, { product }, "Product created successfully"));
@@ -196,6 +203,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
     keywords, tags,
     price, originalPrice, stock, colors, sizes, images,
     isAssured, isBestSeller, isNewArrival, badge, sku, discount, isActive, rating, reviews,
+    weight, length, width, height, shippingMode,
   } = req.body;
 
   const oldPrice = product.price;
@@ -265,6 +273,12 @@ export const updateProduct = asyncHandler(async (req, res) => {
   if (isNewArrival !== undefined) product.isNewArrival = !!isNewArrival;
   if (isActive !== undefined) product.isActive = !!isActive;
   if (badge !== undefined) product.badge = badge;
+  // Delhivery shipping dimensions
+  if (weight !== undefined) product.weight = Number(weight);
+  if (length !== undefined) product.length = Number(length);
+  if (width  !== undefined) product.width  = Number(width);
+  if (height !== undefined) product.height = Number(height);
+  if (shippingMode !== undefined) product.shippingMode = shippingMode;
 
   if (category !== undefined) {
     const categoryDoc = await resolveCategory(category);

@@ -45,6 +45,16 @@ const productSchema = new mongoose.Schema(
     keywords: [{ type: String, trim: true }],
     tags: [{ type: String, trim: true }],
 
+    // ── Delhivery shipping dimensions (set by admin, used when creating shipment) ──
+    // Weight in kg (e.g. 0.5 = 500g)
+    weight: { type: Number, default: 0.05 },
+    // Dimensions in cm
+    length: { type: Number, default: 10 },
+    width:  { type: Number, default: 10 },
+    height: { type: Number, default: 5 },
+    // "Surface" or "Express"
+    shippingMode: { type: String, default: "Surface", enum: ["Surface", "Express"] },
+
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

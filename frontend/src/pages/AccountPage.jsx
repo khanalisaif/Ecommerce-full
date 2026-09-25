@@ -16,7 +16,7 @@ import {
   MessageCircle, Gift, Edit, Trash2,
   Plus, Package, Eye, RotateCcw, ThumbsUp, Smartphone,
   Globe, Phone, Mail, ChevronDown, X, Home, Briefcase,
-  AlertCircle, CheckCheck, XCircle, MoreHorizontal, Menu, Loader2
+  AlertCircle, CheckCheck, XCircle, MoreHorizontal, Menu, Loader2, ExternalLink
 } from 'lucide-react'
 
 const MENU = [
@@ -369,7 +369,9 @@ function OrdersPanel() {
   const [filter, setFilter] = useState('All')
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [trackModal, setTrackModal] = useState(null)
+  const [trackModal, setTrackModal]   = useState(null)   // order object
+  const [trackData, setTrackData]     = useState(null)   // live API response
+  const [trackLoading, setTrackLoading] = useState(false)
   const [cancelModal, setCancelModal] = useState(null)
   const { showToast, addToCart, getProductById } = useShop()
   const filters = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
@@ -399,6 +401,9 @@ function OrdersPanel() {
       couponDiscount: o.couponDiscount,
       couponCode: o.couponCode,
       shippingCost: o.shippingCost,
+      // Delhivery
+      waybill:  o.delhivery?.waybill  || '',
+      delhivery: o.delhivery || {},
     }
   }
 
@@ -430,6 +435,20 @@ function OrdersPanel() {
         loadOrders()
       })
       .catch((err) => showToast(err.message))
+  }
+
+  const openTrackModal = async (order) => {
+    setTrackModal(order)
+    setTrackData(null)
+    setTrackLoading(true)
+    try {
+      const res = await orderService.trackOrder(order.id)
+      setTrackData(res.data || res)
+    } catch {
+      setTrackData({ error: true, statusHistory: order.tracking })
+    } finally {
+      setTrackLoading(false)
+    }
   }
 
   const handleReorder = (order) => {
@@ -485,7 +504,7 @@ function OrdersPanel() {
                   </div>
                 </div>
                 <div className="flex gap-4 mt-3 pt-3 border-t border-gray-100 flex-wrap">
-                  <button onClick={() => setTrackModal(order)} className="text-purple-600 text-xs font-bold hover:underline flex items-center gap-1"><Eye size={12} /> Track Order</button>
+                  <button onClick={() => openTrackModal(order)} className="text-purple-600 text-xs font-bold hover:underline flex items-center gap-1"><Eye size={12} /> Track Order</button>
                   {order.status !== 'Cancelled' && (
                     <button onClick={() => handleReorder(order)} className="text-gray-500 text-xs font-bold hover:underline flex items-center gap-1"><RotateCcw size={12} /> Reorder</button>
                   )}
@@ -521,28 +540,97 @@ function OrdersPanel() {
         ))}
       </div>
 
-      {/* Track Order Modal */}
+      {/* Track Order Modal — Live Delhivery */}
       {trackModal && (
-        <Modal title={`Tracking: ${trackModal.orderNumber}`} onClose={() => setTrackModal(null)}>
-          <div className="mb-4">
-            <img src={trackModal.image} alt={trackModal.product} className="w-16 h-16 rounded-xl object-cover" />
-            <p className="font-bold text-gray-900 mt-2">{trackModal.product}</p>
-            <p className="text-gray-400 text-xs">{trackModal.address}</p>
+        <Modal title={`Tracking: ${trackModal.orderNumber}`} onClose={() => { setTrackModal(null); setTrackData(null) }}>
+          <div className="mb-4 flex items-center gap-3">
+            <img src={trackModal.image} alt={trackModal.product} className="w-14 h-14 rounded-xl object-cover bg-gray-100 shrink-0" />
+            <div>
+              <p className="font-bold text-gray-900 text-sm">{trackModal.product}</p>
+              <p className="text-gray-400 text-xs mt-0.5">{trackModal.address}</p>
+              {trackModal.waybill && (
+                <p className="text-xs font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded mt-1 inline-block">
+                  AWB: {trackModal.waybill}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="relative pl-6">
-            {trackModal.tracking.map((step, i) => (
-              <div key={i} className="relative mb-5 last:mb-0">
-                <div className={`absolute -left-6 top-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${step.done ? 'bg-purple-600 border-purple-600' : 'bg-white border-gray-300'}`}>
-                  {step.done && <span className="text-white text-[8px]">✓</span>}
+
+          {trackLoading && (
+            <div className="flex items-center justify-center gap-2 py-6 text-gray-400">
+              <Loader2 size={18} className="animate-spin text-purple-500" />
+              <span className="text-sm">Fetching live tracking...</span>
+            </div>
+          )}
+
+          {!trackLoading && trackData && (
+            <>
+              {/* Live Delhivery scans */}
+              {trackData.scans?.length > 0 ? (
+                <div className="mb-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Live Delhivery Scans</p>
+                  <div className="relative pl-5 space-y-3">
+                    {trackData.scans
+                      .filter((scan, i, arr) => {
+                        if (i === 0) return true
+                        const prev = arr[i - 1]
+                        return (
+                          (scan.ScanDetail?.Scan || scan.scan) !==
+                            (prev.ScanDetail?.Scan || prev.scan) ||
+                          (scan.ScanDetail?.ScannedLocation || scan.location) !==
+                            (prev.ScanDetail?.ScannedLocation || prev.location)
+                        )
+                      })
+                      .slice(0, 8)
+                      .map((scan, i, filtered) => (
+                      <div key={i} className="relative">
+                        <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-purple-500 border-2 border-white shadow" />
+                        {i < filtered.length - 1 && (
+                          <div className="absolute -left-[15px] top-4 w-0.5 h-full bg-purple-200" />
+                        )}
+                        <p className="font-semibold text-xs text-gray-900">
+                          {scan.ScanDetail?.Scan || scan.scan || '—'}
+                        </p>
+                        <p className="text-[11px] text-gray-500">
+                          {scan.ScanDetail?.ScannedLocation || scan.location || ''}
+                          {(scan.ScanDetail?.ScanDateTime || scan.time) && ` · ${scan.ScanDetail?.ScanDateTime || scan.time}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                {i < trackModal.tracking.length - 1 && (
-                  <div className={`absolute -left-[18px] top-5 w-0.5 h-[calc(100%+4px)] ${step.done ? 'bg-purple-300' : 'bg-gray-200'}`} />
-                )}
-                <p className={`font-bold text-sm ${step.done ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</p>
-                <p className="text-gray-400 text-xs">{step.date}</p>
-              </div>
-            ))}
-          </div>
+              ) : (
+                /* Fallback: show our own status history */
+                <div className="relative pl-6 mb-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Order Timeline</p>
+                  {trackModal.tracking.map((step, i) => (
+                    <div key={i} className="relative mb-5 last:mb-0">
+                      <div className={`absolute -left-6 top-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${step.done ? 'bg-purple-600 border-purple-600' : 'bg-white border-gray-300'}`}>
+                        {step.done && <span className="text-white text-[8px]">✓</span>}
+                      </div>
+                      {i < trackModal.tracking.length - 1 && (
+                        <div className={`absolute -left-[18px] top-5 w-0.5 h-[calc(100%+4px)] ${step.done ? 'bg-purple-300' : 'bg-gray-200'}`} />
+                      )}
+                      <p className={`font-bold text-sm ${step.done ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</p>
+                      <p className="text-gray-400 text-xs">{step.date}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Public Delhivery track link */}
+              {(trackData.publicTrackUrl || trackModal.waybill) && (
+                <a
+                  href={trackData.publicTrackUrl || `https://www.delhivery.com/track-v2/package/${trackModal.waybill}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 border border-blue-200 rounded-xl text-blue-600 text-sm font-bold hover:bg-blue-50 transition-colors"
+                >
+                  <ExternalLink size={14} /> Track on Delhivery.com
+                </a>
+              )}
+            </>
+          )}
         </Modal>
       )}
 
