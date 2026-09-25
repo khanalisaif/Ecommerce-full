@@ -13,6 +13,8 @@ const statusStyles = {
 }
 
 const paymentMeta = {
+  online:     { label: 'Razorpay',   bg: 'bg-purple-100', text: 'text-purple-700', Icon: CreditCard },
+  razorpay:   { label: 'Razorpay',   bg: 'bg-purple-100', text: 'text-purple-700', Icon: CreditCard },
   upi:        { label: 'UPI',        bg: 'bg-purple-100', text: 'text-purple-700', Icon: Smartphone },
   cod:        { label: 'COD',        bg: 'bg-orange-100', text: 'text-orange-700', Icon: Coins },
   card:       { label: 'Card',       bg: 'bg-blue-100',   text: 'text-blue-700',   Icon: CreditCard },
@@ -140,7 +142,8 @@ export default function OrdersTab() {
                   <td className="px-5 sm:px-6 py-3 font-semibold text-gray-700">{o.id}</td>
                   <td className="px-5 sm:px-6 py-3">
                     <p className="text-gray-700 font-medium">{o.customerName}</p>
-                    <p className="text-gray-500 text-sm">{o.customerEmail}</p>
+                    <p className="text-gray-500 text-xs">{o.customerEmail}</p>
+                    {o.customerMobile && <p className="text-purple-600 font-medium text-xs mt-0.5">{o.customerMobile}</p>}
                   </td>
                   <td className="px-5 sm:px-6 py-3">
                     <div className="flex items-center gap-2.5">
@@ -150,7 +153,18 @@ export default function OrdersTab() {
                   </td>
                   <td className="px-5 sm:px-6 py-3 text-gray-500">{o.date}</td>
                   <td className="px-5 sm:px-6 py-3 font-semibold text-gray-800">₹{(o.amount ?? 0).toLocaleString('en-IN')}</td>
-                  <td className="px-5 sm:px-6 py-3"><PaymentBadge method={o.paymentMethod} /></td>
+                  <td className="px-5 sm:px-6 py-3">
+                    <div className="flex flex-col gap-1 items-start">
+                      <PaymentBadge method={o.paymentMethod} />
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                        o.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
+                        o.paymentStatus === 'failed' ? 'bg-red-100 text-red-600' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {o.paymentStatus || 'pending'}
+                      </span>
+                    </div>
+                  </td>
                   <td className="px-5 sm:px-6 py-3">
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusStyles[o.status]}`}>
                       {o.status}

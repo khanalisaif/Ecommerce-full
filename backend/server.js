@@ -29,9 +29,14 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
-// Only log HTTP errors (4xx / 5xx) so logs stay clean
+// Only log HTTP errors (skip expected guest auth checks on /auth/me)
 if (process.env.NODE_ENV !== "production") {
-  app.use(morgan("dev", { skip: (req, res) => res.statusCode < 400 }));
+  app.use(
+    morgan("dev", {
+      skip: (req, res) =>
+        res.statusCode < 400 || (res.statusCode === 401 && req.originalUrl?.includes("/auth/me")),
+    })
+  );
 }
 
 // ---------- Health check ----------

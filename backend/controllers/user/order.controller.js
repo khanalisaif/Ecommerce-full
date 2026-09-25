@@ -21,6 +21,9 @@ export const placeOrder = asyncHandler(async (req, res) => {
     orderNotes = "",
     couponCode = "",
     couponDiscount = 0,
+    razorpayOrderId = "",
+    razorpayPaymentId = "",
+    razorpaySignature = "",
   } = req.body;
   if (!addressId || !paymentMethod) throw new ApiError(400, "addressId and paymentMethod are required");
 
@@ -69,6 +72,9 @@ export const placeOrder = asyncHandler(async (req, res) => {
     },
     paymentMethod: paymentMethod.toLowerCase(),
     paymentStatus: paymentMethod.toLowerCase() === "cod" ? "pending" : "paid",
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
     deliveryOption,
     orderNotes,
     subtotal,

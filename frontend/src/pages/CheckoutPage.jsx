@@ -3,19 +3,20 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import {
-  Smartphone, CreditCard, Landmark, Wallet, Banknote, Lock, Package, RefreshCw, CheckCircle2, Loader2, Tag, X,
+  CreditCard, Banknote, Lock, Package, RefreshCw, CheckCircle2, Loader2, Tag, X,
 } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
 import addressService from '../services/addressService'
 import orderService from '../services/orderService'
 import couponService from '../services/couponService'
+import razorpayService, { loadRazorpayScript } from '../services/razorpayService'
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const { cartItems, cartSubtotal, cartOriginalTotal, cartDiscount, clearCart, showToast } = useShop()
-  const { isAuthenticated, isAuthLoading } = useAuth()
-  const [paymentMethod, setPaymentMethod] = useState('upi')
+  const { user, isAuthenticated, isAuthLoading } = useAuth()
+  const [paymentMethod, setPaymentMethod] = useState('online')
   const [deliveryOption, setDeliveryOption] = useState('standard')
   const [orderNotes, setOrderNotes] = useState('')
   const [addresses, setAddresses] = useState([])
@@ -98,59 +99,150 @@ export default function CheckoutPage() {
     showToast('Coupon removed')
   }
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return
     if (!selectedAddressId) {
       showToast('Please add a delivery address first')
       navigate('/address')
       return
     }
-    setIsPlacing(true)
-    orderService.placeOrder({
-      addressId: selectedAddressId,
-      paymentMethod,
-      deliveryOption,
-      orderNotes,
-      couponCode: appliedCoupon?.code || '',
-      couponDiscount,
-    })
-      .then((res) => {
-        setPlacedOrder(res.data.order)
-        clearCart()
+
+    // ─── COD: place order directly ────────────────────────────────────────────
+    if (paymentMethod === 'cod') {
+      setIsPlacing(true)
+      orderService.placeOrder({
+        addressId: selectedAddressId,
+        paymentMethod,
+        deliveryOption,
+        orderNotes,
+        couponCode: appliedCoupon?.code || '',
+        couponDiscount,
       })
-      .catch((err) => showToast(err.message))
-      .finally(() => setIsPlacing(false))
+        .then((res) => { setPlacedOrder(res.data.order); clearCart() })
+        .catch((err) => showToast(err.message))
+        .finally(() => setIsPlacing(false))
+      return
+    }
+
+    // ─── Online payment (UPI / Card / Net Banking / Wallet) via Razorpay ─────
+    setIsPlacing(true)
+    try {
+      const isLoaded = await loadRazorpayScript()
+      if (!isLoaded) {
+        showToast('Could not load Razorpay SDK. Check your internet connection.')
+        setIsPlacing(false)
+        return
+      }
+
+      // 1. Create Razorpay order on our backend
+      const orderRes = await razorpayService.createOrder({ amount: total })
+      const { order: rzpOrder, key_id } = orderRes.data
+
+      // Load logo as Base64 Data URI so Razorpay checkout iframe displays the He & She logo directly
+      let logoDataUri = window.location.origin + '/he-and-she-logo.png'
+      try {
+        const logoFetch = await fetch('/he-and-she-logo.png')
+        if (logoFetch.ok) {
+          const blob = await logoFetch.blob()
+          logoDataUri = await new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result)
+            reader.onerror = () => resolve(window.location.origin + '/he-and-she-logo.png')
+            reader.readAsDataURL(blob)
+          })
+        }
+      } catch (e) {
+        // Fall back to absolute URL
+      }
+
+      // 2. Open Razorpay checkout modal
+      const paymentResponse = await new Promise((resolve, reject) => {
+        const options = {
+          key: key_id,
+          amount: rzpOrder.amount,
+          currency: rzpOrder.currency,
+          name: 'He & She',
+          description: 'Order Payment',
+          image: logoDataUri,
+          order_id: rzpOrder.id,
+          prefill: {
+            name: user?.fullName || '',
+            email: user?.email || '',
+            ...(user?.mobileNumber ? { contact: user.mobileNumber } : {}),
+          },
+          handler: async (response) => {
+            try {
+              // 3. Verify signature on our backend
+              await razorpayService.verifyPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              })
+              resolve(response)
+            } catch (err) {
+              reject(err)
+            }
+          },
+          modal: {
+            ondismiss: () => reject(new Error('Payment cancelled')),
+          },
+          theme: { color: '#7c3aed' },
+        }
+        const rzp = new window.Razorpay(options)
+        rzp.on('payment.failed', (resp) =>
+          reject(new Error(resp.error?.description || 'Payment failed'))
+        )
+        rzp.open()
+      })
+
+      // 4. Signature verified — now place the order in our system with Razorpay transaction info
+      const res = await orderService.placeOrder({
+        addressId: selectedAddressId,
+        paymentMethod: 'online', // Razorpay payment — mark as online/prepaid
+        razorpayOrderId: paymentResponse?.razorpay_order_id || rzpOrder.id,
+        razorpayPaymentId: paymentResponse?.razorpay_payment_id || '',
+        razorpaySignature: paymentResponse?.razorpay_signature || '',
+        deliveryOption,
+        orderNotes,
+        couponCode: appliedCoupon?.code || '',
+        couponDiscount,
+      })
+      setPlacedOrder(res.data.order)
+      clearCart()
+    } catch (err) {
+      if (err.message !== 'Payment cancelled') {
+        showToast(err.message || 'Payment failed')
+      }
+    } finally {
+      setIsPlacing(false)
+    }
   }
 
+  // Only 2 payment options shown — Online (Razorpay) and COD
   const paymentOptions = [
-    { id: 'upi', icon: Smartphone, title: 'UPI', subtitle: 'Pay using any UPI App',
-      right: <span className="border border-purple-300 text-purple-600 text-xs font-bold px-2 py-1 rounded">UPI</span> },
-    { id: 'card', icon: CreditCard, title: 'Credit / Debit Card', subtitle: 'Visa, Mastercard, Rupay & more',
+    {
+      id: 'online',
+      icon: CreditCard,
+      title: 'Online Payment',
+      subtitle: 'UPI · Card · Net Banking · Wallets',
       right: (
-        <span className="flex items-center gap-2 text-xs font-bold">
-          <span className="text-blue-600">RuPay</span>
+        <span className="flex items-center gap-1.5 text-xs font-bold">
+          <span className="border border-purple-300 text-purple-600 px-1.5 py-0.5 rounded">UPI</span>
           <span className="flex -space-x-1">
             <span className="w-4 h-4 rounded-full bg-red-500 inline-block"></span>
             <span className="w-4 h-4 rounded-full bg-yellow-400 inline-block opacity-90"></span>
           </span>
           <span className="text-blue-800">VISA</span>
         </span>
-      ) },
-    { id: 'netbanking', icon: Landmark, title: 'Net Banking', subtitle: 'All major banks supported',
-      right: <Landmark size={18} className="text-gray-400" /> },
-    { id: 'wallet', icon: Wallet, title: 'Wallets', subtitle: 'Paytm, PhonePe, Amazon Pay & more',
-      right: (
-        <span className="flex items-center gap-2 text-xs font-bold">
-          <span className="text-blue-600">RuPay</span>
-          <span className="flex -space-x-1">
-            <span className="w-4 h-4 rounded-full bg-red-500 inline-block"></span>
-            <span className="w-4 h-4 rounded-full bg-yellow-400 inline-block opacity-90"></span>
-          </span>
-          <span className="text-blue-800">VISA</span>
-        </span>
-      ) },
-    { id: 'cod', icon: Banknote, title: 'Cash on Delivery (COD)', subtitle: 'Pay when your order is delivered',
-      right: <Banknote size={18} className="text-green-500" /> },
+      ),
+    },
+    {
+      id: 'cod',
+      icon: Banknote,
+      title: 'Cash on Delivery (COD)',
+      subtitle: 'Pay when your order is delivered',
+      right: <Banknote size={18} className="text-green-500" />,
+    },
   ]
 
   if (isLoading) {

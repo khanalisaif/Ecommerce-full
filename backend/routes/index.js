@@ -11,6 +11,7 @@ import userReviewRoutes from "./user/review.routes.js";
 import userPaymentMethodRoutes from "./user/paymentMethod.routes.js";
 import userPreferencesRoutes from "./user/preferences.routes.js";
 import userCouponRoutes from "./user/coupon.routes.js";
+import razorpayRoutes from "./user/razorpay.routes.js";
 
 // storefront (public, but grouped under user/ folder per project structure)
 import productRoutes, { searchProducts } from "./user/product.routes.js";
@@ -43,6 +44,7 @@ router.use("/user/reviews", userReviewRoutes);
 router.use("/user/payment-methods", userPaymentMethodRoutes);
 router.use("/user/preferences", userPreferencesRoutes);
 router.use("/user/coupons", userCouponRoutes);
+router.use("/razorpay", razorpayRoutes);   // /razorpay/create-order, /razorpay/verify-payment
 
 // ---------- Storefront (public browsing) ----------
 router.use("/user/products", productRoutes);

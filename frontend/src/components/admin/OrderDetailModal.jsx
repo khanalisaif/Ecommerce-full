@@ -7,6 +7,8 @@ import {
 import { useShop } from '../../context/ShopContext'
 
 const PAYMENT_META = {
+  online:     { label: 'Razorpay Online', bg: '#f3e8ff', color: '#7c3aed', Icon: CreditCard },
+  razorpay:   { label: 'Razorpay Online', bg: '#f3e8ff', color: '#7c3aed', Icon: CreditCard },
   upi:        { label: 'UPI Pay',      bg: '#f3e8ff', color: '#7c3aed', Icon: Smartphone },
   cod:        { label: 'Cash on Delivery', bg: '#fff7ed', color: '#c2410c', Icon: Coins },
   card:       { label: 'Card Payment', bg: '#eff6ff', color: '#1d4ed8', Icon: CreditCard },
@@ -260,7 +262,8 @@ export default function OrderDetailModal({ order, onClose }) {
                 <div className="space-y-1.5">
                   <p className="text-sm text-gray-700"><span className="font-semibold text-gray-500 mr-2">Name:</span> {order.customerName}</p>
                   <p className="text-sm text-gray-700"><span className="font-semibold text-gray-500 mr-2">Email:</span> {order.customerEmail}</p>
-                  <p className="text-sm text-gray-700"><span className="font-semibold text-gray-500 mr-2">Address:</span> {order.address || '45, MG Road, Block C, Indiranagar, Bengaluru, Karnataka 560038'}</p>
+                  <p className="text-sm text-gray-700"><span className="font-semibold text-gray-500 mr-2">Phone (Account):</span> {order.customerMobile || '—'}</p>
+                  <p className="text-sm text-gray-700"><span className="font-semibold text-gray-500 mr-2">Address:</span> {order.address || '—'}</p>
                 </div>
               </div>
 
@@ -269,7 +272,7 @@ export default function OrderDetailModal({ order, onClose }) {
                   <h4 className="text-sm font-bold text-gray-900">Payment Method</h4>
                   <PaymentMethodBadge method={order.paymentMethod} />
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap mb-3">
                   <p className="text-xs text-gray-500 w-full mb-1 font-medium">Payment Status:</p>
                   {['pending', 'paid', 'failed', 'refunded'].map((s) => (
                     <button
@@ -285,6 +288,28 @@ export default function OrderDetailModal({ order, onClose }) {
                     </button>
                   ))}
                 </div>
+
+                {/* Razorpay Transaction Details for Admin */}
+                {order.razorpayPaymentId && (
+                  <div className="pt-3 border-t border-gray-200/80 space-y-1.5 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500 font-medium">Razorpay Payment ID:</span>
+                      <span className="font-mono font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded border border-purple-200">
+                        {order.razorpayPaymentId}
+                      </span>
+                    </div>
+                    {order.razorpayOrderId && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500 font-medium">Razorpay Order ID:</span>
+                        <span className="font-mono text-gray-600">{order.razorpayOrderId}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500 font-medium">Paid Amount:</span>
+                      <span className="font-bold text-green-600 text-sm">₹{(order.amount ?? 0).toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Order Items & Price Breakdown */}
