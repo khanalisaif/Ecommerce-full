@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import {
-  CreditCard, Banknote, Lock, Package, RefreshCw, CheckCircle2, Loader2, Tag, X,
+  CreditCard, Banknote, Lock, Package, RefreshCw, CheckCircle2, Loader2, Tag, X, Wallet,
 } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
@@ -11,6 +11,7 @@ import addressService from '../services/addressService'
 import orderService from '../services/orderService'
 import couponService from '../services/couponService'
 import coinsService from '../services/coinsService'
+import walletService from '../services/walletService'
 import razorpayService, { loadRazorpayScript } from '../services/razorpayService'
 
 export default function CheckoutPage() {
@@ -73,6 +74,29 @@ export default function CheckoutPage() {
     } catch {}
   }, [useCoins])
 
+  const [userWallet, setUserWallet] = useState(user?.walletBalance || 0)
+  const [useWallet, setUseWallet] = useState(() => {
+    try { return localStorage.getItem('hashtelicom_use_wallet') === 'true' } catch { return false }
+  })
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      walletService.getWallet()
+        .then((res) => {
+          if (res?.data?.walletBalance != null) {
+            setUserWallet(res.data.walletBalance)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [isAuthenticated, user?.walletBalance])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('hashtelicom_use_wallet', useWallet ? 'true' : 'false')
+    } catch {}
+  }, [useWallet])
+
   const selectedAddress = addresses.find((a) => a._id === selectedAddressId)
 
   const isCartEmpty = cartItems.length === 0 || cartSubtotal === 0
@@ -90,8 +114,12 @@ export default function CheckoutPage() {
 
   const standardShippingCost = isCartEmpty ? 0 : (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 200)
   const shippingCost = isCartEmpty ? 0 : (deliveryOption === 'express' ? standardShippingCost + 79 : standardShippingCost)
-  const total = isCartEmpty ? 0 : Math.max(0, subtotal - couponDiscount - coinsDeduction + shippingCost)
-  const totalSavings = discount + couponDiscount + coinsDeduction
+
+  // Wallet deduction calculation:
+  const totalBeforeWallet = isCartEmpty ? 0 : Math.max(0, subtotal - couponDiscount - coinsDeduction + shippingCost)
+  const walletDeduction = useWallet && !isCartEmpty ? Math.min(userWallet, totalBeforeWallet) : 0
+  const total = Math.max(0, totalBeforeWallet - walletDeduction)
+  const totalSavings = discount + couponDiscount + coinsDeduction + walletDeduction
   const savePercent = originalTotal > 0 ? Math.round((totalSavings / originalTotal) * 100) : 0
 
   // Check for ?coupon=CODE in URL and auto-apply
@@ -140,6 +168,25 @@ export default function CheckoutPage() {
       return
     }
 
+    // ─── Fully covered by Wallet: place order directly without gateway ──────
+    if (total === 0) {
+      setIsPlacing(true)
+      orderService.placeOrder({
+        addressId: selectedAddressId,
+        paymentMethod: 'wallet',
+        deliveryOption,
+        orderNotes,
+        couponCode: appliedCoupon?.code || '',
+        couponDiscount,
+        useCoins: !!useCoins,
+        useWallet: !!useWallet,
+      })
+        .then((res) => { setPlacedOrder(res.data.order); clearCart() })
+        .catch((err) => showToast(err.message))
+        .finally(() => setIsPlacing(false))
+      return
+    }
+
     // ─── COD: place order directly ────────────────────────────────────────────
     if (paymentMethod === 'cod') {
       setIsPlacing(true)
@@ -151,6 +198,7 @@ export default function CheckoutPage() {
         couponCode: appliedCoupon?.code || '',
         couponDiscount,
         useCoins: !!useCoins,
+        useWallet: !!useWallet,
       })
         .then((res) => { setPlacedOrder(res.data.order); clearCart() })
         .catch((err) => showToast(err.message))
@@ -241,6 +289,7 @@ export default function CheckoutPage() {
         couponCode: appliedCoupon?.code || '',
         couponDiscount,
         useCoins: !!useCoins,
+        useWallet: !!useWallet,
       })
       setPlacedOrder(res.data.order)
       clearCart()
@@ -403,6 +452,44 @@ export default function CheckoutPage() {
                     </label>
                   )
                 })}
+
+                {/* ── User Wallet Balance Card ── */}
+                <div className={`mt-3 p-4 border rounded-xl transition-all ${
+                  userWallet > 0
+                    ? useWallet
+                      ? 'border-indigo-400 bg-indigo-50/50 shadow-xs'
+                      : 'border-gray-200 bg-white hover:border-indigo-200'
+                    : 'border-gray-100 bg-gray-50/70'
+                }`}>
+                  <label htmlFor="checkoutUseWallet" className="flex items-center gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      id="checkoutUseWallet"
+                      checked={useWallet}
+                      onChange={(e) => setUseWallet(e.target.checked)}
+                      disabled={isCartEmpty || userWallet <= 0}
+                      className="w-5 h-5 rounded accent-indigo-600 cursor-pointer disabled:cursor-not-allowed flex-shrink-0"
+                    />
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0">
+                      <Wallet size={20} className="text-indigo-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-gray-900 text-sm">Use Wallet Balance</span>
+                        <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${
+                          userWallet > 0 ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-gray-200 text-gray-600'
+                        }`}>
+                          ₹{userWallet.toLocaleString()} Available
+                        </span>
+                      </div>
+                    </div>
+                    {useWallet && walletDeduction > 0 && (
+                      <span className="text-sm font-black text-indigo-700 shrink-0">
+                        -₹{walletDeduction.toLocaleString()}
+                      </span>
+                    )}
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -583,6 +670,14 @@ export default function CheckoutPage() {
                         <span>🪙</span> She Coins Redeemed ({coinsDeduction} Coins)
                       </span>
                       <span>- ₹{coinsDeduction.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {useWallet && walletDeduction > 0 && (
+                    <div className="flex justify-between text-[12px] font-bold text-indigo-700">
+                      <span className="flex items-center gap-1.5">
+                        <Wallet size={13} className="text-indigo-600 shrink-0" /> Wallet Balance Applied
+                      </span>
+                      <span>- ₹{walletDeduction.toLocaleString()}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-[12px]">

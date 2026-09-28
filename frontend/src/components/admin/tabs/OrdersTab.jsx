@@ -155,7 +155,12 @@ export default function OrdersTab() {
                     <span className="font-semibold text-gray-800">₹{(o.amount ?? 0).toLocaleString('en-IN')}</span>
                     {(o.coinsDiscount > 0 || o.coinsUsed > 0) && (
                       <div className="text-[10px] text-amber-700 font-semibold flex items-center gap-0.5 mt-0.5">
-                        <span>🪙</span> −₹{o.coinsDiscount || o.coinsUsed}
+                        <span>🪙</span> −₹{o.coinsDiscount || o.coinsUsed} Coins
+                      </div>
+                    )}
+                    {o.walletUsed > 0 && (
+                      <div className="text-[10px] text-purple-700 font-semibold flex items-center gap-1 mt-0.5">
+                        <Wallet size={10} /> −₹{o.walletUsed} Wallet
                       </div>
                     )}
                   </td>

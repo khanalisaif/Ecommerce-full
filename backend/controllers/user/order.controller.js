@@ -26,6 +26,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
     razorpayPaymentId = "",
     razorpaySignature = "",
     useCoins = false,
+    useWallet = false,
   } = req.body;
   if (!addressId || !paymentMethod) throw new ApiError(400, "addressId and paymentMethod are required");
 
@@ -74,7 +75,17 @@ export const placeOrder = asyncHandler(async (req, res) => {
   let shippingCost = subtotal === 0 ? 0 : (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING);
   if (deliveryOption === "express") shippingCost += 79;
 
-  const total = Math.max(0, subtotal - appliedCouponDiscount - coinsDiscount + shippingCost);
+  const totalBeforeWallet = Math.max(0, subtotal - appliedCouponDiscount - coinsDiscount + shippingCost);
+
+  let walletUsed = 0;
+  if (useWallet) {
+    const availableWallet = Math.max(0, user.walletBalance || 0);
+    walletUsed = Math.min(availableWallet, totalBeforeWallet);
+  }
+
+  const total = Math.max(0, totalBeforeWallet - walletUsed);
+  const effectivePaymentMethod = total === 0 ? "wallet" : paymentMethod.toLowerCase();
+  const effectivePaymentStatus = total === 0 ? "paid" : (paymentMethod.toLowerCase() === "cod" ? "pending" : "paid");
 
   const orderId = generateOrderId();
   const order = await Order.create({
@@ -90,8 +101,8 @@ export const placeOrder = asyncHandler(async (req, res) => {
       city:        address.city,
       state:       address.state,
     },
-    paymentMethod:      paymentMethod.toLowerCase(),
-    paymentStatus:      paymentMethod.toLowerCase() === "cod" ? "pending" : "paid",
+    paymentMethod:      effectivePaymentMethod,
+    paymentStatus:      effectivePaymentStatus,
     razorpayOrderId,
     razorpayPaymentId,
     razorpaySignature,
@@ -105,6 +116,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
     coinsDiscount,
     coinsEarned,
     coinsCredited: false,
+    walletUsed,
     shippingCost,
     total,
   });
@@ -116,6 +128,19 @@ export const placeOrder = asyncHandler(async (req, res) => {
       type: "redeemed",
       amount: coinsUsed,
       description: `Redeemed on order ${orderId}`,
+      orderId,
+      createdAt: new Date(),
+    });
+    await user.save();
+  }
+
+  // If wallet balance was used, deduct from user's wallet and record in history
+  if (walletUsed > 0) {
+    user.walletBalance = Math.max(0, (user.walletBalance || 0) - walletUsed);
+    user.walletHistory.push({
+      type: "debit",
+      amount: walletUsed,
+      description: `Used on order ${orderId}`,
       orderId,
       createdAt: new Date(),
     });
@@ -195,7 +220,8 @@ export const cancelOrder = asyncHandler(async (req, res) => {
   }
 
   // Refund any redeemed coins if cancelled
-  if (order.coinsUsed > 0) {
+  if (order.coinsUsed > 0 && !order.coinsRefunded) {
+    order.coinsRefunded = true;
     await User.findByIdAndUpdate(req.user._id, {
       $inc: { shePoints: order.coinsUsed },
       $push: {
@@ -210,7 +236,43 @@ export const cancelOrder = asyncHandler(async (req, res) => {
     });
   }
 
-  res.status(200).json(new ApiResponse(200, { order }, "Order cancelled"));
+  // Refund any wallet balance used
+  if (order.walletUsed > 0 && !order.walletRefunded) {
+    order.walletRefunded = true;
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: { walletBalance: order.walletUsed },
+      $push: {
+        walletHistory: {
+          type: "credit",
+          amount: order.walletUsed,
+          description: `Refunded wallet balance from cancelled order ${order.orderId}`,
+          orderId: order.orderId,
+          createdAt: new Date(),
+        },
+      },
+    });
+  }
+
+  if (order.paymentMethod === 'wallet' && order.paymentStatus === 'paid') {
+    order.paymentStatus = 'refunded';
+  }
+
+  await order.save();
+
+  let refundDetails = [];
+  if (order.walletUsed > 0) refundDetails.push(`₹${order.walletUsed} Wallet Money`);
+  if (order.coinsUsed > 0) refundDetails.push(`${order.coinsUsed} She Coins`);
+  const refundMsg = refundDetails.length > 0
+    ? `Order cancelled. ${refundDetails.join(' & ')} refunded to your account!`
+    : "Order cancelled successfully.";
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      { order, refundedCoins: order.coinsUsed, refundedWallet: order.walletUsed },
+      refundMsg
+    )
+  );
 });
 
 /**

@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { User, Mail, Lock, Eye, EyeOff, Phone, Loader2, AlertCircle, X, ArrowLeft } from 'lucide-react'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { User, Mail, Lock, Eye, EyeOff, Phone, Loader2, AlertCircle, X, ArrowLeft, Gift, CheckCircle2, XCircle } from 'lucide-react'
 import AuthTopBar from '../components/AuthTopBar'
 import Footer from '../components/Footer'
 import AuthFeaturesBar from '../components/AuthFeaturesBar'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
+import authService from '../services/authService'
 
 export default function SignupPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const queryRef = new URLSearchParams(location.search).get('ref') || ''
   const { showToast, siteAssets } = useShop()
   const { signup, verifySignupOtp, resendSignupOtp } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
@@ -20,6 +23,7 @@ export default function SignupPage() {
     email: '',
     mobileNumber: '',
     password: '',
+    referralCode: queryRef,
     agreeTerms: false,
   })
   const [showOtpModal, setShowOtpModal] = useState(false)
@@ -28,6 +32,7 @@ export default function SignupPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [otpError, setOtpError] = useState('')
   const [resendCooldown, setResendCooldown] = useState(0)
+  const [refStatus, setRefStatus] = useState({ checking: false, valid: null, referrerName: '', message: '' })
 
   // Resend OTP countdown
   useEffect(() => {
@@ -35,6 +40,44 @@ export default function SignupPage() {
     const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
   }, [resendCooldown])
+
+  // Real-time Referral Code Verification against existing users in DB
+  useEffect(() => {
+    const code = formData.referralCode?.trim()
+    if (!code) {
+      setRefStatus({ checking: false, valid: null, referrerName: '', message: '' })
+      return
+    }
+
+    if (code.length < 4) {
+      setRefStatus({ checking: false, valid: null, referrerName: '', message: '' })
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      setRefStatus((prev) => ({ ...prev, checking: true }))
+      try {
+        const res = await authService.validateReferralCode(code)
+        if (res.data?.valid) {
+          setRefStatus({
+            checking: false,
+            valid: true,
+            referrerName: res.data.referrerName,
+            message: `Valid code! Invited by ${res.data.referrerName}`,
+          })
+        }
+      } catch (err) {
+        setRefStatus({
+          checking: false,
+          valid: false,
+          referrerName: '',
+          message: err.message || 'Invalid referral code: No user found with this code',
+        })
+      }
+    }, 350)
+
+    return () => clearTimeout(timer)
+  }, [formData.referralCode])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -62,7 +105,43 @@ export default function SignupPage() {
       return
     }
 
-    // Basic client validation
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email.trim())) {
+      const msg = 'Please enter a valid email address'
+      setErrorMessage(msg)
+      showToast(msg, 'error')
+      return
+    }
+
+    // 10-digit mobile number validation
+    const cleanMobile = formData.mobileNumber.trim().replace(/\D/g, '')
+    if (cleanMobile.length !== 10 || !/^[6-9]\d{9}$/.test(cleanMobile)) {
+      const msg = 'Please enter a valid 10-digit mobile number'
+      setErrorMessage(msg)
+      showToast(msg, 'error')
+      return
+    }
+
+    // Referral code validation (if entered, must be valid and belong to a user)
+    if (formData.referralCode && formData.referralCode.trim()) {
+      const trimmedCode = formData.referralCode.trim()
+      if (trimmedCode.length !== 4 || isNaN(trimmedCode)) {
+        const msg = 'Referral code must be a 4-digit number'
+        setErrorMessage(msg)
+        showToast(msg, 'error')
+        return
+      }
+
+      if (refStatus.valid === false) {
+        const msg = refStatus.message || 'Invalid referral code: No registered user found with this code'
+        setErrorMessage(msg)
+        showToast(msg, 'error')
+        return
+      }
+    }
+
+    // Password length validation
     if (formData.password.length < 6) {
       const msg = 'Password must be at least 6 characters long'
       setErrorMessage(msg)
@@ -78,6 +157,7 @@ export default function SignupPage() {
         email: formData.email.trim(),
         mobileNumber: formData.mobileNumber.trim(),
         password: formData.password,
+        referralCode: formData.referralCode?.trim() || undefined,
       })
       setSignupUserId(res.userId)
       setResendCooldown(30)
@@ -281,6 +361,53 @@ export default function SignupPage() {
                     {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
+              </div>
+
+              {/* Referral Code (Optional) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-gray-700 font-semibold text-xs">
+                    Referral Code <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                    🪙 Get 100 She Coins
+                  </span>
+                </div>
+                <div className="relative">
+                  <Gift size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-500" />
+                  <input
+                    type="text"
+                    name="referralCode"
+                    value={formData.referralCode}
+                    onChange={handleChange}
+                    placeholder="Enter 4-digit referral code (e.g. 5821)"
+                    maxLength={6}
+                    className="w-full pl-9 pr-3.5 py-2 border border-purple-200 bg-purple-50/20 rounded-lg text-xs sm:text-sm uppercase tracking-wider font-semibold focus:outline-none focus:border-purple-500 transition-colors placeholder-gray-400 placeholder:normal-case placeholder:font-normal"
+                  />
+                </div>
+                {refStatus.checking ? (
+                  <p className="text-[11px] text-purple-600 font-medium mt-1.5 flex items-center gap-1.5 animate-pulse">
+                    <Loader2 size={12} className="animate-spin text-purple-500" /> Verifying referral code...
+                  </p>
+                ) : refStatus.valid === true ? (
+                  <div className="mt-1.5 p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                    <span>✓ Valid Code! Invited by <strong>{refStatus.referrerName}</strong> (100 She Coins bonus applied!)</span>
+                  </div>
+                ) : refStatus.valid === false ? (
+                  <div className="mt-1.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold flex items-center gap-2">
+                    <XCircle size={14} className="text-rose-500 shrink-0" />
+                    <span>✗ Invalid code: No user found with code &quot;{formData.referralCode.trim()}&quot;</span>
+                  </div>
+                ) : formData.referralCode ? (
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Enter the complete 4-digit code to verify.
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Have a friend&apos;s referral code? Enter it to get 100 bonus She Coins!
+                  </p>
+                )}
               </div>
 
               {/* Terms & Conditions */}

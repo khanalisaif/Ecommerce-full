@@ -17,14 +17,16 @@ import {
   Plus, Package, Eye, RotateCcw, ThumbsUp, Smartphone,
   Globe, Phone, Mail, ChevronDown, X, Home, Briefcase,
   AlertCircle, CheckCheck, XCircle, MoreHorizontal, Menu, Loader2, ExternalLink,
-  Coins, ArrowRight,
+  Coins, ArrowRight, Wallet, Copy, Check, Share2,
 } from 'lucide-react'
 import coinsService from '../services/coinsService'
+import walletService from '../services/walletService'
 
 const MENU = [
   { id: 'profile',        label: 'My Profile',            icon: User },
   { id: 'orders',         label: 'Orders',                icon: ShoppingBag },
   { id: 'shecoins',       label: 'She Coins',             icon: Coins, badgeText: 'Coins' },
+  { id: 'wallet',         label: 'My Wallet',             icon: Wallet, badgeText: '₹ Wallet' },
   { id: 'wishlist',       label: 'Wishlist',              icon: Heart, badge: true },
   { id: 'addresses',      label: 'Addresses',             icon: MapPin },
   { id: 'payments',       label: 'Payment Methods',       icon: CreditCard },
@@ -406,6 +408,9 @@ function OrdersPanel() {
       coinsUsed: o.coinsUsed || 0,
       coinsDiscount: o.coinsDiscount || 0,
       coinsEarned: o.coinsEarned || 0,
+      walletUsed: o.walletUsed || 0,
+      walletRefunded: o.walletRefunded || false,
+      coinsRefunded: o.coinsRefunded || false,
       shippingCost: o.shippingCost,
       // Delhivery
       waybill:  o.delhivery?.waybill  || '',
@@ -435,8 +440,9 @@ function OrdersPanel() {
 
   const cancelOrder = (orderId) => {
     orderService.cancelOrder(orderId)
-      .then(() => {
-        showToast('Order cancelled successfully.')
+      .then((res) => {
+        const msg = res.message || res.data?.message || 'Order cancelled successfully.'
+        showToast(msg)
         setCancelModal(null)
         loadOrders()
       })
@@ -511,9 +517,39 @@ function OrdersPanel() {
                         🪙 -₹{order.coinsDiscount} Coins
                       </p>
                     )}
+                    {order.walletUsed > 0 && (
+                      <p className="text-[10px] text-purple-700 font-bold mt-0.5 flex items-center justify-end gap-1">
+                        <Wallet size={10} /> -₹{order.walletUsed} Wallet
+                      </p>
+                    )}
                     <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor(order.status)}`}>{order.status}</span>
                   </div>
                 </div>
+
+                {/* Cancelled status banner with refund breakdown */}
+                {order.status === 'Cancelled' && (
+                  <div className="mt-3 p-3 bg-red-50/70 border border-red-200/70 rounded-xl text-xs space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-red-700 font-semibold">
+                      <X size={13} className="text-red-500 shrink-0" />
+                      <span>This order was cancelled</span>
+                    </div>
+                    {(order.walletUsed > 0 || order.coinsUsed > 0) && (
+                      <div className="flex flex-wrap items-center gap-2 pt-1.5 border-t border-red-100 text-[11px] font-bold">
+                        <span className="text-gray-500 font-normal">Refunded:</span>
+                        {order.walletUsed > 0 && (
+                          <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Wallet size={10} /> ₹{order.walletUsed} credited to Wallet
+                          </span>
+                        )}
+                        {order.coinsUsed > 0 && (
+                          <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            🪙 {order.coinsUsed} She Coins credited
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex gap-4 mt-3 pt-3 border-t border-gray-100 flex-wrap">
                   <button onClick={() => openTrackModal(order)} className="text-purple-600 text-xs font-bold hover:underline flex items-center gap-1"><Eye size={12} /> Track Order</button>
                   {order.status !== 'Cancelled' && (
@@ -648,7 +684,35 @@ function OrdersPanel() {
       {/* Cancel Order Modal */}
       {cancelModal && (
         <Modal title="Cancel Order?" onClose={() => setCancelModal(null)}>
-          <p className="text-gray-600 text-sm mb-4">Are you sure you want to cancel <strong>{cancelModal.product}</strong>?</p>
+          <p className="text-gray-600 text-sm mb-3">
+            Are you sure you want to cancel <strong>{cancelModal.product}</strong>?
+          </p>
+
+          {(cancelModal.walletUsed > 0 || cancelModal.coinsUsed > 0) && (
+            <div className="mb-4 p-3.5 bg-purple-50/70 rounded-xl border border-purple-200 text-xs">
+              <p className="font-bold text-purple-900 mb-2 flex items-center gap-1.5">
+                <span>✨</span> Instant Refund on Cancellation:
+              </p>
+              <div className="space-y-1.5">
+                {cancelModal.walletUsed > 0 && (
+                  <div className="flex items-center justify-between text-purple-900 font-semibold bg-white/70 px-2.5 py-1.5 rounded-lg border border-purple-100">
+                    <span className="flex items-center gap-1.5"><Wallet size={12} className="text-purple-600" /> Wallet Money Refund</span>
+                    <span className="text-purple-700">+ ₹{cancelModal.walletUsed} (Instant)</span>
+                  </div>
+                )}
+                {cancelModal.coinsUsed > 0 && (
+                  <div className="flex items-center justify-between text-amber-900 font-semibold bg-white/70 px-2.5 py-1.5 rounded-lg border border-amber-100">
+                    <span className="flex items-center gap-1.5"><span>🪙</span> She Coins Refund</span>
+                    <span className="text-amber-700">+ {cancelModal.coinsUsed} Coins (Instant)</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-500 mt-2.5 leading-relaxed">
+                Wallet money and She Coins will be returned to your account balance immediately upon cancellation.
+              </p>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button onClick={() => setCancelModal(null)} className="flex-1 border border-gray-200 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50">Keep Order</button>
             <button onClick={() => cancelOrder(cancelModal.id)} className="flex-1 bg-red-500 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-red-600">Yes, Cancel</button>
@@ -896,6 +960,335 @@ function SuperCoinsPanel() {
                         : 'text-blue-600'
                     }`}>
                       {isEarned || isRefunded ? `+${item.amount}` : `-${item.amount}`} She Coins
+                    </span>
+                    <p className="text-[10px] text-gray-400 font-medium capitalize">{item.type}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── WALLET & REFERRAL PANEL ──────────────────────────────────────────────────
+function WalletPanel() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { showToast } = useShop()
+  const [walletData, setWalletData] = useState({
+    walletBalance: user?.walletBalance || 0,
+    referralCode: user?.referralCode || '',
+    referralCount: 0,
+    walletHistory: user?.walletHistory || [],
+  })
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('All')
+  const [copied, setCopied] = useState(false)
+
+  const fetchWallet = () => {
+    setLoading(true)
+    walletService.getWallet()
+      .then((res) => {
+        if (res?.data) {
+          setWalletData({
+            walletBalance: res.data.walletBalance ?? 0,
+            referralCode: res.data.referralCode || '',
+            referralCount: res.data.referralCount ?? 0,
+            walletHistory: res.data.walletHistory || [],
+          })
+        }
+      })
+      .catch((err) => {
+        showToast(err.message || 'Failed to load wallet data')
+      })
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchWallet()
+  }, [])
+
+  const referralCode = walletData.referralCode || user?.referralCode || '----'
+  const shareUrl = `${window.location.origin}/signup?ref=${referralCode}`
+  const shareMessage = `Hey! Shop the latest trending fashion at He & She. Use my referral code ${referralCode} to get 100 She Coins welcome bonus on signup!\nJoin here: ${shareUrl}`
+
+  const handleCopyCode = () => {
+    if (!referralCode || referralCode === '----') return
+    navigator.clipboard.writeText(referralCode)
+    setCopied(true)
+    showToast('Referral code copied!')
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl)
+    showToast('Referral link copied to clipboard!')
+  }
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join He & She — Get 100 She Coins!',
+          text: shareMessage,
+          url: shareUrl,
+        })
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          handleCopyLink()
+        }
+      }
+    } else {
+      handleCopyLink()
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`
+      window.open(waUrl, '_blank')
+    }
+  }
+
+  const handleWhatsAppShare = () => {
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`
+    window.open(waUrl, '_blank')
+  }
+
+  const filteredHistory = (walletData.walletHistory || []).filter((item) => {
+    if (filter === 'All') return true
+    if (filter === 'Credits') return item.type === 'credit'
+    if (filter === 'Debits') return item.type === 'debit'
+    return true
+  })
+
+  return (
+    <div className="space-y-6">
+      {/* Hero Wallet Balance Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 sm:p-8 text-white shadow-xl">
+        <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-white/10 blur-xl pointer-events-none" />
+        <div className="absolute right-12 top-6 w-24 h-24 rounded-full bg-pink-300/20 blur-lg pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold tracking-wide">
+              <Wallet size={13} className="text-pink-300" /> He &amp; She Wallet
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+              {loading ? (
+                <span className="opacity-75">Loading...</span>
+              ) : (
+                `₹${(walletData.walletBalance || 0).toLocaleString('en-IN')}`
+              )}
+            </h2>
+            <p className="text-purple-100 text-sm font-medium">
+              Available Balance • <span className="text-white font-bold">100% Usable</span> on checkout on all orders
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2.5">
+            <button
+              onClick={() => navigate('/')}
+              className="bg-white text-purple-700 hover:bg-purple-50 font-black text-xs px-5 py-3 rounded-xl shadow transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-1.5 cursor-pointer"
+            >
+              Shop &amp; Use Wallet <ArrowRight size={14} />
+            </button>
+            <button
+              onClick={fetchWallet}
+              className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-xs px-4 py-3 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+              title="Refresh Balance"
+            >
+              <RotateCcw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Refer & Earn Hero Section */}
+      <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-xs font-bold">
+              <Gift size={14} /> Refer &amp; Earn Exclusive Rewards
+            </div>
+            <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+              Invite your friends and earn ₹100 cash in your wallet!
+            </h3>
+            <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
+              Share your unique 4-digit code. When a friend signs up, you both get <strong>100 She Coins</strong> instantly. When their first order is delivered, you get <strong>₹100 credited directly to your Wallet</strong>!
+            </p>
+          </div>
+
+          {/* Referral Code Box */}
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200/80 rounded-2xl p-5 flex flex-col items-center gap-3 shrink-0 lg:w-[320px]">
+            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Your Unique Referral Code</span>
+            
+            <div className="flex items-center gap-2 w-full">
+              <div className="flex-1 bg-white border border-purple-200 py-2.5 px-4 rounded-xl text-center shadow-xs">
+                <span className="font-mono text-2xl font-black tracking-widest text-purple-700 select-all">
+                  {referralCode}
+                </span>
+              </div>
+              <button
+                onClick={handleCopyCode}
+                className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-xl transition shadow-xs flex items-center justify-center cursor-pointer shrink-0"
+                title="Copy Code"
+              >
+                {copied ? <Check size={18} /> : <Copy size={18} />}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 w-full">
+              <button
+                onClick={handleShare}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-xs py-2.5 px-3 rounded-xl transition shadow flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Share2 size={14} /> Refer Now
+              </button>
+              <button
+                onClick={handleWhatsAppShare}
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-bold text-xs py-2.5 px-3 rounded-xl transition shadow flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>💬</span> WhatsApp
+              </button>
+            </div>
+            
+            <button
+              onClick={handleCopyLink}
+              className="text-[11px] text-purple-600 hover:underline font-bold cursor-pointer"
+            >
+              Copy Referral Link
+            </button>
+          </div>
+        </div>
+
+        {/* How it works 3-step grid */}
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-4">How Refer &amp; Earn Works</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-purple-50/40 border border-purple-100 space-y-2">
+              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-sm">
+                1
+              </div>
+              <h5 className="font-bold text-gray-900 text-sm">Share 4-Digit Code</h5>
+              <p className="text-gray-500 text-xs leading-relaxed">
+                Send your unique 4-digit code or referral link to friends on WhatsApp or social media.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-50/40 border border-amber-100 space-y-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-sm">
+                2
+              </div>
+              <h5 className="font-bold text-gray-900 text-sm">Both Get 100 She Coins</h5>
+              <p className="text-gray-500 text-xs leading-relaxed">
+                When your friend registers using your referral code, both of you instantly get 100 She Coins!
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-green-50/40 border border-green-100 space-y-2">
+              <div className="w-8 h-8 rounded-xl bg-green-600 text-white flex items-center justify-center font-black text-sm">
+                3
+              </div>
+              <h5 className="font-bold text-gray-900 text-sm">Get ₹100 in Wallet</h5>
+              <p className="text-gray-500 text-xs leading-relaxed">
+                Once your friend places their first order and it is Delivered, ₹100 is automatically credited to your Wallet!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Wallet Passbook & Transaction History */}
+      <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+          <div>
+            <h3 className="font-bold text-gray-900 text-base">Wallet Transactions</h3>
+            <p className="text-gray-400 text-xs mt-0.5">Track all money credited from referrals and debited on orders</p>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+            {['All', 'Credits', 'Debits'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  filter === tab
+                    ? 'bg-white text-gray-900 shadow-xs'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-gray-400 gap-2">
+            <Loader2 size={18} className="animate-spin text-purple-500" />
+            <span className="text-sm">Loading transactions...</span>
+          </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="py-12 text-center space-y-3">
+            <div className="w-14 h-14 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
+              <Wallet size={26} />
+            </div>
+            <h4 className="font-bold text-gray-800 text-sm">No wallet transactions found</h4>
+            <p className="text-gray-400 text-xs max-w-sm mx-auto">
+              {walletData.walletBalance === 0
+                ? "You haven't received any wallet balance yet. Share your referral code to earn ₹100 for every friend!"
+                : "No transactions match the selected filter."}
+            </p>
+            <button
+              onClick={handleShare}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Share2 size={13} /> Refer Friends Now
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {filteredHistory.map((item, idx) => {
+              const isCredit = item.type === 'credit'
+              const dateStr = item.createdAt
+                ? new Date(item.createdAt).toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '—'
+
+              return (
+                <div key={idx} className="py-3.5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+                      isCredit
+                        ? 'bg-green-50 text-green-600 border border-green-100'
+                        : 'bg-red-50 text-red-600 border border-red-100'
+                    }`}>
+                      {isCredit ? '↓' : '↑'}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm">
+                        {item.description || (isCredit ? 'Wallet Balance Credited' : 'Used on Order')}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-400">
+                        <span>{dateStr}</span>
+                        {item.orderId && (
+                          <span className="font-mono text-purple-600 bg-purple-50 px-1.5 py-0.2 rounded text-[10px]">
+                            {item.orderId}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className={`font-black text-sm sm:text-base ${
+                      isCredit ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {isCredit ? `+₹${item.amount}` : `-₹${item.amount}`}
                     </span>
                     <p className="text-[10px] text-gray-400 font-medium capitalize">{item.type}</p>
                   </div>
@@ -1697,7 +2090,21 @@ function AddressesPanel() {
 export default function AccountPage() {
   const navigate = useNavigate()
   const { setIsChatOpen, showToast, wishlistCount } = useShop()
-  const { isAuthenticated, isAuthLoading, logout } = useAuth()
+  const { user, isAuthenticated, isAuthLoading, logout } = useAuth()
+  const [referralCode, setReferralCode] = useState(user?.referralCode || '')
+
+  useEffect(() => {
+    if (user?.referralCode) {
+      setReferralCode(user.referralCode)
+    } else if (isAuthenticated) {
+      walletService.getWallet()
+        .then((res) => {
+          if (res.data?.referralCode) setReferralCode(res.data.referralCode)
+        })
+        .catch(() => {})
+    }
+  }, [user, isAuthenticated])
+
   const [activeTab, setActiveTab] = useState(() => {
     try {
       const p = new URLSearchParams(window.location.search)
@@ -1738,21 +2145,41 @@ export default function AccountPage() {
   }
 
   const handleRefer = async () => {
-    const shareData = {
-      title: 'Join He & She',
-      text: 'Hey! Join me on He & She and get exclusive rewards on premium products!',
-      url: window.location.origin + '?ref=USER123'
+    setActiveTab('wallet')
+    let code = referralCode || user?.referralCode
+    if (!code) {
+      try {
+        const res = await walletService.getWallet()
+        if (res.data?.referralCode) {
+          code = res.data.referralCode
+          setReferralCode(code)
+        }
+      } catch {}
     }
+    const finalCode = code || ''
+    const shareUrl = `${window.location.origin}/signup?ref=${finalCode}`
+    const shareMessage = `Hey! Shop the latest trending fashion at He & She. Use my referral code ${finalCode} to get 100 She Coins welcome bonus on signup!\nJoin here: ${shareUrl}`
 
     if (navigator.share) {
       try {
-        await navigator.share(shareData)
+        await navigator.share({
+          title: 'Join He & She — Get 100 She Coins!',
+          text: shareMessage,
+          url: shareUrl,
+        })
       } catch (err) {
-        console.error('Error sharing', err)
+        if (err.name !== 'AbortError') {
+          navigator.clipboard.writeText(shareUrl)
+          showToast('Referral link copied to clipboard!')
+          const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`
+          window.open(waUrl, '_blank')
+        }
       }
     } else {
-      navigator.clipboard.writeText(shareData.url)
+      navigator.clipboard.writeText(shareUrl)
       showToast('Referral link copied to clipboard!')
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`
+      window.open(waUrl, '_blank')
     }
   }
 
@@ -1761,6 +2188,7 @@ export default function AccountPage() {
     orders:        <OrdersPanel />,
     shecoins:      <SuperCoinsPanel />,
     supercoins:    <SuperCoinsPanel />,
+    wallet:        <WalletPanel />,
     wishlist:      <WishlistPanel />,
     addresses:     <AddressesPanel />,
     payments:      <PaymentsPanel />,
@@ -1832,11 +2260,24 @@ export default function AccountPage() {
           </div>
 
           {/* Refer & Earn */}
-          <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-5 text-white relative overflow-hidden shadow-sm hidden md:block">
+          <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-pink-600 rounded-2xl p-5 text-white relative overflow-hidden shadow-sm hidden md:block">
             <Gift className="absolute right-0 bottom-0 text-white opacity-10 w-28 h-28 transform translate-x-6 translate-y-6" />
             <h4 className="font-black text-base mb-1 relative z-10">Refer &amp; Earn</h4>
-            <p className="text-xs text-purple-100 mb-4 relative z-10 leading-relaxed">Invite your friends and earn exclusive rewards.</p>
-            <button onClick={handleRefer} className="bg-white text-purple-600 text-xs font-black px-4 py-2 rounded-lg hover:bg-gray-50 transition relative z-10">Refer Now</button>
+            <p className="text-xs text-purple-100 mb-3 relative z-10 leading-relaxed">
+              Invite your friends and earn exclusive rewards.
+            </p>
+            {referralCode && (
+              <div className="relative z-10 mb-3 bg-white/15 backdrop-blur-xs px-3 py-1.5 rounded-xl flex items-center justify-between text-xs">
+                <span className="text-purple-200 text-[11px]">Your Code:</span>
+                <span className="font-mono font-black tracking-widest text-yellow-300 text-sm">{referralCode}</span>
+              </div>
+            )}
+            <button
+              onClick={handleRefer}
+              className="w-full bg-white text-purple-700 text-xs font-black px-4 py-2.5 rounded-xl hover:bg-gray-50 transition relative z-10 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+            >
+              <Share2 size={13} /> Refer Now
+            </button>
           </div>
 
           {/* Chat */}
@@ -1863,11 +2304,24 @@ export default function AccountPage() {
           {/* Mobile bottom blocks */}
           <div className="flex flex-col gap-4 mt-8 md:hidden">
             {/* Refer & Earn */}
-            <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-5 text-white relative overflow-hidden shadow-sm">
+            <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-pink-600 rounded-2xl p-5 text-white relative overflow-hidden shadow-sm">
               <Gift className="absolute right-0 bottom-0 text-white opacity-10 w-28 h-28 transform translate-x-6 translate-y-6" />
               <h4 className="font-black text-base mb-1 relative z-10">Refer &amp; Earn</h4>
-              <p className="text-xs text-purple-100 mb-4 relative z-10 leading-relaxed">Invite your friends and earn exclusive rewards.</p>
-              <button onClick={handleRefer} className="bg-white text-purple-600 text-xs font-black px-4 py-2 rounded-lg hover:bg-gray-50 transition relative z-10">Refer Now</button>
+              <p className="text-xs text-purple-100 mb-3 relative z-10 leading-relaxed">
+                Invite your friends and earn exclusive rewards.
+              </p>
+              {referralCode && (
+                <div className="relative z-10 mb-3 bg-white/15 backdrop-blur-xs px-3 py-1.5 rounded-xl flex items-center justify-between text-xs">
+                  <span className="text-purple-200 text-[11px]">Your Code:</span>
+                  <span className="font-mono font-black tracking-widest text-yellow-300 text-sm">{referralCode}</span>
+                </div>
+              )}
+              <button
+                onClick={handleRefer}
+                className="w-full bg-white text-purple-700 text-xs font-black px-4 py-2.5 rounded-xl hover:bg-gray-50 transition relative z-10 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+              >
+                <Share2 size={13} /> Refer Now
+              </button>
             </div>
 
             {/* Chat */}

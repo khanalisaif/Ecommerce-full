@@ -110,6 +110,20 @@ const userSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    // ── Wallet & Referral System ─────────────────────────────────────────────
+    walletBalance: { type: Number, default: 0, min: 0 },
+    walletHistory: [
+      {
+        type: { type: String, enum: ["credit", "debit"], required: true },
+        amount: { type: Number, required: true },
+        description: { type: String, default: "" },
+        orderId: { type: String, default: "" },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    referralCode: { type: String, unique: true, sparse: true, trim: true },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    referralRewardPaid: { type: Boolean, default: false },
     // ─────────────────────────────────────────────────────────────────────────
 
     isEmailVerified: { type: Boolean, default: false },

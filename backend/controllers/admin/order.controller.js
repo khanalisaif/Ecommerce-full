@@ -138,6 +138,28 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
             });
           }
         }
+
+        // Referral: Credit ₹100 to referrer's wallet upon first delivered order of referred user
+        if (userId) {
+          const customer = await User.findById(userId);
+          if (customer && customer.referredBy && !customer.referralRewardPaid) {
+            customer.referralRewardPaid = true;
+            await customer.save();
+
+            await User.findByIdAndUpdate(customer.referredBy, {
+              $inc: { walletBalance: 100 },
+              $push: {
+                walletHistory: {
+                  type: "credit",
+                  amount: 100,
+                  description: `Referral reward: ${customer.fullName || 'Friend'} completed their first order (${order.orderId})!`,
+                  orderId: order.orderId,
+                  createdAt: new Date(),
+                },
+              },
+            });
+          }
+        }
       }
     }
 
@@ -148,9 +170,10 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
         }
       }
 
-      // Refund any redeemed coins if cancelled
       const userId = order.user?._id || order.user;
-      if (userId && order.coinsUsed > 0) {
+      // Refund any redeemed coins if cancelled
+      if (userId && order.coinsUsed > 0 && !order.coinsRefunded) {
+        order.coinsRefunded = true;
         await User.findByIdAndUpdate(userId, {
           $inc: { shePoints: order.coinsUsed },
           $push: {
@@ -164,6 +187,29 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
           },
         });
       }
+
+      // Refund any wallet balance used if cancelled
+      if (userId && order.walletUsed > 0 && !order.walletRefunded) {
+        order.walletRefunded = true;
+        await User.findByIdAndUpdate(userId, {
+          $inc: { walletBalance: order.walletUsed },
+          $push: {
+            walletHistory: {
+              type: "credit",
+              amount: order.walletUsed,
+              description: `Refunded wallet balance from cancelled order ${order.orderId}`,
+              orderId: order.orderId,
+              createdAt: new Date(),
+            },
+          },
+        });
+      }
+
+      if (order.paymentMethod === 'wallet' && order.paymentStatus === 'paid') {
+        order.paymentStatus = 'refunded';
+      }
+
+      await order.save();
     }
   }
 
@@ -367,13 +413,52 @@ export const cancelOrderOnDelhivery = asyncHandler(async (req, res) => {
   order.delhivery.cancelled = true;
   await order.save();
 
-  // Restore inventory
+  // Restore inventory & refund coins and wallet
   if (oldStatus !== "Cancelled") {
     for (const item of order.items) {
       if (item.product) {
         await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
       }
     }
+
+    const userId = order.user?._id || order.user;
+    if (userId && order.coinsUsed > 0 && !order.coinsRefunded) {
+      order.coinsRefunded = true;
+      await User.findByIdAndUpdate(userId, {
+        $inc: { shePoints: order.coinsUsed },
+        $push: {
+          coinsHistory: {
+            type: "refunded",
+            amount: order.coinsUsed,
+            description: `Refunded coins from cancelled order ${order.orderId}`,
+            orderId: order.orderId,
+            createdAt: new Date(),
+          },
+        },
+      });
+    }
+
+    if (userId && order.walletUsed > 0 && !order.walletRefunded) {
+      order.walletRefunded = true;
+      await User.findByIdAndUpdate(userId, {
+        $inc: { walletBalance: order.walletUsed },
+        $push: {
+          walletHistory: {
+            type: "credit",
+            amount: order.walletUsed,
+            description: `Refunded wallet balance from cancelled order ${order.orderId}`,
+            orderId: order.orderId,
+            createdAt: new Date(),
+          },
+        },
+      });
+    }
+
+    if (order.paymentMethod === 'wallet' && order.paymentStatus === 'paid') {
+      order.paymentStatus = 'refunded';
+    }
+
+    await order.save();
   }
 
   res.status(200).json(

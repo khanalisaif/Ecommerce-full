@@ -12,6 +12,7 @@ import userPaymentMethodRoutes from "./user/paymentMethod.routes.js";
 import userPreferencesRoutes from "./user/preferences.routes.js";
 import userCouponRoutes from "./user/coupon.routes.js";
 import userCoinsRoutes from "./user/coins.routes.js";
+import userWalletRoutes from "./user/wallet.routes.js";
 import razorpayRoutes from "./user/razorpay.routes.js";
 
 // storefront (public, but grouped under user/ folder per project structure)
@@ -47,6 +48,7 @@ router.use("/user/payment-methods", userPaymentMethodRoutes);
 router.use("/user/preferences", userPreferencesRoutes);
 router.use("/user/coupons", userCouponRoutes);
 router.use("/user/coins", userCoinsRoutes);
+router.use("/user/wallet", userWalletRoutes);
 router.use("/razorpay", razorpayRoutes);   // /razorpay/create-order, /razorpay/verify-payment
 
 // ---------- Storefront (public browsing) ----------

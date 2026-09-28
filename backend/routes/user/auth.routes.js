@@ -2,12 +2,13 @@ import express from "express";
 import {
   signup, verifySignupOtp, resendSignupOtp, login, requestOtpLogin, verifyOtpLogin,
   forgotPassword, resetPassword, checkResetToken, googleAuth, facebookAuth,
-  logout, getMe,
+  logout, getMe, validateReferralCode,
 } from "../../controllers/user/auth.controller.js";
 import { protectUser } from "../../middleware/userAuth.js";
 
 const router = express.Router();
 
+router.get("/validate-referral/:code", validateReferralCode);
 router.post("/signup", signup);
 router.post("/verify-signup-otp", verifySignupOtp);
 router.post("/resend-signup-otp", resendSignupOtp);

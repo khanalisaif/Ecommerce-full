@@ -59,6 +59,10 @@ const orderSchema = new mongoose.Schema(
     coinsDiscount: { type: Number, default: 0 },
     coinsEarned: { type: Number, default: 0 },
     coinsCredited: { type: Boolean, default: false },
+    coinsRefunded: { type: Boolean, default: false },
+    // ── Wallet ────────────────────────────────────────────────────────────────
+    walletUsed: { type: Number, default: 0 },
+    walletRefunded: { type: Boolean, default: false },
     // ──────────────────────────────────────────────────────────────────────────
     shippingCost: { type: Number, default: 0 },
     total: { type: Number, required: true },

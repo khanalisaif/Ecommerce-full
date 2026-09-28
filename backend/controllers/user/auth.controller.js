@@ -8,6 +8,7 @@ import { sendOtpSms, TEMPLATES } from "../../utils/sendSms.js";
 import { sendOtpEmail, sendPasswordResetLinkEmail, sendSecurityAlertEmail, formatDelhiDateTime } from "../../utils/sendEmail.js";
 import { generateResetToken, hashToken } from "../../utils/resetToken.js";
 import { getClientUrl } from "../../utils/urlHelper.js";
+import { generateUniqueReferralCode } from "../../utils/referralCode.js";
 
 // Helper: fire OTP over SMS + email in parallel, never block on SMS failure
 const dispatchOtp = async ({ mobileNumber, email }, otp, templateName, purposeLabel) => {
@@ -24,39 +25,71 @@ const dispatchOtp = async ({ mobileNumber, email }, otp, templateName, purposeLa
 // @route POST /api/user/auth/signup
 // Creates the user in an unverified state and sends a signup OTP
 export const signup = asyncHandler(async (req, res) => {
-  const { fullName, gender, email, mobileNumber, password } = req.body;
+  const { fullName, gender, email, mobileNumber, password, referralCode } = req.body;
 
   if (!fullName || !email || !mobileNumber || !password) {
     throw new ApiError(400, "Full Name, Email, Mobile Number, and Password are all required");
   }
 
   const cleanEmail = email.trim().toLowerCase();
-  const cleanMobile = mobileNumber.trim();
+  const cleanMobile = mobileNumber.trim().replace(/\D/g, "");
   const formattedGender = gender ? (gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase()) : "";
 
-  // Check for existing verified users with this email or mobile
-  const existingVerified = await User.findOne({
-    $or: [{ email: cleanEmail }, { mobileNumber: cleanMobile }],
-    isEmailVerified: true,
-  });
-
-  if (existingVerified) {
-    if (existingVerified.email === cleanEmail && existingVerified.mobileNumber === cleanMobile) {
-      throw new ApiError(409, "An account already exists with this email and mobile number. Please log in.");
-    } else if (existingVerified.email === cleanEmail) {
-      throw new ApiError(409, "This email address is already registered. Please use a different email or log in.");
-    } else {
-      throw new ApiError(409, "This mobile number is already registered. Please use a different number or log in.");
-    }
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(cleanEmail)) {
+    throw new ApiError(400, "Please enter a valid email address");
   }
 
-  // Remove any stale unverified records with this email or mobile (to avoid unique index conflicts)
+  // 10-digit mobile number validation
+  if (cleanMobile.length !== 10 || !/^[6-9]\d{9}$/.test(cleanMobile)) {
+    throw new ApiError(400, "Please enter a valid 10-digit mobile number");
+  }
+
+  // Check 1: Strict check if email already belongs to an existing user
+  const existingByEmail = await User.findOne({
+    email: cleanEmail,
+    $or: [{ isEmailVerified: true }, { isMobileVerified: true }, { isActive: true }],
+  });
+  if (existingByEmail) {
+    throw new ApiError(409, "This email address is already registered. Please log in or use a different email.");
+  }
+
+  // Check 2: Strict check if mobile number already belongs to an existing user
+  const existingByMobile = await User.findOne({
+    mobileNumber: cleanMobile,
+    $or: [{ isEmailVerified: true }, { isMobileVerified: true }, { isActive: true }],
+  });
+  if (existingByMobile) {
+    throw new ApiError(409, "This mobile number is already registered. Please log in or use a different mobile number.");
+  }
+
+  // Check 3: If referral code is provided, verify it belongs to a registered existing user
+  let referredBy = null;
+  if (referralCode && String(referralCode).trim()) {
+    const trimmedCode = String(referralCode).trim();
+    const referrer = await User.findOne({ referralCode: trimmedCode });
+    if (!referrer) {
+      throw new ApiError(400, `Invalid referral code "${trimmedCode}". No registered user found with this referral code. Please check the 4-digit code or leave it blank.`);
+    }
+
+    // Disallow self-referral
+    if (referrer.email === cleanEmail || referrer.mobileNumber === cleanMobile) {
+      throw new ApiError(400, "You cannot use your own referral code.");
+    }
+
+    referredBy = referrer._id;
+  }
+
+  // Remove any stale unverified draft records with this email or mobile (never touching verified accounts)
   await User.deleteMany({
     $or: [{ email: cleanEmail }, { mobileNumber: cleanMobile }],
-    isEmailVerified: false,
+    isEmailVerified: { $ne: true },
+    isMobileVerified: { $ne: true },
   });
 
   const { otp, expiresAt } = generateOtp();
+  const newReferralCode = await generateUniqueReferralCode();
 
   const user = await User.create({
     fullName: fullName.trim(),
@@ -65,6 +98,8 @@ export const signup = asyncHandler(async (req, res) => {
     mobileNumber: cleanMobile,
     password,
     authProvider: "local",
+    referralCode: newReferralCode,
+    referredBy: referredBy || undefined,
     otp: { code: otp, expiresAt, purpose: "signup" },
   });
 
@@ -114,6 +149,32 @@ export const verifySignupOtp = asyncHandler(async (req, res) => {
   user.isEmailVerified = true;
   user.isMobileVerified = true;
   user.otp = undefined;
+
+  // Referral Rewards: Both get 100 She Coins upon successful verified signup
+  if (user.referredBy) {
+    // 1. New user gets 100 She Coins welcome bonus
+    user.shePoints = (user.shePoints || 0) + 100;
+    user.coinsHistory.push({
+      type: "earned",
+      amount: 100,
+      description: "Welcome bonus for signing up with referral code",
+      createdAt: new Date(),
+    });
+
+    // 2. Referrer gets 100 She Coins referral bonus immediately
+    await User.findByIdAndUpdate(user.referredBy, {
+      $inc: { shePoints: 100 },
+      $push: {
+        coinsHistory: {
+          type: "earned",
+          amount: 100,
+          description: `Referral bonus for inviting ${user.fullName}`,
+          createdAt: new Date(),
+        },
+      },
+    });
+  }
+
   await user.save();
 
   const token = generateUserToken(res, user._id);
@@ -426,6 +487,10 @@ export const logout = asyncHandler(async (req, res) => {
 
 // @route GET /api/user/auth/me
 export const getMe = asyncHandler(async (req, res) => {
+  if (req.user && !req.user.referralCode) {
+    req.user.referralCode = await generateUniqueReferralCode();
+    await req.user.save();
+  }
   res.status(200).json(new ApiResponse(200, { user: req.user }, "Current user fetched"));
 });
 
@@ -437,3 +502,29 @@ export const sanitizeUser = (user) => {
   delete obj.resetPasswordExpires;
   return obj;
 };
+
+// @route GET /api/user/auth/validate-referral/:code
+export const validateReferralCode = asyncHandler(async (req, res) => {
+  const code = req.params.code?.trim();
+  if (!code) throw new ApiError(400, "Referral code is required");
+
+  const referrer = await User.findOne({
+    referralCode: code,
+    $or: [{ isEmailVerified: true }, { isMobileVerified: true }, { isActive: true }],
+  }).select("fullName referralCode");
+
+  if (!referrer) {
+    throw new ApiError(404, `Invalid referral code "${code}". No registered user found with this code.`);
+  }
+
+  const firstName = referrer.fullName ? referrer.fullName.split(" ")[0] : "Friend";
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      { valid: true, referralCode: referrer.referralCode, referrerName: firstName },
+      `Valid referral code! Invited by ${firstName}`
+    )
+  );
+});
+

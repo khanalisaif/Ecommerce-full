@@ -22,6 +22,7 @@ export const authService = {
 
   logout: () => api.post('/user/auth/logout'),
   getMe: () => api.get('/user/auth/me'),
+  validateReferralCode: (code) => api.get(`/user/auth/validate-referral/${code}`),
 }
 
 export default authService

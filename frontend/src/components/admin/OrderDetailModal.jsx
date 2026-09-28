@@ -290,11 +290,16 @@ function DelhiveryPanel({ order }) {
           <div>
             <span className="text-[10px] text-gray-400 font-medium block">Payment Collection</span>
             <span className="font-medium text-gray-700 capitalize">
-              {order.paymentMethod?.toLowerCase() === 'cod' ? `COD: ₹${order.amount || 0}` : 'Prepaid (₹0 COD)'}
+              {order.paymentMethod?.toLowerCase() === 'cod' ? `COD: ₹${order.amount || 0}` : (order.paymentMethod?.toLowerCase() === 'wallet' ? 'Paid via Wallet (₹0 COD)' : 'Prepaid (₹0 COD)')}
             </span>
             {order.paymentMethod?.toLowerCase() === 'cod' && (order.coinsDiscount > 0 || order.coinsUsed > 0) && (
               <span className="text-[10px] text-amber-700 font-medium block">
                 (🪙 ₹{order.coinsDiscount || order.coinsUsed} She Coins deducted)
+              </span>
+            )}
+            {order.paymentMethod?.toLowerCase() === 'cod' && order.walletUsed > 0 && (
+              <span className="text-[10px] text-indigo-700 font-medium flex items-center gap-1">
+                (<Wallet size={10} /> ₹{order.walletUsed} Wallet deducted)
               </span>
             )}
           </div>
@@ -524,6 +529,9 @@ export default function OrderDetailModal({ order, onClose }) {
             <h3 className="font-bold text-gray-900 text-lg">{order.id}</h3>
             <p className="text-gray-500 text-sm">
               {order.customerName} · ₹{(order.amount || 0).toLocaleString('en-IN')}
+              {order.walletUsed > 0 && (
+                <span className="ml-1 text-xs text-purple-700 font-semibold">(−₹{order.walletUsed} Wallet)</span>
+              )}
               {order.delhivery?.waybill && (
                 <span className="ml-2 text-xs font-mono bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
                   AWB: {order.delhivery.waybill}
@@ -537,9 +545,26 @@ export default function OrderDetailModal({ order, onClose }) {
         {/* Progress Stepper */}
         <div className="px-6 pt-5 pb-2">
           {order.status === 'Cancelled' ? (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              <XCircle size={16} className="text-red-500" />
-              <span className="text-red-700 text-sm font-semibold">This order was cancelled</span>
+            <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-2">
+                <XCircle size={16} className="text-red-500 shrink-0" />
+                <span className="text-red-700 text-sm font-semibold">This order was cancelled</span>
+              </div>
+              {(order.walletUsed > 0 || order.coinsUsed > 0) && (
+                <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-red-100 text-xs">
+                  <span className="text-gray-600 font-medium">Refund to User:</span>
+                  {order.walletUsed > 0 && (
+                    <span className="bg-purple-100 text-purple-800 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Wallet size={10} /> ₹{order.walletUsed} Wallet Refunded
+                    </span>
+                  )}
+                  {order.coinsUsed > 0 && (
+                    <span className="bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full">
+                      🪙 {order.coinsUsed} She Coins Refunded
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center">
@@ -747,6 +772,15 @@ export default function OrderDetailModal({ order, onClose }) {
                       </div>
                     )}
 
+                    {order.walletUsed > 0 && (
+                      <div className="flex justify-between text-xs text-indigo-800 font-semibold bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200">
+                        <span className="flex items-center gap-1.5">
+                          <Wallet size={12} className="text-indigo-600" /> Wallet Balance Applied
+                        </span>
+                        <span>− ₹{(order.walletUsed || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+
                     {order.shippingCost != null && (
                       <div className="flex justify-between text-xs text-gray-500">
                         <span>Shipping</span>
@@ -755,7 +789,7 @@ export default function OrderDetailModal({ order, onClose }) {
                     )}
 
                     <div className="flex justify-between text-sm font-bold text-gray-900 border-t border-gray-200 pt-1.5 mt-1">
-                      <span>{order.paymentMethod?.toLowerCase() === 'cod' ? 'Total (COD Due)' : 'Total Paid'}</span>
+                      <span>{order.paymentMethod?.toLowerCase() === 'cod' ? 'Total (COD Due)' : (order.paymentMethod?.toLowerCase() === 'wallet' ? 'Total (Paid via Wallet)' : 'Total Paid')}</span>
                       <span className="text-[#e83e8c]">₹{(order.amount || 0).toLocaleString('en-IN')}</span>
                     </div>
 

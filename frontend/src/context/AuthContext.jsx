@@ -17,8 +17,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   // ---- Signup (returns userId so the caller can show the OTP screen) ----
-  const signup = async ({ fullName, gender, email, mobileNumber, password }) => {
-    const res = await authService.signup({ fullName, gender, email, mobileNumber, password })
+  const signup = async ({ fullName, gender, email, mobileNumber, password, referralCode }) => {
+    const res = await authService.signup({ fullName, gender, email, mobileNumber, password, referralCode })
     return res.data // { userId, email, mobileNumber }
   }
 

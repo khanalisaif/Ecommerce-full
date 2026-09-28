@@ -319,6 +319,7 @@ export function ShopProvider({ children }) {
       coinsDiscount: o.coinsDiscount ?? 0,
       coinsEarned: o.coinsEarned ?? 0,
       coinsCredited: o.coinsCredited ?? false,
+      walletUsed: o.walletUsed ?? 0,
       shippingCost: o.shippingCost ?? 0,
       deliveryOption: o.deliveryOption,
       orderNotes: o.orderNotes || '',
