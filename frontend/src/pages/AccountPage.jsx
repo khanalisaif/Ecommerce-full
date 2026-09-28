@@ -16,12 +16,15 @@ import {
   MessageCircle, Gift, Edit, Trash2,
   Plus, Package, Eye, RotateCcw, ThumbsUp, Smartphone,
   Globe, Phone, Mail, ChevronDown, X, Home, Briefcase,
-  AlertCircle, CheckCheck, XCircle, MoreHorizontal, Menu, Loader2, ExternalLink
+  AlertCircle, CheckCheck, XCircle, MoreHorizontal, Menu, Loader2, ExternalLink,
+  Coins, ArrowRight,
 } from 'lucide-react'
+import coinsService from '../services/coinsService'
 
 const MENU = [
   { id: 'profile',        label: 'My Profile',            icon: User },
   { id: 'orders',         label: 'Orders',                icon: ShoppingBag },
+  { id: 'shecoins',       label: 'She Coins',             icon: Coins, badgeText: 'Coins' },
   { id: 'wishlist',       label: 'Wishlist',              icon: Heart, badge: true },
   { id: 'addresses',      label: 'Addresses',             icon: MapPin },
   { id: 'payments',       label: 'Payment Methods',       icon: CreditCard },
@@ -400,6 +403,9 @@ function OrdersPanel() {
       discount: o.discount,
       couponDiscount: o.couponDiscount,
       couponCode: o.couponCode,
+      coinsUsed: o.coinsUsed || 0,
+      coinsDiscount: o.coinsDiscount || 0,
+      coinsEarned: o.coinsEarned || 0,
       shippingCost: o.shippingCost,
       // Delhivery
       waybill:  o.delhivery?.waybill  || '',
@@ -500,6 +506,11 @@ function OrdersPanel() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-black text-gray-900">₹{order.total.toLocaleString()}</p>
+                    {order.coinsDiscount > 0 && (
+                      <p className="text-[10px] text-amber-700 font-bold mt-0.5">
+                        🪙 -₹{order.coinsDiscount} Coins
+                      </p>
+                    )}
                     <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor(order.status)}`}>{order.status}</span>
                   </div>
                 </div>
@@ -644,6 +655,256 @@ function OrdersPanel() {
           </div>
         </Modal>
       )}
+    </div>
+  )
+}
+
+// ─── SUPER COINS PANEL ────────────────────────────────────────────────────────
+function SuperCoinsPanel() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { showToast } = useShop()
+  const [coinsData, setCoinsData] = useState({ shePoints: user?.shePoints || 0, coinsHistory: user?.coinsHistory || [] })
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('All')
+
+  const fetchCoins = () => {
+    setLoading(true)
+    coinsService.getCoins()
+      .then((res) => {
+        if (res?.data) {
+          setCoinsData({
+            shePoints: res.data.shePoints ?? 0,
+            coinsHistory: res.data.coinsHistory || [],
+          })
+        }
+      })
+      .catch((err) => {
+        showToast(err.message || 'Failed to load coins')
+      })
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchCoins()
+  }, [])
+
+  const filteredHistory = (coinsData.coinsHistory || []).filter((item) => {
+    if (filter === 'All') return true
+    if (filter === 'Earned') return item.type === 'earned'
+    if (filter === 'Redeemed') return item.type === 'redeemed'
+    if (filter === 'Refunded') return item.type === 'refunded'
+    return true
+  })
+
+  return (
+    <div className="space-y-6">
+      {/* Hero Balance Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-600 p-6 sm:p-8 text-white shadow-lg">
+        {/* Background decorative circles */}
+        <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-white/10 blur-xl pointer-events-none" />
+        <div className="absolute right-12 top-6 w-24 h-24 rounded-full bg-yellow-300/20 blur-lg pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold tracking-wide">
+              <span>🪙</span> He &amp; She Rewards
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+              {loading ? (
+                <span className="opacity-75">Loading...</span>
+              ) : (
+                `${coinsData.shePoints} She Coins`
+              )}
+            </h2>
+            <p className="text-amber-100 text-sm font-medium">
+              Available Balance • Worth <span className="font-bold text-white">₹{coinsData.shePoints}</span> (1 Coin = ₹1)
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2.5">
+            <button
+              onClick={() => navigate('/')}
+              className="bg-white text-amber-800 hover:bg-amber-50 font-black text-xs px-5 py-3 rounded-xl shadow transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-1.5"
+            >
+              Shop &amp; Earn More <ArrowRight size={14} />
+            </button>
+            <button
+              onClick={fetchCoins}
+              className="bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-xs px-4 py-3 rounded-xl transition flex items-center gap-1.5"
+              title="Refresh Balance"
+            >
+              <RotateCcw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Required Highlight Banner */}
+      <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border border-amber-200/80 rounded-2xl p-5 shadow-xs flex items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🎉</span>
+            <h3 className="font-bold text-gray-900 text-base">Yay! You will earn She Coins on every order</h3>
+          </div>
+          <p className="text-gray-600 text-xs font-medium">
+            These coins will be credited after order delivery.
+          </p>
+        </div>
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 text-white font-black flex items-center justify-center flex-shrink-0 text-xl shadow-md ring-4 ring-amber-100">
+          S
+        </div>
+      </div>
+
+      {/* Rules / How it Works 3-Column Grid */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xs">
+        <h3 className="font-bold text-gray-900 text-base mb-4 flex items-center gap-2">
+          <span>✨</span> How She Coins Work
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-100">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-base mb-3">
+              1
+            </div>
+            <h4 className="font-bold text-gray-900 text-sm mb-1">1 Coin = ₹1 Rupee</h4>
+            <p className="text-gray-500 text-xs leading-relaxed">
+              Every single She Coin is equal to 1 Indian Rupee discount with no hidden fees or conversion rates.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-purple-50/50 border border-purple-100">
+            <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center font-black text-base mb-3">
+              2
+            </div>
+            <h4 className="font-bold text-gray-900 text-sm mb-1">Credited After Delivery</h4>
+            <p className="text-gray-500 text-xs leading-relaxed">
+              Coins earned on your ordered products are automatically credited to your balance once the shipment is marked Delivered.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-green-50/50 border border-green-100">
+            <div className="w-9 h-9 rounded-xl bg-green-100 text-green-800 flex items-center justify-center font-black text-base mb-3">
+              3
+            </div>
+            <h4 className="font-bold text-gray-900 text-sm mb-1">Redeem Up to 10% in Cart</h4>
+            <p className="text-gray-500 text-xs leading-relaxed">
+              When purchasing items in your cart, check &quot;Redeem She Coins&quot; to apply your coins up to 10% of the total cart amount!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Activity / Passbook History */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+          <div>
+            <h3 className="font-bold text-gray-900 text-base">Coins Passbook &amp; History</h3>
+            <p className="text-gray-400 text-xs mt-0.5">Track your earned, redeemed and refunded She Coins</p>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+            {['All', 'Earned', 'Redeemed', 'Refunded'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  filter === tab
+                    ? 'bg-white text-gray-900 shadow-xs'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-gray-400 gap-2">
+            <Loader2 size={18} className="animate-spin text-amber-500" />
+            <span className="text-sm">Loading activity...</span>
+          </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="py-12 text-center space-y-3">
+            <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mx-auto text-2xl">
+              🪙
+            </div>
+            <h4 className="font-bold text-gray-800 text-sm">No coin activity found</h4>
+            <p className="text-gray-400 text-xs max-w-sm mx-auto">
+              {coinsData.shePoints === 0
+                ? "You haven't earned any She Coins yet. Shop now to earn coins on eligible products!"
+                : "No transactions match the selected filter."}
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition inline-flex items-center gap-1.5 shadow-sm"
+            >
+              Start Shopping <ArrowRight size={13} />
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {filteredHistory.map((item, idx) => {
+              const isEarned = item.type === 'earned'
+              const isRefunded = item.type === 'refunded'
+              const isRedeemed = item.type === 'redeemed'
+
+              const dateStr = item.createdAt
+                ? new Date(item.createdAt).toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '—'
+
+              return (
+                <div key={idx} className="py-3.5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+                      isEarned
+                        ? 'bg-green-50 text-green-600 border border-green-100'
+                        : isRedeemed
+                        ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                        : 'bg-blue-50 text-blue-600 border border-blue-100'
+                    }`}>
+                      {isEarned ? '✓' : isRedeemed ? '−' : '↺'}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm">
+                        {item.description || (isEarned ? 'Coins Earned' : isRedeemed ? 'Coins Redeemed' : 'Coins Refunded')}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-400">
+                        <span>{dateStr}</span>
+                        {item.orderId && (
+                          <span className="font-mono text-purple-600 bg-purple-50 px-1.5 py-0.2 rounded text-[10px]">
+                            {item.orderId}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className={`font-black text-sm sm:text-base ${
+                      isEarned
+                        ? 'text-green-600'
+                        : isRedeemed
+                        ? 'text-amber-700'
+                        : 'text-blue-600'
+                    }`}>
+                      {isEarned || isRefunded ? `+${item.amount}` : `-${item.amount}`} She Coins
+                    </span>
+                    <p className="text-[10px] text-gray-400 font-medium capitalize">{item.type}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -1437,8 +1698,23 @@ export default function AccountPage() {
   const navigate = useNavigate()
   const { setIsChatOpen, showToast, wishlistCount } = useShop()
   const { isAuthenticated, isAuthLoading, logout } = useAuth()
-  const [activeTab, setActiveTab] = useState('profile')
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const p = new URLSearchParams(window.location.search)
+      return p.get('tab') || 'profile'
+    } catch {
+      return 'profile'
+    }
+  })
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search)
+      const tabParam = p.get('tab')
+      if (tabParam) setActiveTab(tabParam)
+    } catch {}
+  }, [])
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -1483,6 +1759,8 @@ export default function AccountPage() {
   const panels = {
     profile:       <ProfilePanel />,
     orders:        <OrdersPanel />,
+    shecoins:      <SuperCoinsPanel />,
+    supercoins:    <SuperCoinsPanel />,
     wishlist:      <WishlistPanel />,
     addresses:     <AddressesPanel />,
     payments:      <PaymentsPanel />,
@@ -1527,7 +1805,7 @@ export default function AccountPage() {
           <div className="bg-white rounded-none md:rounded-2xl shadow-none md:shadow-sm border-0 md:border border-gray-100 overflow-hidden py-2 md:py-3 flex-1 md:flex-none">
             <h3 className="hidden md:block text-[10px] font-black text-gray-400 uppercase tracking-widest px-5 mb-1">My Account</h3>
             <nav className="flex flex-col">
-              {MENU.map(({ id, label, icon: Icon, badge }) => {
+              {MENU.map(({ id, label, icon: Icon, badge, badgeText }) => {
                 const active = activeTab === id
                 return (
                   <button
@@ -1542,6 +1820,7 @@ export default function AccountPage() {
                   >
                     <div className="flex items-center gap-3 whitespace-nowrap"><Icon size={18} className={active ? "text-purple-600" : "text-gray-400"} /><span>{label}</span></div>
                     {badge && id === 'wishlist' && wishlistCount > 0 && <span className="bg-red-100 text-red-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">{wishlistCount}</span>}
+                    {badgeText && <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-200">{badgeText}</span>}
                   </button>
                 )
               })}

@@ -151,8 +151,14 @@ export default function OrdersTab() {
                       <span className="text-gray-600 max-w-[160px] truncate">{o.product}</span>
                     </div>
                   </td>
-                  <td className="px-5 sm:px-6 py-3 text-gray-500">{o.date}</td>
-                  <td className="px-5 sm:px-6 py-3 font-semibold text-gray-800">₹{(o.amount ?? 0).toLocaleString('en-IN')}</td>
+                  <td className="px-5 sm:px-6 py-3">
+                    <span className="font-semibold text-gray-800">₹{(o.amount ?? 0).toLocaleString('en-IN')}</span>
+                    {(o.coinsDiscount > 0 || o.coinsUsed > 0) && (
+                      <div className="text-[10px] text-amber-700 font-semibold flex items-center gap-0.5 mt-0.5">
+                        <span>🪙</span> −₹{o.coinsDiscount || o.coinsUsed}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-5 sm:px-6 py-3">
                     <div className="flex flex-col gap-1 items-start">
                       <PaymentBadge method={o.paymentMethod} />

@@ -324,10 +324,24 @@ export default function ProductDetailPage() {
             </div>
             <p className="text-gray-400 text-[11px] mb-5">Inclusive of all taxes</p>
 
-            <div className="bg-blue-50/50 border border-blue-100 rounded-lg px-4 py-2.5 mb-6">
+            <div className="bg-blue-50/50 border border-blue-100 rounded-lg px-4 py-2.5 mb-3">
               <p className="text-blue-800 text-xs font-semibold flex items-center gap-2">
                 🎉 Special Offer: Extra 10% OFF on Prepaid Orders
               </p>
+            </div>
+
+            {/* She Coins Reward Card */}
+            <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-amber-50 to-yellow-50/50 border border-amber-200/90 rounded-xl p-3.5 mb-6 shadow-xs">
+              <div className="text-[12px] min-w-0">
+                <p className="font-bold text-gray-900 mb-0.5 text-[12px]">Yay! You will earn</p>
+                <p className="text-amber-700 font-black text-[15px] mb-0.5">
+                  {product.coinsReward > 0 ? product.coinsReward : 45} She Coins
+                </p>
+                <p className="text-gray-500 text-[10px] leading-tight">These coins will be credited after order delivery</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 text-white font-black flex items-center justify-center flex-shrink-0 text-sm shadow-sm ring-2 ring-amber-200">
+                S
+              </div>
             </div>
 
             {/* Colors */}

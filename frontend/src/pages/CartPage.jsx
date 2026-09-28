@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import {
   Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Zap,
-  ShieldCheck, Package, RefreshCw, ShoppingCart, Star, Heart,
+  ShieldCheck, Package, RefreshCw, ShoppingCart, Star, Heart, Coins,
 } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
+import { useAuth } from '../context/AuthContext'
+import coinsService from '../services/coinsService'
 import { getColorName } from '../data/colorUtils'
 
 export default function CartPage() {
@@ -45,15 +47,58 @@ export default function CartPage() {
   const subtotal = cartSubtotal
   const originalTotal = cartOriginalTotal
   const discount = cartDiscount
-  
+
+  const { user, isAuthenticated } = useAuth()
+  const [userCoins, setUserCoins] = useState(user?.shePoints || 0)
+  const [useCoins, setUseCoins] = useState(() => {
+    try { return localStorage.getItem('hashtelicom_use_coins') === 'true' } catch { return false }
+  })
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      coinsService.getCoins()
+        .then((res) => {
+          if (res?.data?.shePoints != null) {
+            setUserCoins(res.data.shePoints)
+          }
+        })
+        .catch(() => {})
+    } else {
+      setUserCoins(0)
+    }
+  }, [isAuthenticated, user?.shePoints])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('hashtelicom_use_coins', useCoins ? 'true' : 'false')
+    } catch {}
+  }, [useCoins])
+
   const isCartEmpty = cartItems.length === 0 || subtotal === 0
   const FREE_SHIPPING_THRESHOLD = 999
   const freeShipping = !isCartEmpty && subtotal >= FREE_SHIPPING_THRESHOLD
   const shippingCost = isCartEmpty ? 0 : (freeShipping ? 0 : 200)
-  const total = isCartEmpty ? 0 : (subtotal + shippingCost)
+
+  // Super Coins redemption logic:
+  // 1 Coin = ₹1.
+  // Maximum 10% of total cart amount can be redeemed using coins.
+  const maxAllowedCoins = Math.floor(subtotal * 0.10)
+  const redeemableCoins = Math.min(userCoins, maxAllowedCoins)
+  const coinsDeduction = useCoins && !isCartEmpty ? redeemableCoins : 0
+
+  const total = isCartEmpty ? 0 : Math.max(0, subtotal - coinsDeduction + shippingCost)
+  const totalSavings = discount + coinsDeduction
   const amountNeeded = isCartEmpty ? FREE_SHIPPING_THRESHOLD : Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
   const progressPercent = isCartEmpty ? 0 : Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100))
-  const discountPct = originalTotal > 0 ? Math.round((discount / originalTotal) * 100) : 0
+  const discountPct = originalTotal > 0 ? Math.round((totalSavings / originalTotal) * 100) : 0
+
+  // Calculate dynamic coins earned for products in cart
+  const earnedCoins = cartItems.reduce((acc, item) => {
+    const prod = products.find(p => p.id === item.id)
+    const reward = item.coinsReward ?? prod?.coinsReward ?? 0
+    return acc + (reward > 0 ? reward * item.quantity : 0)
+  }, 0)
+  const displayEarnedCoins = earnedCoins > 0 ? earnedCoins : 45
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -175,6 +220,59 @@ export default function CartPage() {
                 <div className="h-full bg-[#00b368] rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
               </div>
             </div>
+
+            {/* Super Coins / She Points Redemption Card */}
+            <div className={`rounded-xl border p-4 transition-all ${
+              useCoins 
+                ? 'bg-gradient-to-r from-amber-50 to-yellow-50/80 border-amber-300 shadow-sm' 
+                : 'bg-white border-amber-200/70 hover:border-amber-300'
+            }`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="pt-0.5">
+                    <input
+                      type="checkbox"
+                      id="redeemCoinsCart"
+                      checked={useCoins}
+                      onChange={(e) => setUseCoins(e.target.checked)}
+                      disabled={isCartEmpty || userCoins <= 0 || maxAllowedCoins <= 0}
+                      className="w-5 h-5 accent-amber-600 rounded cursor-pointer disabled:opacity-40"
+                    />
+                  </div>
+                  <label htmlFor="redeemCoinsCart" className="cursor-pointer select-none">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
+                        <span className="text-amber-500">🪙</span> Redeem She Coins
+                      </span>
+                      <span className="bg-amber-100 text-amber-900 text-[11px] font-black px-2 py-0.5 rounded-full border border-amber-200">
+                        {userCoins} Coins Available
+                      </span>
+                    </div>
+                    <p className="text-gray-500 text-[12px] mt-1">
+                      1 Coin = ₹1. Redeem up to 10% of order total (Max ₹{maxAllowedCoins} off on this order).
+                    </p>
+                    {userCoins <= 0 && (
+                      <p className="text-amber-700 text-[11px] font-medium mt-1">
+                        You have 0 coins. Earn She Coins on every order to redeem here!
+                      </p>
+                    )}
+                  </label>
+                </div>
+
+                <div className="text-right shrink-0">
+                  {useCoins && coinsDeduction > 0 ? (
+                    <div>
+                      <span className="text-base font-black text-amber-700">-₹{coinsDeduction}</span>
+                      <p className="text-[10px] text-green-600 font-bold">Applied</p>
+                    </div>
+                  ) : (
+                    redeemableCoins > 0 && (
+                      <span className="text-xs font-bold text-gray-500">Save up to ₹{redeemableCoins}</span>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="lg:col-span-1">
@@ -192,6 +290,14 @@ export default function CartPage() {
                     <span className="text-[#00b368] font-medium">- ₹{discount.toLocaleString()}</span>
                   </div>
                 )}
+                {useCoins && coinsDeduction > 0 && (
+                  <div className="flex justify-between text-[12px] font-bold text-amber-700">
+                    <span className="flex items-center gap-1">
+                      <span>🪙</span> She Coins Redeemed ({coinsDeduction} Coins)
+                    </span>
+                    <span>- ₹{coinsDeduction.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[12px]">
                   <span className="text-gray-500">Shipping Charges</span>
                   <span className={isCartEmpty ? 'text-gray-900 font-medium' : (freeShipping ? 'text-[#00b368] font-bold' : 'text-gray-900 font-medium')}>
@@ -205,24 +311,24 @@ export default function CartPage() {
                   <span className="font-bold text-gray-900 text-[14px]">Total Amount</span>
                   <span className="font-black text-[#e83e8c] text-[22px]">₹{total.toLocaleString()}</span>
                 </div>
-                {discount > 0 && (
+                {totalSavings > 0 && (
                   <div className="flex justify-between text-[11px]">
                     <span className="text-[#00b368] font-bold">You Save</span>
-                    <span className="text-[#00b368] font-bold">₹{discount.toLocaleString()} ({discountPct}%)</span>
+                    <span className="text-[#00b368] font-bold">₹{totalSavings.toLocaleString()} ({discountPct}%)</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-3">
                 <button
-                  onClick={() => navigate('/checkout')}
+                  onClick={() => navigate('/checkout', { state: { useCoins } })}
                   disabled={cartItems.length === 0}
                   className="w-full flex items-center justify-center gap-2 bg-[#e83e8c] text-white py-3.5 rounded-xl font-bold text-[14px] hover:shadow-lg transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Zap size={16} className="fill-white" /> Proceed to Checkout
                 </button>
 
-                <button onClick={() => navigate('/checkout')} className="w-full flex items-center justify-center gap-2 border border-purple-200 bg-purple-50/50 text-purple-600 py-3.5 rounded-xl font-bold text-[14px] hover:bg-purple-50 transition-colors">
+                <button onClick={() => navigate('/checkout', { state: { useCoins } })} className="w-full flex items-center justify-center gap-2 border border-purple-200 bg-purple-50/50 text-purple-600 py-3.5 rounded-xl font-bold text-[14px] hover:bg-purple-50 transition-colors">
                   <ShieldCheck size={16} /> Buy with 1-Click
                 </button>
               </div>
@@ -245,13 +351,13 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-100 rounded-xl p-4 shadow-sm mt-4">
+              <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-amber-50 to-yellow-50/60 border border-amber-200 rounded-xl p-4 shadow-sm mt-4">
                 <div className="text-[12px] min-w-0">
                   <p className="font-bold text-gray-900 mb-0.5 text-[12px]">Yay! You will earn</p>
-                  <p className="text-purple-600 font-bold text-[15px] mb-1">45 She Points</p>
-                  <p className="text-gray-600 text-[10px] leading-tight">These points will be credited after order delivery</p>
+                  <p className="text-amber-700 font-black text-[15px] mb-1">{displayEarnedCoins} She Coins</p>
+                  <p className="text-gray-600 text-[10px] leading-tight">These coins will be credited after order delivery</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-yellow-400 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm shadow-sm ring-2 ring-amber-200">
                   S
                 </div>
               </div>

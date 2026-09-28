@@ -55,6 +55,10 @@ const productSchema = new mongoose.Schema(
     // "Surface" or "Express"
     shippingMode: { type: String, default: "Surface", enum: ["Surface", "Express"] },
 
+    // ── She Points / Super Coins reward ─────────────────────────────────────────
+    // How many She Points the customer earns when this product is delivered
+    coinsReward: { type: Number, default: 0, min: 0 },
+
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

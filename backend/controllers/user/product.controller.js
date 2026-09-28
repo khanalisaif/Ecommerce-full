@@ -49,6 +49,7 @@ const toStorefront = (p) => {
     isBestSeller: obj.isBestSeller,
     isNewArrival: obj.isNewArrival,
     sku: obj.sku,
+    coinsReward: obj.coinsReward ?? 0,
   };
 };
 

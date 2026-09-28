@@ -54,6 +54,12 @@ const orderSchema = new mongoose.Schema(
     discount: { type: Number, default: 0 },
     couponCode: { type: String, default: "" },
     couponDiscount: { type: Number, default: 0 },
+    // ── Super Coins / She Points ──────────────────────────────────────────────
+    coinsUsed: { type: Number, default: 0 },
+    coinsDiscount: { type: Number, default: 0 },
+    coinsEarned: { type: Number, default: 0 },
+    coinsCredited: { type: Boolean, default: false },
+    // ──────────────────────────────────────────────────────────────────────────
     shippingCost: { type: Number, default: 0 },
     total: { type: Number, required: true },
 

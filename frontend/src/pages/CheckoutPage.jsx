@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import {
@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext'
 import addressService from '../services/addressService'
 import orderService from '../services/orderService'
 import couponService from '../services/couponService'
+import coinsService from '../services/coinsService'
 import razorpayService, { loadRazorpayScript } from '../services/razorpayService'
 
 export default function CheckoutPage() {
@@ -47,6 +48,31 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isAuthLoading])
 
+  const location = useLocation()
+  const [userCoins, setUserCoins] = useState(user?.shePoints || 0)
+  const [useCoins, setUseCoins] = useState(() => {
+    if (location.state?.useCoins !== undefined) return location.state.useCoins
+    try { return localStorage.getItem('hashtelicom_use_coins') === 'true' } catch { return false }
+  })
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      coinsService.getCoins()
+        .then((res) => {
+          if (res?.data?.shePoints != null) {
+            setUserCoins(res.data.shePoints)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [isAuthenticated, user?.shePoints])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('hashtelicom_use_coins', useCoins ? 'true' : 'false')
+    } catch {}
+  }, [useCoins])
+
   const selectedAddress = addresses.find((a) => a._id === selectedAddressId)
 
   const isCartEmpty = cartItems.length === 0 || cartSubtotal === 0
@@ -55,10 +81,17 @@ export default function CheckoutPage() {
   const originalTotal = cartOriginalTotal
   const discount = cartDiscount
   const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0
+
+  // Super coins calculation: 1 coin = ₹1, max 10% of cart total
+  const netBeforeCoins = Math.max(0, subtotal - couponDiscount)
+  const maxAllowedCoins = Math.floor(netBeforeCoins * 0.10)
+  const redeemableCoins = Math.min(userCoins, maxAllowedCoins)
+  const coinsDeduction = useCoins && !isCartEmpty ? redeemableCoins : 0
+
   const standardShippingCost = isCartEmpty ? 0 : (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 200)
   const shippingCost = isCartEmpty ? 0 : (deliveryOption === 'express' ? standardShippingCost + 79 : standardShippingCost)
-  const total = isCartEmpty ? 0 : Math.max(0, subtotal - couponDiscount + shippingCost)
-  const totalSavings = discount + couponDiscount
+  const total = isCartEmpty ? 0 : Math.max(0, subtotal - couponDiscount - coinsDeduction + shippingCost)
+  const totalSavings = discount + couponDiscount + coinsDeduction
   const savePercent = originalTotal > 0 ? Math.round((totalSavings / originalTotal) * 100) : 0
 
   // Check for ?coupon=CODE in URL and auto-apply
@@ -117,6 +150,7 @@ export default function CheckoutPage() {
         orderNotes,
         couponCode: appliedCoupon?.code || '',
         couponDiscount,
+        useCoins: !!useCoins,
       })
         .then((res) => { setPlacedOrder(res.data.order); clearCart() })
         .catch((err) => showToast(err.message))
@@ -206,6 +240,7 @@ export default function CheckoutPage() {
         orderNotes,
         couponCode: appliedCoupon?.code || '',
         couponDiscount,
+        useCoins: !!useCoins,
       })
       setPlacedOrder(res.data.order)
       clearCart()
@@ -540,6 +575,14 @@ export default function CheckoutPage() {
                         <Tag size={12} /> Coupon ({appliedCoupon.code})
                       </span>
                       <span className="text-green-600 font-bold">- ₹{couponDiscount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {useCoins && coinsDeduction > 0 && (
+                    <div className="flex justify-between text-[12px] font-bold text-amber-700">
+                      <span className="flex items-center gap-1">
+                        <span>🪙</span> She Coins Redeemed ({coinsDeduction} Coins)
+                      </span>
+                      <span>- ₹{coinsDeduction.toLocaleString()}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-[12px]">

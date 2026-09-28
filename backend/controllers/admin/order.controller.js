@@ -118,6 +118,26 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
           orderId: order.orderId,
           items: order.items,
         }).catch((err) => console.error("Review reminder email failed:", err.message));
+
+        // Credit She Points on order delivery
+        if (!order.coinsCredited && order.coinsEarned > 0) {
+          order.coinsCredited = true;
+          await order.save();
+          if (userId) {
+            await User.findByIdAndUpdate(userId, {
+              $inc: { shePoints: order.coinsEarned },
+              $push: {
+                coinsHistory: {
+                  type: "earned",
+                  amount: order.coinsEarned,
+                  description: `Earned on delivered order ${order.orderId}`,
+                  orderId: order.orderId,
+                  createdAt: new Date(),
+                },
+              },
+            });
+          }
+        }
       }
     }
 
@@ -126,6 +146,23 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
         if (item.product) {
           await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
         }
+      }
+
+      // Refund any redeemed coins if cancelled
+      const userId = order.user?._id || order.user;
+      if (userId && order.coinsUsed > 0) {
+        await User.findByIdAndUpdate(userId, {
+          $inc: { shePoints: order.coinsUsed },
+          $push: {
+            coinsHistory: {
+              type: "refunded",
+              amount: order.coinsUsed,
+              description: `Refunded coins from cancelled order ${order.orderId}`,
+              orderId: order.orderId,
+              createdAt: new Date(),
+            },
+          },
+        });
       }
     }
   }

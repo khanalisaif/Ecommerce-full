@@ -99,6 +99,19 @@ const userSchema = new mongoose.Schema(
 
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
 
+    // ── Super Coins / She Points ──────────────────────────────────────────────
+    shePoints: { type: Number, default: 0, min: 0 },
+    coinsHistory: [
+      {
+        type: { type: String, enum: ["earned", "redeemed", "expired", "refunded"], required: true },
+        amount: { type: Number, required: true },
+        description: { type: String, default: "" },
+        orderId: { type: String, default: "" },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    // ─────────────────────────────────────────────────────────────────────────
+
     isEmailVerified: { type: Boolean, default: false },
     isMobileVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },

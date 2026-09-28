@@ -127,6 +127,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     price, originalPrice, stock, colors, sizes, images,
     isAssured, isBestSeller, isNewArrival, badge, sku, discount, rating, reviews,
     weight, length, width, height, shippingMode,
+    coinsReward,
   } = req.body;
 
   if (!name || !brand || !category || price === undefined) {
@@ -175,6 +176,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     colors: parsedColors,
     sizes: cleanSizes,
     stock: computedStock,
+    coinsReward: coinsReward !== undefined ? Math.max(0, Number(coinsReward) || 0) : 0,
     rating: rating !== undefined ? Number(rating) : undefined,
     reviews: reviews !== undefined ? Number(reviews) : undefined,
     isAssured: isAssured !== undefined ? !!isAssured : true,
@@ -204,6 +206,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
     price, originalPrice, stock, colors, sizes, images,
     isAssured, isBestSeller, isNewArrival, badge, sku, discount, isActive, rating, reviews,
     weight, length, width, height, shippingMode,
+    coinsReward,
   } = req.body;
 
   const oldPrice = product.price;
@@ -217,6 +220,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
   if (price !== undefined) product.price = Number(price);
   if (originalPrice !== undefined) product.originalPrice = Number(originalPrice);
   if (discount !== undefined) product.discount = discount;
+  if (coinsReward !== undefined) product.coinsReward = Math.max(0, Number(coinsReward) || 0);
 
   let cleanSizes = sizes !== undefined ? normalizeSizes(sizes) : undefined;
   let parsedColors = Array.isArray(colors)

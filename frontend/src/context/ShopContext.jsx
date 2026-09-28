@@ -109,6 +109,8 @@ function mapBackendProduct(doc) {
     width:        doc.width        ?? 10,
     height:       doc.height       ?? 5,
     shippingMode: doc.shippingMode || 'Surface',
+    // Super Coins / She Points
+    coinsReward:  doc.coinsReward != null ? Number(doc.coinsReward) : 0,
   }
 }
 
@@ -126,6 +128,7 @@ function mapCartItemFromApi(item) {
     size: item.size || null,
     category: p.category,
     quantity: item.quantity,
+    coinsReward: p.coinsReward || 0,
   }
 }
 
@@ -312,6 +315,10 @@ export function ShopProvider({ children }) {
       discount: o.discount ?? 0,
       couponCode: o.couponCode || '',
       couponDiscount: o.couponDiscount ?? 0,
+      coinsUsed: o.coinsUsed ?? 0,
+      coinsDiscount: o.coinsDiscount ?? 0,
+      coinsEarned: o.coinsEarned ?? 0,
+      coinsCredited: o.coinsCredited ?? false,
       shippingCost: o.shippingCost ?? 0,
       deliveryOption: o.deliveryOption,
       orderNotes: o.orderNotes || '',

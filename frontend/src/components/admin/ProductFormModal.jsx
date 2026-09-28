@@ -43,6 +43,7 @@ const emptyForm = {
   width: '10',
   height: '5',
   shippingMode: 'Surface',
+  coinsReward: '0',
 }
 
 export default function ProductFormModal({ product, onClose, onSave }) {
@@ -117,6 +118,7 @@ export default function ProductFormModal({ product, onClose, onSave }) {
         width: String(product.width ?? '10'),
         height: String(product.height ?? '5'),
         shippingMode: product.shippingMode || 'Surface',
+        coinsReward: String(product.coinsReward ?? '0'),
       })
     } else {
       setForm({ ...emptyForm, category: categories[0]?.slug || '' })
@@ -362,6 +364,7 @@ export default function ProductFormModal({ product, onClose, onSave }) {
       width:  parseFloat(form.width)  || 10,
       height: parseFloat(form.height) || 5,
       shippingMode: form.shippingMode || 'Surface',
+      coinsReward: Math.max(0, parseInt(form.coinsReward, 10) || 0),
     }
 
     Promise.resolve(onSave(payload))
@@ -889,6 +892,32 @@ export default function ProductFormModal({ product, onClose, onSave }) {
             <p className="text-[10px] text-gray-400">
               📍 These values auto-populate the Delhivery TAT estimate on the product page for customers.
             </p>
+          </div>
+
+          {/* Super Coins / She Points Reward Field (Above Description) */}
+          <div className="border border-amber-200 bg-amber-50/60 rounded-2xl p-4 space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-xs bg-gradient-to-br from-amber-400 to-yellow-500 text-white font-bold text-sm">
+                🪙
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 leading-tight">She Coins Reward</h4>
+                <p className="text-[11px] text-gray-500 mt-0.5">Coins earned by the customer when purchasing this product (1 Coin = ₹1)</p>
+              </div>
+            </div>
+            <div>
+              <label className="block text-gray-700 font-semibold text-xs mb-1.5">
+                Coins Reward <span className="text-amber-700 font-normal">(User will earn this upon delivery)</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.coinsReward}
+                onChange={field('coinsReward')}
+                placeholder="e.g. 45"
+                className="w-full px-3.5 py-2.5 border border-amber-300 rounded-lg text-sm focus:outline-none focus:border-amber-500 bg-white font-semibold text-gray-800"
+              />
+            </div>
           </div>
 
           <div>

@@ -292,6 +292,11 @@ function DelhiveryPanel({ order }) {
             <span className="font-medium text-gray-700 capitalize">
               {order.paymentMethod?.toLowerCase() === 'cod' ? `COD: ₹${order.amount || 0}` : 'Prepaid (₹0 COD)'}
             </span>
+            {order.paymentMethod?.toLowerCase() === 'cod' && (order.coinsDiscount > 0 || order.coinsUsed > 0) && (
+              <span className="text-[10px] text-amber-700 font-medium block">
+                (🪙 ₹{order.coinsDiscount || order.coinsUsed} She Coins deducted)
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -701,12 +706,67 @@ export default function OrderDetailModal({ order, onClose }) {
                       </div>
                     ))}
                   </div>
-                  <div className="border-t border-gray-200 pt-2 space-y-1">
-                    {order.subtotal != null && <div className="flex justify-between text-xs text-gray-500"><span>Subtotal</span><span>₹{(order.subtotal || 0).toLocaleString('en-IN')}</span></div>}
-                    {order.discount > 0 && <div className="flex justify-between text-xs text-green-600"><span>Discount</span><span>− ₹{order.discount.toLocaleString('en-IN')}</span></div>}
-                    {order.couponDiscount > 0 && <div className="flex justify-between text-xs text-green-600"><span>Coupon ({order.couponCode})</span><span>− ₹{order.couponDiscount.toLocaleString('en-IN')}</span></div>}
-                    {order.shippingCost != null && <div className="flex justify-between text-xs text-gray-500"><span>Shipping</span><span>{order.shippingCost === 0 ? 'FREE' : `₹${order.shippingCost.toLocaleString('en-IN')}`}</span></div>}
-                    <div className="flex justify-between text-sm font-bold text-gray-900 border-t border-gray-200 pt-1 mt-1"><span>Total Paid</span><span>₹{(order.amount || 0).toLocaleString('en-IN')}</span></div>
+                  <div className="border-t border-gray-200 pt-2 space-y-1.5">
+                    {order.discount > 0 ? (
+                      <>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Total MRP</span>
+                          <span>₹{((order.subtotal || 0) + (order.discount || 0)).toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-green-600">
+                          <span>Discount on MRP</span>
+                          <span>− ₹{(order.discount || 0).toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-700 font-medium">
+                          <span>Subtotal</span>
+                          <span>₹{(order.subtotal || 0).toLocaleString('en-IN')}</span>
+                        </div>
+                      </>
+                    ) : (
+                      order.subtotal != null && (
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Subtotal</span>
+                          <span>₹{(order.subtotal || 0).toLocaleString('en-IN')}</span>
+                        </div>
+                      )
+                    )}
+
+                    {order.couponDiscount > 0 && (
+                      <div className="flex justify-between text-xs text-green-600 font-medium">
+                        <span>Coupon ({order.couponCode})</span>
+                        <span>− ₹{(order.couponDiscount || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+
+                    {(order.coinsDiscount > 0 || order.coinsUsed > 0) && (
+                      <div className="flex justify-between text-xs text-amber-800 font-semibold bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                        <span className="flex items-center gap-1.5">
+                          <span>🪙</span> She Coins Redeemed ({order.coinsUsed || order.coinsDiscount} Coins)
+                        </span>
+                        <span>− ₹{(order.coinsDiscount || order.coinsUsed || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+
+                    {order.shippingCost != null && (
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Shipping</span>
+                        <span>{order.shippingCost === 0 ? 'FREE' : `₹${(order.shippingCost || 0).toLocaleString('en-IN')}`}</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-sm font-bold text-gray-900 border-t border-gray-200 pt-1.5 mt-1">
+                      <span>{order.paymentMethod?.toLowerCase() === 'cod' ? 'Total (COD Due)' : 'Total Paid'}</span>
+                      <span className="text-[#e83e8c]">₹{(order.amount || 0).toLocaleString('en-IN')}</span>
+                    </div>
+
+                    {order.coinsEarned > 0 && (
+                      <div className="flex justify-between text-xs text-purple-700 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 mt-1">
+                        <span className="flex items-center gap-1">
+                          <span>🎁</span> She Coins Reward (on delivery):
+                        </span>
+                        <span className="font-bold">+{order.coinsEarned} Coins {order.coinsCredited ? '✓ (Credited)' : ''}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

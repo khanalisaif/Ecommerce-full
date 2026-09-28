@@ -25,6 +25,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
     razorpayOrderId = "",
     razorpayPaymentId = "",
     razorpaySignature = "",
+    useCoins = false,
   } = req.body;
   if (!addressId || !paymentMethod) throw new ApiError(400, "addressId and paymentMethod are required");
 
@@ -53,13 +54,31 @@ export const placeOrder = asyncHandler(async (req, res) => {
   const discount = Math.max(0, originalTotal - subtotal);
   const appliedCouponDiscount = Math.max(0, Number(couponDiscount) || 0);
 
+  // She Points / Super Coins calculation
+  const coinsEarned = cart.items.reduce(
+    (sum, i) => sum + (Number(i.product?.coinsReward) || 0) * i.quantity,
+    0
+  );
+
+  let coinsUsed = 0;
+  let coinsDiscount = 0;
+  if (useCoins) {
+    const netCartAmount = Math.max(0, subtotal - appliedCouponDiscount);
+    // User can redeem max 10% of total cart amount (1 coin = ₹1)
+    const maxAllowedCoins = Math.floor(netCartAmount * 0.10);
+    const availableCoins = Math.max(0, user.shePoints || 0);
+    coinsUsed = Math.min(availableCoins, maxAllowedCoins);
+    coinsDiscount = coinsUsed * 1;
+  }
+
   let shippingCost = subtotal === 0 ? 0 : (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING);
   if (deliveryOption === "express") shippingCost += 79;
 
-  const total = Math.max(0, subtotal - appliedCouponDiscount + shippingCost);
+  const total = Math.max(0, subtotal - appliedCouponDiscount - coinsDiscount + shippingCost);
 
+  const orderId = generateOrderId();
   const order = await Order.create({
-    orderId: generateOrderId(),
+    orderId,
     user: req.user._id,
     items,
     shippingAddress: {
@@ -82,9 +101,26 @@ export const placeOrder = asyncHandler(async (req, res) => {
     discount,
     couponCode:      couponCode ? couponCode.trim().toUpperCase() : "",
     couponDiscount:  appliedCouponDiscount,
+    coinsUsed,
+    coinsDiscount,
+    coinsEarned,
+    coinsCredited: false,
     shippingCost,
     total,
   });
+
+  // If coins were used, deduct them from user's balance and record in history
+  if (coinsUsed > 0) {
+    user.shePoints = Math.max(0, (user.shePoints || 0) - coinsUsed);
+    user.coinsHistory.push({
+      type: "redeemed",
+      amount: coinsUsed,
+      description: `Redeemed on order ${orderId}`,
+      orderId,
+      createdAt: new Date(),
+    });
+    await user.save();
+  }
 
   // Decrement stock
   for (const item of cart.items) {
@@ -156,6 +192,22 @@ export const cancelOrder = asyncHandler(async (req, res) => {
     if (item.product) {
       await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } });
     }
+  }
+
+  // Refund any redeemed coins if cancelled
+  if (order.coinsUsed > 0) {
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: { shePoints: order.coinsUsed },
+      $push: {
+        coinsHistory: {
+          type: "refunded",
+          amount: order.coinsUsed,
+          description: `Refunded coins from cancelled order ${order.orderId}`,
+          orderId: order.orderId,
+          createdAt: new Date(),
+        },
+      },
+    });
   }
 
   res.status(200).json(new ApiResponse(200, { order }, "Order cancelled"));
