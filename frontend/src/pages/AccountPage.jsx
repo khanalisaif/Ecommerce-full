@@ -2196,6 +2196,28 @@ export default function AccountPage() {
     const shareUrl = `${window.location.origin}/signup?ref=${finalCode}`
     const shareMessage = `Hey! Shop the latest trending fashion at He & She. Use my referral code ${finalCode} to get 100 She Coins welcome bonus on signup!\nJoin here: ${shareUrl}`
 
+    // Helper: safe copy that works on HTTP (no navigator.clipboard needed)
+    const doCopy = (text) => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => execCopy(text))
+      } else {
+        execCopy(text)
+      }
+    }
+    const execCopy = (text) => {
+      try {
+        const el = document.createElement('textarea')
+        el.value = text
+        el.style.position = 'fixed'
+        el.style.opacity = '0'
+        document.body.appendChild(el)
+        el.focus()
+        el.select()
+        document.execCommand('copy')
+        document.body.removeChild(el)
+      } catch {}
+    }
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -2205,11 +2227,13 @@ export default function AccountPage() {
         })
       } catch (err) {
         if (err.name !== 'AbortError') {
-          safeCopyToClipboard(shareUrl, 'Referral link copied to clipboard!')
+          doCopy(shareUrl)
+          showToast('Referral link copied!')
         }
       }
     } else {
-      safeCopyToClipboard(shareUrl, 'Referral link copied to clipboard!')
+      doCopy(shareUrl)
+      showToast('Referral link copied! Share it anywhere.')
     }
   }
 
