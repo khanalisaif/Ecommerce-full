@@ -1030,6 +1030,7 @@ function WalletPanel() {
 
   const handleShare = async () => {
     if (navigator.share) {
+      // Mobile / supported browser → open native system share dialog
       try {
         await navigator.share({
           title: 'Join He & She — Get 100 She Coins!',
@@ -1037,20 +1038,24 @@ function WalletPanel() {
           url: shareUrl,
         })
       } catch (err) {
+        // User cancelled — do nothing
         if (err.name !== 'AbortError') {
-          // Fallback: open WhatsApp
-          const waUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`
-          window.open(waUrl, '_blank')
+          showToast('Could not open share dialog')
         }
       }
     } else {
-      // Desktop fallback: open WhatsApp web with the share message
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`
-      window.open(waUrl, '_blank')
+      // Desktop browsers that don't support navigator.share → copy link + notify
+      try {
+        await navigator.clipboard.writeText(shareUrl)
+        showToast('Referral link copied! Share it anywhere.')
+      } catch {
+        showToast('Share not supported. Copy your code: ' + referralCode)
+      }
     }
   }
 
   const handleWhatsAppShare = () => {
+    // Always open WhatsApp directly with pre-filled message
     const waUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`
     window.open(waUrl, '_blank')
   }
