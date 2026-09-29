@@ -1015,17 +1015,43 @@ function WalletPanel() {
   const shareUrl = `${window.location.origin}/signup?ref=${referralCode}`
   const shareMessage = `Hey! Shop the latest trending fashion at He & She. Use my referral code ${referralCode} to get 100 She Coins welcome bonus on signup!\nJoin here: ${shareUrl}`
 
+  // Safe clipboard copy — works on HTTP too (navigator.clipboard needs HTTPS)
+  const safeCopyToClipboard = (text, successMsg) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast(successMsg))
+        .catch(() => legacyCopy(text, successMsg))
+    } else {
+      legacyCopy(text, successMsg)
+    }
+  }
+
+  const legacyCopy = (text, successMsg) => {
+    try {
+      const el = document.createElement('textarea')
+      el.value = text
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
+      document.body.appendChild(el)
+      el.focus()
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      showToast(successMsg)
+    } catch {
+      showToast('Could not copy. Your code: ' + referralCode)
+    }
+  }
+
   const handleCopyCode = () => {
     if (!referralCode || referralCode === '----') return
-    navigator.clipboard.writeText(referralCode)
+    safeCopyToClipboard(referralCode, 'Referral code copied!')
     setCopied(true)
-    showToast('Referral code copied!')
     setTimeout(() => setCopied(false), 2000)
   }
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl)
-    showToast('Referral link copied to clipboard!')
+    safeCopyToClipboard(shareUrl, 'Referral link copied to clipboard!')
   }
 
   const handleShare = async () => {
