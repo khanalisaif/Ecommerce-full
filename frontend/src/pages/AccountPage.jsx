@@ -2205,17 +2205,11 @@ export default function AccountPage() {
         })
       } catch (err) {
         if (err.name !== 'AbortError') {
-          navigator.clipboard.writeText(shareUrl)
-          showToast('Referral link copied to clipboard!')
-          const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`
-          window.open(waUrl, '_blank')
+          safeCopyToClipboard(shareUrl, 'Referral link copied to clipboard!')
         }
       }
     } else {
-      navigator.clipboard.writeText(shareUrl)
-      showToast('Referral link copied to clipboard!')
-      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`
-      window.open(waUrl, '_blank')
+      safeCopyToClipboard(shareUrl, 'Referral link copied to clipboard!')
     }
   }
 

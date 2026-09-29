@@ -35,8 +35,28 @@ export default function WishlistPage() {
     if (navigator.share) {
       try { await navigator.share(shareData) } catch {}
     } else {
-      navigator.clipboard.writeText(shareData.url)
-      showToast('Wishlist link copied to clipboard!')
+      // Safe clipboard — works on HTTP too
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareData.url)
+          .then(() => showToast('Wishlist link copied to clipboard!'))
+          .catch(() => {
+            const el = document.createElement('textarea')
+            el.value = shareData.url
+            el.style.position = 'fixed'; el.style.opacity = '0'
+            document.body.appendChild(el); el.focus(); el.select()
+            document.execCommand('copy')
+            document.body.removeChild(el)
+            showToast('Wishlist link copied to clipboard!')
+          })
+      } else {
+        const el = document.createElement('textarea')
+        el.value = shareData.url
+        el.style.position = 'fixed'; el.style.opacity = '0'
+        document.body.appendChild(el); el.focus(); el.select()
+        document.execCommand('copy')
+        document.body.removeChild(el)
+        showToast('Wishlist link copied to clipboard!')
+      }
     }
   }
 
