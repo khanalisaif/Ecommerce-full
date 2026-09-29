@@ -1044,13 +1044,8 @@ function WalletPanel() {
         }
       }
     } else {
-      // Desktop browsers that don't support navigator.share → copy link + notify
-      try {
-        await navigator.clipboard.writeText(shareUrl)
-        showToast('Referral link copied! Share it anywhere.')
-      } catch {
-        showToast('Share not supported. Copy your code: ' + referralCode)
-      }
+      // Desktop fallback → copy referral link safely
+      safeCopyToClipboard(shareUrl, 'Referral link copied! Share it anywhere.')
     }
   }
 
