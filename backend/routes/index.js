@@ -33,6 +33,7 @@ import adminDashboardRoutes from "./admin/dashboard.routes.js";
 import adminSiteContentRoutes from "./admin/siteContent.routes.js";
 import adminBroadcastRoutes from "./admin/broadcast.routes.js";
 import adminCouponRoutes from "./admin/coupon.routes.js";
+import analyticsRoutes from "./admin/analytics.routes.js";
 
 const router = express.Router();
 
@@ -71,5 +72,6 @@ router.use("/admin/dashboard", adminDashboardRoutes);
 router.use("/admin/content", adminSiteContentRoutes); // /admin/content/:key — generic CMS key/value store (admin write)
 router.use("/admin/broadcast", adminBroadcastRoutes);
 router.use("/admin/coupons", adminCouponRoutes);
+router.use("/analytics", analyticsRoutes); // POST /analytics/product-view (public+optional auth), GET /analytics/products, GET /analytics/products/:id/viewers (admin)
 
 export default router;

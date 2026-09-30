@@ -11,6 +11,12 @@ import productService from '../services/productService'
 import addressService from '../services/addressService'
 import deliveryService from '../services/deliveryService'
 import { trackProductView } from './AccountPage'
+import adminAnalyticsService from '../services/admin/adminAnalyticsService'
+
+// Module-level Set keyed by product ID.
+// - Handles React StrictMode double-mount (Set.has() is synchronous, so 2nd call is blocked)
+// - Handles navigating A→B→A (each unique ID tracked once per session)
+const _reportedViews = new Set()
 
 export default function ProductDetailPage() {
   const { id } = useParams()
@@ -31,9 +37,22 @@ export default function ProductDetailPage() {
     }
   }, [id, foundProduct])
 
-  // Track this product as recently viewed in localStorage
+  // Track this product as recently viewed in localStorage AND on the backend.
+  // _reportedViews Set is keyed by product ID so each new product navigated to
+  // gets recorded correctly, even within the same component instance.
   useEffect(() => {
-    if (id) trackProductView(id)
+    if (!id) return
+    trackProductView(id)
+    // Only fire once per unique product ID per session
+    if (!_reportedViews.has(id)) {
+      _reportedViews.add(id)
+      let sessionId = sessionStorage.getItem('htl_session_id')
+      if (!sessionId) {
+        sessionId = Math.random().toString(36).slice(2) + Date.now().toString(36)
+        sessionStorage.setItem('htl_session_id', sessionId)
+      }
+      adminAnalyticsService.recordProductView(id, sessionId).catch(() => {})
+    }
   }, [id])
 
   const product = foundProduct || fetchedProduct || {
@@ -324,11 +343,13 @@ export default function ProductDetailPage() {
             </div>
             <p className="text-gray-400 text-[11px] mb-5">Inclusive of all taxes</p>
 
-            <div className="bg-blue-50/50 border border-blue-100 rounded-lg px-4 py-2.5 mb-3">
-              <p className="text-blue-800 text-xs font-semibold flex items-center gap-2">
-                🎉 Special Offer: Extra 10% OFF on Prepaid Orders
-              </p>
-            </div>
+            {discountPercent > 0 && (
+              <div className="bg-green-50 border border-green-100 rounded-lg px-4 py-2.5 mb-3">
+                <p className="text-green-800 text-xs font-semibold flex items-center gap-2">
+                  🎉 Special Offer: {discountPercent}% OFF — You save ₹{(product.originalPrice - product.price).toLocaleString()}
+                </p>
+              </div>
+            )}
 
             {/* She Coins Reward Card */}
             <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-amber-50 to-yellow-50/50 border border-amber-200/90 rounded-xl p-3.5 mb-6 shadow-xs">

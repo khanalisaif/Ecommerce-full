@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, X, Image, FolderTree, PanelTop, LayoutTemplate, FileText, GalleryHorizontal, Boxes, ExternalLink, ListFilter, Megaphone } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, X, Image, FolderTree, PanelTop, LayoutTemplate, FileText, GalleryHorizontal, Boxes, ExternalLink, ListFilter, Megaphone, BarChart2 } from 'lucide-react'
 import { useAdminAuth } from '../../context/AdminAuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useShop } from '../../context/ShopContext'
@@ -13,6 +13,7 @@ const navItems = [
   { id: 'orders', label: 'Orders', icon: ShoppingCart },
   { id: 'offers-updates', label: 'Offers & Updates', icon: Megaphone },
   { id: 'customers', label: 'Customers', icon: Users },
+  { id: 'analytics', label: 'Analytics', icon: BarChart2 },
   { id: 'branding', label: 'Branding', icon: Image },
   { id: 'topbar', label: 'Top Bar', icon: PanelTop },
   { id: 'footer', label: 'Footer', icon: LayoutTemplate },

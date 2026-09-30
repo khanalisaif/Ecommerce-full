@@ -14,6 +14,7 @@ import TopbarTab from '../../components/admin/tabs/TopbarTab'
 import FooterTab from '../../components/admin/tabs/FooterTab'
 import PagesTab from '../../components/admin/tabs/PagesTab'
 import OffersUpdatesTab from '../../components/admin/tabs/OffersUpdatesTab'
+import AnalyticsTab from '../../components/admin/tabs/AnalyticsTab'
 import { useAdminAuth } from '../../context/AdminAuthContext'
 import { useShop } from '../../context/ShopContext'
 
@@ -27,6 +28,7 @@ const titles = {
   orders: 'Orders',
   'offers-updates': 'Offers & Updates',
   customers: 'Customers',
+  analytics: 'Analytics',
   branding: 'Branding',
   topbar: 'Top Bar',
   footer: 'Footer',
@@ -105,6 +107,7 @@ export default function AdminDashboardPage() {
           {activeTab === 'orders' && <OrdersTab />}
           {activeTab === 'offers-updates' && <OffersUpdatesTab />}
           {activeTab === 'customers' && <CustomersTab />}
+          {activeTab === 'analytics' && <AnalyticsTab />}
           {activeTab === 'branding' && <BrandingTab />}
           {activeTab === 'topbar' && <TopbarTab />}
           {activeTab === 'footer' && <FooterTab />}
