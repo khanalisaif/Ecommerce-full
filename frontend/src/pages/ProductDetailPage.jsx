@@ -158,6 +158,17 @@ export default function ProductDetailPage() {
   const [reviewsList, setReviewsList] = useState([])
   const { isAuthenticated } = useAuth()
 
+  // ── 15-second login prompt for guest users ────────────────────────────────
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+
+  useEffect(() => {
+    if (isAuthenticated) return // already logged in — never show
+    setShowLoginPrompt(false)   // reset on product change
+    const timer = setTimeout(() => setShowLoginPrompt(true), 15000)
+    return () => clearTimeout(timer)
+  }, [isAuthenticated, id])
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     reviewService.getProductReviews(product.id)
       .then((res) => {
@@ -820,6 +831,107 @@ export default function ProductDetailPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* ── 15-sec Guest Login Prompt Modal ───────────────────────────── */}
+      {showLoginPrompt && (
+        <div
+          className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4"
+          style={{ background: 'rgba(15,10,30,0.6)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setShowLoginPrompt(false)}
+        >
+          <div
+            className="relative bg-white w-full max-w-[420px] rounded-3xl overflow-hidden shadow-2xl"
+            style={{ animation: 'loginPromptPop 0.35s cubic-bezier(.34,1.56,.64,1) both' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowLoginPrompt(false)}
+              aria-label="Close"
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors shadow-sm"
+            >
+              <X size={16} strokeWidth={2.5} />
+            </button>
+
+            {/* Gradient hero */}
+            <div
+              className="relative px-8 pt-10 pb-8 text-center"
+              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)' }}
+            >
+              {/* Decorative blobs */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
+                <div className="absolute -top-8 -left-8 w-32 h-32 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }} />
+                <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }} />
+              </div>
+
+              <div
+                className="relative w-20 h-20 mx-auto mb-5 rounded-2xl flex items-center justify-center shadow-xl rotate-3"
+                style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}
+              >
+                <span style={{ fontSize: 40 }}>🛍️</span>
+              </div>
+
+              <h2 className="text-white text-2xl font-black mb-2 leading-tight">
+                Ready to Buy?<br />
+                <span style={{ color: '#fde68a' }}>Login First!</span>
+              </h2>
+              <p className="text-white/80 text-[13px] leading-relaxed">
+                Create an account or login to purchase,<br />track orders &amp; get exclusive offers.
+              </p>
+            </div>
+
+            {/* Perks list */}
+            <div className="px-8 py-5 bg-gradient-to-b from-purple-50/60 to-white">
+              <ul className="space-y-2.5 mb-6">
+                {[
+                  ['🚚', 'Free shipping on orders above ₹999'],
+                  ['🪙', 'Earn She Coins on every purchase'],
+                  ['🔒', 'Safe &amp; secure checkout'],
+                ].map(([icon, text]) => (
+                  <li key={text} className="flex items-center gap-3 text-[13px] text-gray-700 font-medium">
+                    <span className="text-lg flex-shrink-0">{icon}</span>
+                    <span dangerouslySetInnerHTML={{ __html: text }} />
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => {
+                  setShowLoginPrompt(false)
+                  navigate('/login', { state: { from: { pathname: `/product/${product.id}` } } })
+                }}
+                className="w-full py-4 rounded-2xl font-black text-[15px] text-white shadow-lg hover:opacity-90 active:scale-[0.98] transition-all mb-3"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)' }}
+              >
+                🔑 Login to Buy
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowLoginPrompt(false)
+                  navigate('/signup', { state: { from: { pathname: `/product/${product.id}` } } })
+                }}
+                className="w-full py-3 rounded-2xl font-bold text-[14px] text-purple-700 border-2 border-purple-200 bg-white hover:bg-purple-50 transition-colors"
+              >
+                ✨ Create Free Account
+              </button>
+
+              <button
+                onClick={() => setShowLoginPrompt(false)}
+                className="w-full mt-2 py-2.5 text-[12px] text-gray-400 hover:text-gray-600 font-medium transition-colors"
+              >
+                Continue Browsing
+              </button>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes loginPromptPop {
+              from { opacity: 0; transform: scale(0.88) translateY(32px); }
+              to   { opacity: 1; transform: scale(1)   translateY(0); }
+            }
+          `}</style>
         </div>
       )}
     </div>

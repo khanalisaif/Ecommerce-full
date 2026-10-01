@@ -22,6 +22,7 @@ export default function CartPage() {
   // cart item so a user can move something out of the cart without losing it.
   const [savedItems, setSavedItems] = useState([])
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   const youMayAlsoLike = products.filter((p) => p.isBestSeller).slice(0, 6)
 
@@ -321,14 +322,23 @@ export default function CartPage() {
 
               <div className="space-y-3">
                 <button
-                  onClick={() => navigate('/checkout', { state: { useCoins } })}
+                  onClick={() => {
+                    if (!isAuthenticated) { setShowLoginModal(true); return }
+                    navigate('/checkout', { state: { useCoins } })
+                  }}
                   disabled={cartItems.length === 0}
                   className="w-full flex items-center justify-center gap-2 bg-[#e83e8c] text-white py-3.5 rounded-xl font-bold text-[14px] hover:shadow-lg transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Zap size={16} className="fill-white" /> Proceed to Checkout
                 </button>
 
-                <button onClick={() => navigate('/checkout', { state: { useCoins } })} className="w-full flex items-center justify-center gap-2 border border-purple-200 bg-purple-50/50 text-purple-600 py-3.5 rounded-xl font-bold text-[14px] hover:bg-purple-50 transition-colors">
+                <button
+                  onClick={() => {
+                    if (!isAuthenticated) { setShowLoginModal(true); return }
+                    navigate('/checkout', { state: { useCoins } })
+                  }}
+                  className="w-full flex items-center justify-center gap-2 border border-purple-200 bg-purple-50/50 text-purple-600 py-3.5 rounded-xl font-bold text-[14px] hover:bg-purple-50 transition-colors"
+                >
                   <ShieldCheck size={16} /> Buy with 1-Click
                 </button>
               </div>
@@ -507,6 +517,72 @@ export default function CartPage() {
               Cancel
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}
+          onClick={() => setShowLoginModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-[380px] w-full overflow-hidden"
+            style={{ animation: 'modalPop 0.25s cubic-bezier(.34,1.56,.64,1) both' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Gradient header */}
+            <div
+              className="relative px-6 pt-8 pb-6 text-center"
+              style={{ background: 'linear-gradient(135deg, #f8edff 0%, #fce4f4 100%)' }}
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)' }}>
+                <span className="text-3xl">🔐</span>
+              </div>
+              <h2 className="text-[20px] font-black text-gray-900 mb-1">Login Required</h2>
+              <p className="text-gray-500 text-[13px] leading-relaxed">
+                Please login to continue to checkout.<br />
+                <span className="font-semibold text-purple-600">Your cart items will be saved!</span>
+              </p>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-6 space-y-3">
+              <button
+                onClick={() => {
+                  setShowLoginModal(false)
+                  navigate('/login', { state: { from: { pathname: '/cart' } } })
+                }}
+                className="w-full py-3.5 rounded-xl font-bold text-[15px] text-white flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all"
+                style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)' }}
+              >
+                <span>🚀</span> Login &amp; Continue
+              </button>
+              <button
+                onClick={() => {
+                  setShowLoginModal(false)
+                  navigate('/signup', { state: { from: { pathname: '/cart' } } })
+                }}
+                className="w-full py-3 rounded-xl font-bold text-[14px] text-purple-700 border border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors"
+              >
+                Create New Account
+              </button>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="w-full py-2.5 text-[13px] font-medium text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Continue Browsing
+              </button>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes modalPop {
+              from { opacity: 0; transform: scale(0.85) translateY(24px); }
+              to   { opacity: 1; transform: scale(1)   translateY(0); }
+            }
+          `}</style>
         </div>
       )}
     </div>

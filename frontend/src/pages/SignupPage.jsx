@@ -12,6 +12,7 @@ export default function SignupPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const queryRef = new URLSearchParams(location.search).get('ref') || ''
+  const redirectPath = location.state?.from?.pathname || '/'
   const { showToast, siteAssets } = useShop()
   const { signup, verifySignupOtp, resendSignupOtp } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
@@ -188,7 +189,7 @@ export default function SignupPage() {
     try {
       await verifySignupOtp({ userId: signupUserId, otp: otp.trim() })
       showToast('Account created and verified successfully!', 'success')
-      navigate('/')
+      navigate(redirectPath, { replace: true })
     } catch (err) {
       const msg = err.message || 'Invalid OTP'
       setOtpError(msg)

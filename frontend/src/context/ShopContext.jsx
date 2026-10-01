@@ -802,10 +802,35 @@ export function ShopProvider({ children }) {
   const addToCart = (product, options = {}) => {
     const { quantity = 1, color, size } = options
 
-    // 🔒 Login required to add to cart
+    // ✅ Guest users: add to localStorage cart so they keep items before login
     if (!isAuthenticated) {
-      showToast('Please login to add items to your cart', 'error')
-      setTimeout(() => { window.location.href = '/login' }, 800)
+      const cartId = buildCartId(product.id, color, size)
+      setCartItems((prev) => {
+        const existing = prev.find((i) => i.cartId === cartId)
+        if (existing) {
+          return prev.map((i) =>
+            i.cartId === cartId ? { ...i, quantity: i.quantity + quantity } : i
+          )
+        }
+        return [
+          ...prev,
+          {
+            cartId,
+            id: product.id,
+            name: product.name,
+            image: product.image,
+            price: product.price,
+            originalPrice: product.originalPrice ?? product.price,
+            discount: product.discount || '',
+            color: color || null,
+            size: size || null,
+            category: product.category,
+            quantity,
+            coinsReward: product.coinsReward || 0,
+          },
+        ]
+      })
+      showToast(`${product.name} added to cart`)
       return Promise.resolve()
     }
 
