@@ -1854,10 +1854,20 @@ const emptyAddressForm = {
   setAsDefault: false,
 }
 
+const INDIAN_STATES_LIST = [
+  'Andaman and Nicobar Islands','Andhra Pradesh','Arunachal Pradesh','Assam','Bihar',
+  'Chandigarh','Chhattisgarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Goa',
+  'Gujarat','Haryana','Himachal Pradesh','Jammu and Kashmir','Jharkhand','Karnataka',
+  'Kerala','Ladakh','Lakshadweep','Madhya Pradesh','Maharashtra','Manipur','Meghalaya',
+  'Mizoram','Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim',
+  'Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal',
+]
+
 function AddressesPanel() {
   const [formData, setFormData] = useState(emptyAddressForm)
   const [editingId, setEditingId] = useState(null)
   const [confirmPrimaryId, setConfirmPrimaryId] = useState(null)
+  const [locationLoading, setLocationLoading] = useState(false)
   const nameInputRef = useRef(null)
   const { showToast } = useShop()
 
@@ -1962,6 +1972,58 @@ function AddressesPanel() {
       .catch((err) => showToast(err.message))
   }
 
+  // ── Use My Location: GPS + OpenStreetMap Nominatim (free, no API key) ──────
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      showToast('Geolocation is not supported by your browser', 'error')
+      return
+    }
+    setLocationLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          )
+          const data = await res.json()
+          const a = data.address || {}
+          const pincode    = a.postcode || ''
+          const areaStreet = [a.road, a.neighbourhood, a.suburb, a.village].filter(Boolean).join(', ')
+          const landmark   = a.tourism || a.amenity || a.leisure || ''
+          const city       = a.city || a.town || a.village || a.county || a.district || ''
+          const rawState   = a.state || ''
+          const matched    = INDIAN_STATES_LIST.find((s) => s.toLowerCase() === rawState.toLowerCase()) || rawState
+          setFormData((prev) => ({
+            ...prev,
+            pincode:    pincode    || prev.pincode,
+            areaStreet: areaStreet || prev.areaStreet,
+            landmark:   landmark   || prev.landmark,
+            city:       city       || prev.city,
+            state:      matched    || prev.state,
+          }))
+          showToast('Location detected! Please verify and fill Flat/House No.', 'success')
+        } catch {
+          showToast('Could not get address from location. Please fill manually.', 'error')
+        } finally {
+          setLocationLoading(false)
+        }
+      },
+      (err) => {
+        setLocationLoading(false)
+        showToast(
+          err.code === 1
+            ? 'Location permission denied. Please allow access in browser settings.'
+            : 'Unable to get your location. Please try again.',
+          'error'
+        )
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    )
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -1975,9 +2037,34 @@ function AddressesPanel() {
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-6">
             {/* Contact Details */}
             <div>
-              <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <User size={18} /> Contact Details
-              </h2>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <User size={18} /> Contact Details
+                </h2>
+                {/* ── Use My Location button ── */}
+                <button
+                  type="button"
+                  onClick={handleUseLocation}
+                  disabled={locationLoading}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 border-purple-500 text-purple-600 bg-purple-50 hover:bg-purple-100 active:scale-[0.97] transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {locationLoading ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      Detecting…
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        <circle cx="12" cy="9" r="2.5"/>
+                      </svg>
+                      Use My Location
+                    </>
+                  )}
+                </button>
+              </div>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -2025,10 +2112,7 @@ function AddressesPanel() {
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">State*</label>
                     <select name="state" value={formData.state} onChange={handleInputChange} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-600 transition bg-white">
-                      <option>Haryana</option>
-                      <option>Delhi</option>
-                      <option>Punjab</option>
-                      <option>Uttar Pradesh</option>
+                      {INDIAN_STATES_LIST.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>

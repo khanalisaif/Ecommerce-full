@@ -12,7 +12,6 @@ const emptyForm = {
   landmark: '', city: '', state: 'Haryana', addressType: 'home', setAsDefault: false,
 }
 
-// Maps a backend address subdocument into the display shape this page uses.
 function mapAddress(a) {
   const addressText = [a.addressLine, a.landmark, `${a.city}, ${a.state} - ${a.pincode}`].filter(Boolean).join('\n')
   const [flatHouse, ...rest] = (a.addressLine || '').split(', ')
@@ -31,6 +30,16 @@ function mapAddress(a) {
   }
 }
 
+// All 28 states + 8 Union Territories of India
+const INDIAN_STATES = [
+  'Andaman and Nicobar Islands','Andhra Pradesh','Arunachal Pradesh','Assam','Bihar',
+  'Chandigarh','Chhattisgarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Goa',
+  'Gujarat','Haryana','Himachal Pradesh','Jammu and Kashmir','Jharkhand','Karnataka',
+  'Kerala','Ladakh','Lakshadweep','Madhya Pradesh','Maharashtra','Manipur','Meghalaya',
+  'Mizoram','Nagaland','Odisha','Puducherry','Punjab','Rajasthan','Sikkim',
+  'Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal',
+]
+
 export default function AddressPage() {
   const navigate = useNavigate()
   const { isAuthenticated, isAuthLoading } = useAuth()
@@ -41,6 +50,7 @@ export default function AddressPage() {
   const [confirmPrimaryId, setConfirmPrimaryId] = useState(null)
   const [savedAddresses, setSavedAddresses] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [locationLoading, setLocationLoading] = useState(false)
   const nameInputRef = useRef(null)
 
   useEffect(() => {
@@ -115,10 +125,10 @@ export default function AddressPage() {
       showToast('Please fill in the required fields (Name, Mobile, Address, City)')
       return
     }
-
     const payload = buildPayload()
-    const request = editingId ? addressService.updateAddress(editingId, payload) : addressService.addAddress(payload)
-
+    const request = editingId
+      ? addressService.updateAddress(editingId, payload)
+      : addressService.addAddress(payload)
     request
       .then((res) => {
         setSavedAddresses((res.data.addresses || []).map(mapAddress))
@@ -126,6 +136,57 @@ export default function AddressPage() {
         resetForm()
       })
       .catch((err) => showToast(err.message))
+  }
+
+  // Use My Location: GPS + OpenStreetMap Nominatim (free, no API key needed)
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      showToast('Geolocation is not supported by your browser', 'error')
+      return
+    }
+    setLocationLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          )
+          const data = await res.json()
+          const a = data.address || {}
+          const pincode    = a.postcode || ''
+          const areaStreet = [a.road, a.neighbourhood, a.suburb, a.village].filter(Boolean).join(', ')
+          const landmark   = a.tourism || a.amenity || a.leisure || ''
+          const city       = a.city || a.town || a.village || a.county || a.district || ''
+          const rawState   = a.state || ''
+          const matched    = INDIAN_STATES.find((s) => s.toLowerCase() === rawState.toLowerCase()) || rawState
+          setFormData((prev) => ({
+            ...prev,
+            pincode:    pincode    || prev.pincode,
+            areaStreet: areaStreet || prev.areaStreet,
+            landmark:   landmark   || prev.landmark,
+            city:       city       || prev.city,
+            state:      matched    || prev.state,
+          }))
+          showToast('Location detected! Please verify and fill Flat/House No.', 'success')
+        } catch {
+          showToast('Could not get address details. Please fill manually.', 'error')
+        } finally {
+          setLocationLoading(false)
+        }
+      },
+      (err) => {
+        setLocationLoading(false)
+        showToast(
+          err.code === 1
+            ? 'Location permission denied. Please allow access in browser settings.'
+            : 'Unable to retrieve location. Please try again.',
+          'error'
+        )
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    )
   }
 
   if (isLoading) {
@@ -136,6 +197,8 @@ export default function AddressPage() {
     )
   }
 
+  const inputCls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600 transition-colors'
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -145,110 +208,109 @@ export default function AddressPage() {
         <p className="text-gray-500 text-sm mb-6">Enter the address details below for smooth delivery</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Form Section */}
+
+          {/* ── Form ── */}
           <div className="lg:col-span-2">
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 space-y-6">
-              <div>
-                <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+
+              {/* Header row */}
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                   <User size={18} />
                   Contact Details
                 </h2>
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">Full Name*</label>
-                      <input
-                        ref={nameInputRef}
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">Mobile Number*</label>
-                      <input
-                        type="text"
-                        name="mobile"
-                        value={formData.mobile}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600"
-                      />
-                    </div>
-                  </div>
+                {/* Use My Location */}
+                <button
+                  type="button"
+                  onClick={handleUseLocation}
+                  disabled={locationLoading}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border-2 border-purple-500 text-purple-600 bg-purple-50 hover:bg-purple-100 active:scale-[0.97] transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {locationLoading ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      Detecting…
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        <circle cx="12" cy="9" r="2.5"/>
+                      </svg>
+                      Use My Location
+                    </>
+                  )}
+                </button>
+              </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">Pincode*</label>
-                      <input
-                        type="text"
-                        name="pincode"
-                        value={formData.pincode}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">Flat / House No.*</label>
-                      <input
-                        type="text"
-                        name="flatHouse"
-                        value={formData.flatHouse}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600"
-                      />
-                    </div>
-                  </div>
-
+              <div className="space-y-4">
+                {/* Name + Mobile  — NOT auto-filled */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">Area / Street</label>
-                    <input
-                      type="text"
-                      name="areaStreet"
-                      value={formData.areaStreet}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600"
-                    />
+                    <label className="block text-xs text-gray-500 mb-1.5">Full Name*</label>
+                    <input ref={nameInputRef} type="text" name="fullName"
+                      value={formData.fullName} onChange={handleInputChange}
+                      placeholder="Enter full name" className={inputCls} />
                   </div>
-
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">Landmark</label>
-                    <input
-                      type="text"
-                      name="landmark"
-                      value={formData.landmark}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600"
-                    />
+                    <label className="block text-xs text-gray-500 mb-1.5">Mobile Number*</label>
+                    <input type="text" name="mobile"
+                      value={formData.mobile} onChange={handleInputChange}
+                      placeholder="10-digit mobile number" className={inputCls} />
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">City / Town*</label>
-                      <input
-                        type="text"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">State*</label>
-                      <select
-                        name="state"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-purple-600"
-                      >
-                        <option>Haryana</option>
-                        <option>Delhi</option>
-                        <option>Punjab</option>
-                        <option>Uttar Pradesh</option>
-                      </select>
-                    </div>
+                {/* Pincode + Flat/House — Pincode auto-filled, Flat manual */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1.5">Pincode*</label>
+                    <input type="text" name="pincode"
+                      value={formData.pincode} onChange={handleInputChange}
+                      placeholder="6-digit pincode" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1.5">
+                      Flat / House No.*{' '}
+                      <span className="text-purple-400 font-normal">(fill manually)</span>
+                    </label>
+                    <input type="text" name="flatHouse"
+                      value={formData.flatHouse} onChange={handleInputChange}
+                      placeholder="e.g. House No. 5, Block A" className={inputCls} />
+                  </div>
+                </div>
+
+                {/* Area / Street — auto-filled */}
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1.5">Area / Street</label>
+                  <input type="text" name="areaStreet"
+                    value={formData.areaStreet} onChange={handleInputChange}
+                    placeholder="Road, colony or neighbourhood" className={inputCls} />
+                </div>
+
+                {/* Landmark — auto-filled if available */}
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1.5">Landmark</label>
+                  <input type="text" name="landmark"
+                    value={formData.landmark} onChange={handleInputChange}
+                    placeholder="Nearby school, temple, metro station…" className={inputCls} />
+                </div>
+
+                {/* City + State — both auto-filled */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1.5">City / Town*</label>
+                    <input type="text" name="city"
+                      value={formData.city} onChange={handleInputChange}
+                      placeholder="City or town" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1.5">State*</label>
+                    <select name="state" value={formData.state} onChange={handleInputChange}
+                      className={inputCls + ' bg-white'}>
+                      {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -262,57 +324,60 @@ export default function AddressPage() {
                     { key: 'work', label: 'Work', icon: Briefcase },
                     { key: 'other', label: 'Other', icon: MoreHorizontal },
                   ].map(({ key, label, icon: Icon }) => (
-                    <button
-                      key={key}
-                      onClick={() => setFormData((prev) => ({ ...prev, addressType: key }))}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium ${
-                        formData.addressType === key ? 'border-purple-600 text-purple-600' : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                    <button key={key}
+                      onClick={() => setFormData((p) => ({ ...p, addressType: key }))}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                        formData.addressType === key
+                          ? 'border-purple-600 text-purple-600 bg-purple-50'
+                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
                       }`}
                     >
-                      <Icon size={16} />
-                      {label}
+                      <Icon size={16} />{label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Set as Default */}
+              {/* Set as Default toggle */}
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-gray-900">Set as Default Address</p>
-                  <p className="text-xs text-gray-500">This address will be used by default for all orders</p>
+                  <p className="text-xs text-gray-500">Used by default for all orders</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, setAsDefault: !prev.setAsDefault }))}
+                <button type="button"
+                  onClick={() => setFormData((p) => ({ ...p, setAsDefault: !p.setAsDefault }))}
                   className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${formData.setAsDefault ? 'bg-purple-600' : 'bg-gray-300'}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${formData.setAsDefault ? 'translate-x-5' : ''}`} />
                 </button>
               </div>
 
-              {/* Buttons */}
+              {/* Actions */}
               <div className="flex gap-4 pt-2">
-                <button onClick={resetForm} className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-bold text-sm text-gray-700 hover:bg-gray-50">
+                <button onClick={resetForm}
+                  className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-bold text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                   Cancel
                 </button>
-                <button onClick={handleSave} className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-bold text-sm hover:bg-purple-700">
+                <button onClick={handleSave}
+                  className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-bold text-sm hover:bg-purple-700 transition-colors">
                   {editingId ? 'Update Address' : 'Save Address'}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Saved Addresses Section */}
+          {/* ── Saved Addresses ── */}
           <div className="lg:col-span-1">
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-4">
               <h2 className="text-base font-bold text-gray-900 mb-4">Saved Addresses</h2>
               <div className="space-y-4">
                 {savedAddresses.map((addr) => (
-                  <div key={addr.id} className={`border rounded-lg p-4 bg-white ${addr.type === 'PRIMARY' ? 'border-purple-600' : 'border-gray-200'}`}>
+                  <div key={addr.id}
+                    className={`border rounded-lg p-4 bg-white ${addr.type === 'PRIMARY' ? 'border-purple-600' : 'border-gray-200'}`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => setAsPrimary(addr.id)} className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 focus:outline-none transition-colors ${addr.type === 'PRIMARY' ? 'border-purple-600' : 'border-gray-300 hover:border-purple-400'}`}>
+                        <button onClick={() => setAsPrimary(addr.id)}
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 focus:outline-none transition-colors ${addr.type === 'PRIMARY' ? 'border-purple-600' : 'border-gray-300 hover:border-purple-400'}`}>
                           {addr.type === 'PRIMARY' && <span className="w-2 h-2 rounded-full bg-purple-600" />}
                         </button>
                         <h3 className="font-bold text-gray-900 text-sm">{addr.name}</h3>
@@ -333,11 +398,11 @@ export default function AddressPage() {
                     </div>
                   </div>
                 ))}
-                {!savedAddresses.length && <p className="text-gray-400 text-sm text-center py-4">No saved addresses yet</p>}
-                <button
-                  onClick={resetForm}
-                  className="w-full border-2 border-dashed border-purple-600 rounded-lg p-4 text-center text-purple-600 font-bold text-sm flex items-center justify-center gap-1 hover:bg-purple-50"
-                >
+                {!savedAddresses.length && (
+                  <p className="text-gray-400 text-sm text-center py-4">No saved addresses yet</p>
+                )}
+                <button onClick={resetForm}
+                  className="w-full border-2 border-dashed border-purple-600 rounded-lg p-4 text-center text-purple-600 font-bold text-sm flex items-center justify-center gap-1 hover:bg-purple-50 transition-colors">
                   <Plus size={16} /> Add New Address
                 </button>
               </div>
@@ -350,22 +415,27 @@ export default function AddressPage() {
         <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-center gap-2 text-sm text-gray-600 flex-wrap">
           <Phone size={16} className="text-gray-700" />
           <span className="font-bold text-gray-900">Need Help?</span>
-          <span>Call us at +91 98765 43210 or Email us at <a href="mailto:support@heandshe.com" className="text-purple-600 hover:underline">support@heandshe.com</a></span>
+          <span>Call us at +91 98765 43210 or Email us at{' '}
+            <a href="mailto:support@heandshe.com" className="text-purple-600 hover:underline">support@heandshe.com</a>
+          </span>
         </div>
       </div>
 
       <Footer />
 
+      {/* Confirm Set Primary Modal */}
       {confirmPrimaryId !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Change Primary Address?</h3>
             <p className="text-gray-600 text-sm mb-6">Are you sure you want to set this as your primary default address?</p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmPrimaryId(null)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+              <button onClick={() => setConfirmPrimaryId(null)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors">
                 Cancel
               </button>
-              <button onClick={confirmSetAsPrimary} className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition-colors">
+              <button onClick={confirmSetAsPrimary}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition-colors">
                 Confirm
               </button>
             </div>
