@@ -155,12 +155,32 @@ export default function AddressPage() {
           )
           const data = await res.json()
           const a = data.address || {}
-          const pincode    = a.postcode || ''
-          const areaStreet = [a.road, a.neighbourhood, a.suburb, a.village].filter(Boolean).join(', ')
-          const landmark   = a.tourism || a.amenity || a.leisure || ''
-          const city       = a.city || a.town || a.village || a.county || a.district || ''
-          const rawState   = a.state || ''
-          const matched    = INDIAN_STATES.find((s) => s.toLowerCase() === rawState.toLowerCase()) || rawState
+          const pincode = (a.postcode || '').replace(/\s+/g, '')
+
+          // Build road / area / street cleanly without duplication
+          const areaParts = [
+            a.road,
+            a.quarter || a.neighbourhood || a.suburb || a.residential,
+            a.subdistrict || a.village
+          ].filter(Boolean)
+          const areaStreet = [...new Set(areaParts)].join(', ')
+
+          const landmark = a.tourism || a.amenity || a.leisure || a.shop || a.building || a.office || ''
+          const city = a.city || a.town || a.city_district || a.municipality || a.district || a.state_district || a.county || a.village || ''
+          
+          // Match Indian state with aliases (e.g. NCT of Delhi, Orissa, etc.)
+          const rawState = (a.state || '').trim().toLowerCase()
+          let matched = INDIAN_STATES.find((s) => s.toLowerCase() === rawState)
+          if (!matched) {
+            matched = INDIAN_STATES.find((s) => rawState.includes(s.toLowerCase()) || s.toLowerCase().includes(rawState))
+          }
+          if (!matched) {
+            if (rawState.includes('delhi')) matched = 'Delhi'
+            else if (rawState.includes('orissa')) matched = 'Odisha'
+            else if (rawState.includes('pondicherry')) matched = 'Puducherry'
+            else if (rawState.includes('uttaranchal')) matched = 'Uttarakhand'
+          }
+
           setFormData((prev) => ({
             ...prev,
             pincode:    pincode    || prev.pincode,
