@@ -8,10 +8,23 @@ export function AdminAuthProvider({ children }) {
   const [isAdminAuthLoading, setIsAdminAuthLoading] = useState(true)
 
   useEffect(() => {
+    const adminToken = localStorage.getItem('admin_token')
+    const isAdminRoute = window.location.pathname.startsWith('/page/admin')
+
+    // Don't call admin auth if there's no admin_token and user is not on admin routes
+    if (!adminToken && !isAdminRoute) {
+      setAdmin(null)
+      setIsAdminAuthLoading(false)
+      return
+    }
+
     adminAuthService
       .getMe()
       .then((res) => setAdmin(res.data.admin))
-      .catch(() => setAdmin(null))
+      .catch(() => {
+        localStorage.removeItem('admin_token')
+        setAdmin(null)
+      })
       .finally(() => setIsAdminAuthLoading(false))
   }, [])
 
