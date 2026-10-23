@@ -386,8 +386,8 @@ const RAW_PRODUCTS = [
 const SITE_CONTENT_DATA = {
   site_assets: {
     logoUrl: "/zenpha-logo.png",
-    loginImageUrl: "/login.png",
-    signupImageUrl: "/signin.png",
+    loginImageUrl: "/zenpha-auth-side.png",
+    signupImageUrl: "/zenpha-auth-side.png",
   },
   topbar_settings: {
     announcementEnabled: true,

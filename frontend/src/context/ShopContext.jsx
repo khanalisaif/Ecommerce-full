@@ -35,8 +35,8 @@ export const DEFAULT_TOPBAR_SETTINGS = {
 // Admin-uploaded images (Cloudinary URLs) override these once set on the backend.
 export const DEFAULT_SITE_ASSETS = {
   logoUrl: '/zenpha-logo.png',
-  loginImageUrl: '/auth-side-image.png',
-  signupImageUrl: '/auth-side-image.png',
+  loginImageUrl: '/zenpha-auth-side.png',
+  signupImageUrl: '/zenpha-auth-side.png',
 }
 
 function loadFromStorage(key, fallback) {
@@ -207,6 +207,12 @@ export function ShopProvider({ children }) {
           const loadedAssets = { ...c.site_assets }
           if (loadedAssets.logoUrl === '/he-and-she-logo.png' || loadedAssets.logoUrl === '/logo.png') {
             loadedAssets.logoUrl = '/zenpha-logo.png'
+          }
+          if (loadedAssets.loginImageUrl === '/auth-side-image.png' || loadedAssets.loginImageUrl === '/login.png') {
+            loadedAssets.loginImageUrl = '/zenpha-auth-side.png'
+          }
+          if (loadedAssets.signupImageUrl === '/auth-side-image.png' || loadedAssets.signupImageUrl === '/signin.png') {
+            loadedAssets.signupImageUrl = '/zenpha-auth-side.png'
           }
           setSiteAssetsState(loadedAssets)
         }
