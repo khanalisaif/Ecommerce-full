@@ -25,7 +25,7 @@ import walletService from '../services/walletService'
 const MENU = [
   { id: 'profile',        label: 'My Profile',            icon: User },
   { id: 'orders',         label: 'Orders',                icon: ShoppingBag },
-  { id: 'shecoins',       label: 'She Coins',             icon: Coins, badgeText: 'Coins' },
+  { id: 'shecoins',       label: 'Zenpha Coins',          icon: Coins, badgeText: 'Coins' },
   { id: 'wallet',         label: 'My Wallet',             icon: Wallet, badgeText: '₹ Wallet' },
   { id: 'wishlist',       label: 'Wishlist',              icon: Heart, badge: true },
   { id: 'addresses',      label: 'Addresses',             icon: MapPin },
@@ -543,7 +543,7 @@ function OrdersPanel() {
                         )}
                         {order.coinsUsed > 0 && (
                           <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            🪙 {order.coinsUsed} She Coins credited
+                            🪙 {order.coinsUsed} Zenpha Coins credited
                           </span>
                         )}
                       </div>
@@ -702,13 +702,13 @@ function OrdersPanel() {
                 )}
                 {cancelModal.coinsUsed > 0 && (
                   <div className="flex items-center justify-between text-amber-900 font-semibold bg-white/70 px-2.5 py-1.5 rounded-lg border border-amber-100">
-                    <span className="flex items-center gap-1.5"><span>🪙</span> She Coins Refund</span>
+                    <span className="flex items-center gap-1.5"><span>🪙</span> Zenpha Coins Refund</span>
                     <span className="text-amber-700">+ {cancelModal.coinsUsed} Coins (Instant)</span>
                   </div>
                 )}
               </div>
               <p className="text-[11px] text-gray-500 mt-2.5 leading-relaxed">
-                Wallet money and She Coins will be returned to your account balance immediately upon cancellation.
+                Wallet money and Zenpha Coins will be returned to your account balance immediately upon cancellation.
               </p>
             </div>
           )}
@@ -772,13 +772,13 @@ function SuperCoinsPanel() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold tracking-wide">
-              <span>🪙</span> He &amp; She Rewards
+              <span>🪙</span> Zenpha Rewards
             </div>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
               {loading ? (
                 <span className="opacity-75">Loading...</span>
               ) : (
-                `${coinsData.shePoints} She Coins`
+                `${coinsData.shePoints} Zenpha Coins`
               )}
             </h2>
             <p className="text-amber-100 text-sm font-medium">
@@ -809,21 +809,21 @@ function SuperCoinsPanel() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-xl">🎉</span>
-            <h3 className="font-bold text-gray-900 text-base">Yay! You will earn She Coins on every order</h3>
+            <h3 className="font-bold text-gray-900 text-base">Yay! You will earn Zenpha Coins on every order</h3>
           </div>
           <p className="text-gray-600 text-xs font-medium">
             These coins will be credited after order delivery.
           </p>
         </div>
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 text-white font-black flex items-center justify-center flex-shrink-0 text-xl shadow-md ring-4 ring-amber-100">
-          S
+          Z
         </div>
       </div>
 
       {/* Rules / How it Works 3-Column Grid */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-xs">
         <h3 className="font-bold text-gray-900 text-base mb-4 flex items-center gap-2">
-          <span>✨</span> How She Coins Work
+          <span>✨</span> How Zenpha Coins Work
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-100">
@@ -832,7 +832,7 @@ function SuperCoinsPanel() {
             </div>
             <h4 className="font-bold text-gray-900 text-sm mb-1">1 Coin = ₹1 Rupee</h4>
             <p className="text-gray-500 text-xs leading-relaxed">
-              Every single She Coin is equal to 1 Indian Rupee discount with no hidden fees or conversion rates.
+              Every single Zenpha Coin is equal to 1 Indian Rupee discount with no hidden fees or conversion rates.
             </p>
           </div>
 
@@ -852,7 +852,7 @@ function SuperCoinsPanel() {
             </div>
             <h4 className="font-bold text-gray-900 text-sm mb-1">Redeem Up to 10% in Cart</h4>
             <p className="text-gray-500 text-xs leading-relaxed">
-              When purchasing items in your cart, check &quot;Redeem She Coins&quot; to apply your coins up to 10% of the total cart amount!
+              When purchasing items in your cart, check &quot;Redeem Zenpha Coins&quot; to apply your coins up to 10% of the total cart amount!
             </p>
           </div>
         </div>
@@ -863,7 +863,7 @@ function SuperCoinsPanel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <div>
             <h3 className="font-bold text-gray-900 text-base">Coins Passbook &amp; History</h3>
-            <p className="text-gray-400 text-xs mt-0.5">Track your earned, redeemed and refunded She Coins</p>
+            <p className="text-gray-400 text-xs mt-0.5">Track your earned, redeemed and refunded Zenpha Coins</p>
           </div>
 
           {/* Filter Pills */}
@@ -897,7 +897,7 @@ function SuperCoinsPanel() {
             <h4 className="font-bold text-gray-800 text-sm">No coin activity found</h4>
             <p className="text-gray-400 text-xs max-w-sm mx-auto">
               {coinsData.shePoints === 0
-                ? "You haven't earned any She Coins yet. Shop now to earn coins on eligible products!"
+                ? "You haven't earned any Zenpha Coins yet. Shop now to earn coins on eligible products!"
                 : "No transactions match the selected filter."}
             </p>
             <button
@@ -959,7 +959,7 @@ function SuperCoinsPanel() {
                         ? 'text-amber-700'
                         : 'text-blue-600'
                     }`}>
-                      {isEarned || isRefunded ? `+${item.amount}` : `-${item.amount}`} She Coins
+                      {isEarned || isRefunded ? `+${item.amount}` : `-${item.amount}`} Zenpha Coins
                     </span>
                     <p className="text-[10px] text-gray-400 font-medium capitalize">{item.type}</p>
                   </div>
@@ -1013,7 +1013,7 @@ function WalletPanel() {
 
   const referralCode = walletData.referralCode || user?.referralCode || '----'
   const shareUrl = `${window.location.origin}/signup?ref=${referralCode}`
-  const shareMessage = `Hey! Shop the latest trending fashion at He & She. Use my referral code ${referralCode} to get 100 She Coins welcome bonus on signup!\nJoin here: ${shareUrl}`
+  const shareMessage = `Hey! Shop at Zenpha. Use my referral code ${referralCode} to get 100 Zenpha Coins welcome bonus on signup!\nJoin here: ${shareUrl}`
 
   // Safe clipboard copy — works on HTTP too (navigator.clipboard needs HTTPS)
   const safeCopyToClipboard = (text, successMsg) => {
@@ -1059,7 +1059,7 @@ function WalletPanel() {
       // Mobile / supported browser → open native system share dialog
       try {
         await navigator.share({
-          title: 'Join He & She — Get 100 She Coins!',
+          title: 'Join Zenpha — Get 100 Zenpha Coins!',
           text: shareMessage,
           url: shareUrl,
         })
@@ -1098,7 +1098,7 @@ function WalletPanel() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold tracking-wide">
-              <Wallet size={13} className="text-pink-300" /> He &amp; She Wallet
+              <Wallet size={13} className="text-pink-300" /> Zenpha Wallet
             </div>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
               {loading ? (
@@ -1141,7 +1141,7 @@ function WalletPanel() {
               Invite your friends and earn ₹100 cash in your wallet!
             </h3>
             <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
-              Share your unique 4-digit code. When a friend signs up, you both get <strong>100 She Coins</strong> instantly. When their first order is delivered, you get <strong>₹100 credited directly to your Wallet</strong>!
+              Share your unique 4-digit code. When a friend signs up, you both get <strong>100 Zenpha Coins</strong> instantly. When their first order is delivered, you get <strong>₹100 credited directly to your Wallet</strong>!
             </p>
           </div>
 
@@ -1214,9 +1214,9 @@ function WalletPanel() {
               <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-sm">
                 2
               </div>
-              <h5 className="font-bold text-gray-900 text-sm">Both Get 100 She Coins</h5>
+              <h5 className="font-bold text-gray-900 text-sm">Both Get 100 Zenpha Coins</h5>
               <p className="text-gray-500 text-xs leading-relaxed">
-                When your friend registers using your referral code, both of you instantly get 100 She Coins!
+                When your friend registers using your referral code, both of you instantly get 100 Zenpha Coins!
               </p>
             </div>
 
@@ -1769,7 +1769,7 @@ function NotificationsPanel() {
     { key: 'wishlist', label: 'Wishlist Alerts',    desc: 'Price drops on your wishlist items',     icon: Heart },
     { key: 'reviews',  label: 'Review Reminders',   desc: 'Reminders to review your purchases',     icon: Star },
     { key: 'security', label: 'Security Alerts',    desc: 'Important account security updates',     icon: Shield },
-    { key: 'news',     label: 'News & Updates',     desc: 'Latest news from He & She',          icon: Bell },
+    { key: 'news',     label: 'News & Updates',     desc: 'Latest news from Zenpha',            icon: Bell },
   ]
 
   const toggle = (k) => {
@@ -2298,7 +2298,7 @@ export default function AccountPage() {
     }
     const finalCode = code || ''
     const shareUrl = `${window.location.origin}/signup?ref=${finalCode}`
-    const shareMessage = `Hey! Shop the latest trending fashion at He & She. Use my referral code ${finalCode} to get 100 She Coins welcome bonus on signup!\nJoin here: ${shareUrl}`
+    const shareMessage = `Hey! Shop at Zenpha. Use my referral code ${finalCode} to get 100 Zenpha Coins welcome bonus on signup!\nJoin here: ${shareUrl}`
 
     // Helper: safe copy that works on HTTP (no navigator.clipboard needed)
     const doCopy = (text) => {
@@ -2325,7 +2325,7 @@ export default function AccountPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join He & She — Get 100 She Coins!',
+          title: 'Join Zenpha — Get 100 Zenpha Coins!',
           text: shareMessage,
           url: shareUrl,
         })

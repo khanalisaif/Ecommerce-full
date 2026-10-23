@@ -150,9 +150,9 @@ export const verifySignupOtp = asyncHandler(async (req, res) => {
   user.isMobileVerified = true;
   user.otp = undefined;
 
-  // Referral Rewards: Both get 100 She Coins upon successful verified signup
+  // Referral Rewards: Both get 100 Zenpha Coins upon successful verified signup
   if (user.referredBy) {
-    // 1. New user gets 100 She Coins welcome bonus
+    // 1. New user gets 100 Zenpha Coins welcome bonus
     user.shePoints = (user.shePoints || 0) + 100;
     user.coinsHistory.push({
       type: "earned",
@@ -161,7 +161,7 @@ export const verifySignupOtp = asyncHandler(async (req, res) => {
       createdAt: new Date(),
     });
 
-    // 2. Referrer gets 100 She Coins referral bonus immediately
+    // 2. Referrer gets 100 Zenpha Coins referral bonus immediately
     await User.findByIdAndUpdate(user.referredBy, {
       $inc: { shePoints: 100 },
       $push: {

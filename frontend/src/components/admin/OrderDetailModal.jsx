@@ -294,7 +294,7 @@ function DelhiveryPanel({ order }) {
             </span>
             {order.paymentMethod?.toLowerCase() === 'cod' && (order.coinsDiscount > 0 || order.coinsUsed > 0) && (
               <span className="text-[10px] text-amber-700 font-medium block">
-                (🪙 ₹{order.coinsDiscount || order.coinsUsed} She Coins deducted)
+                (🪙 ₹{order.coinsDiscount || order.coinsUsed} Zenpha Coins deducted)
               </span>
             )}
             {order.paymentMethod?.toLowerCase() === 'cod' && order.walletUsed > 0 && (
@@ -560,7 +560,7 @@ export default function OrderDetailModal({ order, onClose }) {
                   )}
                   {order.coinsUsed > 0 && (
                     <span className="bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full">
-                      🪙 {order.coinsUsed} She Coins Refunded
+                      🪙 {order.coinsUsed} Zenpha Coins Refunded
                     </span>
                   )}
                 </div>
@@ -766,7 +766,7 @@ export default function OrderDetailModal({ order, onClose }) {
                     {(order.coinsDiscount > 0 || order.coinsUsed > 0) && (
                       <div className="flex justify-between text-xs text-amber-800 font-semibold bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
                         <span className="flex items-center gap-1.5">
-                          <span>🪙</span> She Coins Redeemed ({order.coinsUsed || order.coinsDiscount} Coins)
+                          <span>🪙</span> Zenpha Coins Redeemed ({order.coinsUsed || order.coinsDiscount} Coins)
                         </span>
                         <span>− ₹{(order.coinsDiscount || order.coinsUsed || 0).toLocaleString('en-IN')}</span>
                       </div>
@@ -796,7 +796,7 @@ export default function OrderDetailModal({ order, onClose }) {
                     {order.coinsEarned > 0 && (
                       <div className="flex justify-between text-xs text-purple-700 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 mt-1">
                         <span className="flex items-center gap-1">
-                          <span>🎁</span> She Coins Reward (on delivery):
+                          <span>🎁</span> Zenpha Coins Reward (on delivery):
                         </span>
                         <span className="font-bold">+{order.coinsEarned} Coins {order.coinsCredited ? '✓ (Credited)' : ''}</span>
                       </div>

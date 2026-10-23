@@ -1,7 +1,7 @@
 {
   "name": "hashtelicom-backend",
   "version": "1.0.0",
-  "description": "Backend API for HASHTELICOM e-commerce platform",
+  "description": "Backend API for Zenpha e-commerce platform",
   "type": "module",
   "main": "server.js",
   "scripts": {

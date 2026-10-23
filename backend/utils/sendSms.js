@@ -2,7 +2,7 @@ import "dotenv/config";
 import axios from "axios";
 
 /**
- * Send OTP via SMS using PRP SMS service for HASHTELICOM.
+ * Send OTP via SMS using PRP SMS service for Zenpha.
  *
  * @param {string} phone - Phone number (10 digits)
  * @param {string} templateType - Type of OTP (signup, login, reset, verify) or exact DLT template name
@@ -59,7 +59,7 @@ export const sendOTPViaSMS = async (phone, otp, templateType = "signup") => {
       ],
     };
 
-    console.log("📤 [HASHTELICOM SMS] Sending SMS payload:", smsPayload);
+    console.log("📤 [ZENPHA SMS] Sending SMS payload:", smsPayload);
 
     const response = await axios.post(prpSmsConfig.apiUrl, smsPayload, {
       headers: {
@@ -70,10 +70,10 @@ export const sendOTPViaSMS = async (phone, otp, templateType = "signup") => {
       timeout: 30000,
     });
 
-    console.log("📥 [HASHTELICOM SMS] API response:", response.data);
+    console.log("📥 [ZENPHA SMS] API response:", response.data);
 
     if (response.data?.isSuccess === true) {
-      console.log(`📱 [HASHTELICOM SMS] Sent to ${cleanPhone}`);
+      console.log(`📱 [ZENPHA SMS] Sent to ${cleanPhone}`);
 
       return true;
     } else {

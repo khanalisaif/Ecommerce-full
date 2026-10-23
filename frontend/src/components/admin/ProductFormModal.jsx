@@ -901,7 +901,7 @@ export default function ProductFormModal({ product, onClose, onSave }) {
                 🪙
               </div>
               <div>
-                <h4 className="text-sm font-bold text-gray-900 leading-tight">She Coins Reward</h4>
+                <h4 className="text-sm font-bold text-gray-900 leading-tight">Zenpha Coins Reward</h4>
                 <p className="text-[11px] text-gray-500 mt-0.5">Coins earned by the customer when purchasing this product (1 Coin = ₹1)</p>
               </div>
             </div>

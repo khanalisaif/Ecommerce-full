@@ -385,13 +385,13 @@ const RAW_PRODUCTS = [
 
 const SITE_CONTENT_DATA = {
   site_assets: {
-    logoUrl: "/logo.png",
+    logoUrl: "/zenpha-logo.png",
     loginImageUrl: "/login.png",
     signupImageUrl: "/signin.png",
   },
   topbar_settings: {
     announcementEnabled: true,
-    announcementText: "Free shipping on orders above ₹999 | Use code HASHTELI for 10% off",
+    announcementText: "Free shipping on orders above ₹999 | Use code ZENPHA for 10% off",
     announcementBgType: "gradient",
     announcementBgColor1: "#a855f7",
     announcementBgColor2: "#ec4899",
@@ -485,8 +485,8 @@ const SITE_CONTENT_DATA = {
     { id: "tb-4", icon: "Headphones", title: "Dedicated Support", desc: "Expert assistance available 24/7" },
   ],
   footer_settings: {
-    brandDescription: "HASHTELICOM is your trusted Indian destination for premium mobile electronics, computers, audio gadgets, and genuine accessories with rapid door-to-door delivery.",
-    copyrightText: "© 2026 HASHTELICOM. All rights reserved.",
+    brandDescription: "Zenpha is your trusted Indian destination for premium mobile electronics, computers, audio gadgets, and genuine accessories with rapid door-to-door delivery.",
+    copyrightText: "© 2026 Zenpha. All rights reserved.",
     social: {
       instagram: "https://instagram.com",
       facebook: "https://facebook.com",
@@ -513,7 +513,7 @@ const SITE_CONTENT_DATA = {
       id: "page-terms",
       title: "Terms & Conditions",
       slug: "terms-and-conditions",
-      content: "Welcome to HASHTELICOM. By accessing or using our store, you agree to be bound by these Terms of Service. All items sold are authentic with manufacturer warranties.",
+      content: "Welcome to Zenpha. By accessing or using our store, you agree to be bound by these Terms of Service. All items sold are authentic with manufacturer warranties.",
     },
     {
       id: "page-privacy",
@@ -537,7 +537,7 @@ const SITE_CONTENT_DATA = {
       id: "page-contact",
       title: "Contact Us",
       slug: "contact-us",
-      content: "Need help? Email us at support@hashtelicom.com or reach out via our 24/7 AI shopping assistant.",
+      content: "Need help? Email us at support@zenpha.com or reach out via our 24/7 AI shopping assistant.",
     },
   ],
   faqs: [
@@ -554,7 +554,7 @@ const SITE_CONTENT_DATA = {
     {
       id: "faq-3",
       question: "Are all products original with warranty?",
-      answer: "Yes, every product on HASHTELICOM is 100% authentic and comes with standard brand manufacturer warranty.",
+      answer: "Yes, every product on Zenpha is 100% authentic and comes with standard brand manufacturer warranty.",
     },
     {
       id: "faq-4",
@@ -565,7 +565,7 @@ const SITE_CONTENT_DATA = {
 };
 
 async function seed() {
-  console.log("🌱 Starting HASHTELICOM database seed...");
+  console.log("🌱 Starting Zenpha database seed...");
   await mongoose.connect(process.env.DB_URL);
   console.log("Connected to MongoDB.");
 

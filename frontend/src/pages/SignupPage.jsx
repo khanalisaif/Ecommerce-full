@@ -234,7 +234,7 @@ export default function SignupPage() {
             <div className="w-full rounded-2xl shadow-xl border border-gray-100 overflow-hidden bg-white">
               <img
                 src={siteAssets.signupImageUrl}
-                alt="Create your He & She account"
+                alt="Create your Zenpha account"
                 className="w-full h-auto block"
               />
             </div>
@@ -246,7 +246,7 @@ export default function SignupPage() {
             {/* Heading */}
             <div className="text-center mb-4">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-0.5">Create an Account</h1>
-              <p className="text-gray-500 text-xs sm:text-sm">Join He &amp; She to access exclusive offers and fast checkout</p>
+              <p className="text-gray-500 text-xs sm:text-sm">Join Zenpha to access exclusive offers and fast checkout</p>
             </div>
 
             {/* Inline Error Alert */}
@@ -371,7 +371,7 @@ export default function SignupPage() {
                     Referral Code <span className="text-gray-400 font-normal">(Optional)</span>
                   </label>
                   <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                    🪙 Get 100 She Coins
+                    🪙 Get 100 Zenpha Coins
                   </span>
                 </div>
                 <div className="relative">
@@ -393,7 +393,7 @@ export default function SignupPage() {
                 ) : refStatus.valid === true ? (
                   <div className="mt-1.5 p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold flex items-center gap-2">
                     <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
-                    <span>✓ Valid Code! Invited by <strong>{refStatus.referrerName}</strong> (100 She Coins bonus applied!)</span>
+                    <span>✓ Valid Code! Invited by <strong>{refStatus.referrerName}</strong> (100 Zenpha Coins bonus applied!)</span>
                   </div>
                 ) : refStatus.valid === false ? (
                   <div className="mt-1.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold flex items-center gap-2">
@@ -406,7 +406,7 @@ export default function SignupPage() {
                   </p>
                 ) : (
                   <p className="text-[10px] text-gray-400 mt-1">
-                    Have a friend&apos;s referral code? Enter it to get 100 bonus She Coins!
+                    Have a friend&apos;s referral code? Enter it to get 100 bonus Zenpha Coins!
                   </p>
                 )}
               </div>

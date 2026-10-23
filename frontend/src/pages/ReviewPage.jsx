@@ -75,7 +75,7 @@ export default function ReviewPage() {
             setProduct({
               id: p.id || p._id,
               name: p.name,
-              brand: p.brandName || p.brand || 'He & She',
+              brand: p.brandName || p.brand || 'Zenpha',
               price: p.price,
               originalPrice: p.originalPrice || p.price,
               image: p.images?.[0] || p.image || '',

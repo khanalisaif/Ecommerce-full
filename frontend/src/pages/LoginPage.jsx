@@ -176,7 +176,7 @@ export default function LoginPage() {
             <div className="w-full rounded-2xl shadow-xl border border-gray-100 overflow-hidden bg-white">
               <img
                 src={siteAssets.loginImageUrl}
-                alt="Welcome to He & She"
+                alt="Welcome to Zenpha"
                 className="w-full h-auto block"
               />
             </div>
@@ -510,7 +510,7 @@ export default function LoginPage() {
             <div className="pt-3">
               {loginMode === 'password' ? (
                 <p className="text-center text-gray-500 text-xs sm:text-sm">
-                  New to He &amp; She?{' '}
+                  New to Zenpha?{' '}
                   <button
                     type="button"
                     onClick={() => navigate('/signup')}

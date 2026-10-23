@@ -41,7 +41,7 @@ if (process.env.NODE_ENV !== "production") {
 
 // ---------- Health check ----------
 app.get("/api/health", (req, res) => {
-  res.status(200).json({ success: true, message: "HASHTELICOM API is running" });
+  res.status(200).json({ success: true, message: "Zenpha API is running" });
 });
 
 // ---------- API routes ----------

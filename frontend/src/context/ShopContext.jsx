@@ -34,7 +34,7 @@ export const DEFAULT_TOPBAR_SETTINGS = {
 // Default (fallback) image paths — these are the original files bundled in /public.
 // Admin-uploaded images (Cloudinary URLs) override these once set on the backend.
 export const DEFAULT_SITE_ASSETS = {
-  logoUrl: '/he-and-she-logo.png',
+  logoUrl: '/zenpha-logo.png',
   loginImageUrl: '/auth-side-image.png',
   signupImageUrl: '/auth-side-image.png',
 }
@@ -203,7 +203,13 @@ export function ShopProvider({ children }) {
       .getAll()
       .then((res) => {
         const c = res.data.content || {}
-        if (c.site_assets) setSiteAssetsState(c.site_assets)
+        if (c.site_assets) {
+          const loadedAssets = { ...c.site_assets }
+          if (loadedAssets.logoUrl === '/he-and-she-logo.png' || loadedAssets.logoUrl === '/logo.png') {
+            loadedAssets.logoUrl = '/zenpha-logo.png'
+          }
+          setSiteAssetsState(loadedAssets)
+        }
         if (c.topbar_settings) setTopbarSettingsState(c.topbar_settings)
         if (c.popular_searches?.length) setPopularSearchesState(c.popular_searches)
         if (c.category_configs && Object.keys(c.category_configs).length) setCategoryConfigsState(c.category_configs)

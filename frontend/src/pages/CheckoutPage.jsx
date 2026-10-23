@@ -220,16 +220,16 @@ export default function CheckoutPage() {
       const orderRes = await razorpayService.createOrder({ amount: total })
       const { order: rzpOrder, key_id } = orderRes.data
 
-      // Load logo as Base64 Data URI so Razorpay checkout iframe displays the He & She logo directly
-      let logoDataUri = window.location.origin + '/he-and-she-logo.png'
+      // Load logo as Base64 Data URI so Razorpay checkout iframe displays the Zenpha logo directly
+      let logoDataUri = window.location.origin + '/zenpha-logo.png'
       try {
-        const logoFetch = await fetch('/he-and-she-logo.png')
+        const logoFetch = await fetch('/zenpha-logo.png')
         if (logoFetch.ok) {
           const blob = await logoFetch.blob()
           logoDataUri = await new Promise((resolve) => {
             const reader = new FileReader()
             reader.onloadend = () => resolve(reader.result)
-            reader.onerror = () => resolve(window.location.origin + '/he-and-she-logo.png')
+            reader.onerror = () => resolve(window.location.origin + '/zenpha-logo.png')
             reader.readAsDataURL(blob)
           })
         }
@@ -243,7 +243,7 @@ export default function CheckoutPage() {
           key: key_id,
           amount: rzpOrder.amount,
           currency: rzpOrder.currency,
-          name: 'He & She',
+          name: 'Zenpha',
           description: 'Order Payment',
           image: logoDataUri,
           order_id: rzpOrder.id,
@@ -667,7 +667,7 @@ export default function CheckoutPage() {
                   {useCoins && coinsDeduction > 0 && (
                     <div className="flex justify-between text-[12px] font-bold text-amber-700">
                       <span className="flex items-center gap-1">
-                        <span>🪙</span> She Coins Redeemed ({coinsDeduction} Coins)
+                        <span>🪙</span> Zenpha Coins Redeemed ({coinsDeduction} Coins)
                       </span>
                       <span>- ₹{coinsDeduction.toLocaleString()}</span>
                     </div>

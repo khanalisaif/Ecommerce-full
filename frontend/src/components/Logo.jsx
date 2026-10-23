@@ -11,7 +11,7 @@ export default function Logo({ size = 'md', boxed = false, className = '' }) {
 
   const mark = (
     <div className={className}>
-      <img src={siteAssets.logoUrl} alt="Logo" className={`${heightClass} w-auto object-contain`} />
+      <img src={siteAssets.logoUrl} alt="Zenpha" className={`${heightClass} w-auto object-contain`} />
     </div>
   )
 

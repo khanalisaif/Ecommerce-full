@@ -47,7 +47,7 @@ export default function AdminDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { admin } = useAdminAuth()
   const { siteAssets } = useShop()
-  const adminEmail = admin?.email || 'admin@heshe.com'
+  const adminEmail = admin?.email || 'admin@zenpha.com'
 
   useEffect(() => {
     const handleHashChange = () => {

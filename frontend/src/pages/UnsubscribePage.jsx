@@ -71,7 +71,7 @@ export default function UnsubscribePage() {
         <div className="bg-white max-w-md w-full rounded-2xl shadow-xl border border-gray-100 p-8 text-center">
           {/* Logo badge */}
           <div className="flex items-center justify-center mb-6">
-            <img src="/he-and-she-logo.png" alt="He & She" className="h-16 w-auto object-contain" />
+            <img src="/zenpha-logo.png" alt="Zenpha" className="h-16 w-auto object-contain" />
           </div>
 
           {status === 'loading' && (

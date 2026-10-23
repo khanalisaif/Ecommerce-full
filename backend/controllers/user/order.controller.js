@@ -261,7 +261,7 @@ export const cancelOrder = asyncHandler(async (req, res) => {
 
   let refundDetails = [];
   if (order.walletUsed > 0) refundDetails.push(`₹${order.walletUsed} Wallet Money`);
-  if (order.coinsUsed > 0) refundDetails.push(`${order.coinsUsed} She Coins`);
+  if (order.coinsUsed > 0) refundDetails.push(`${order.coinsUsed} Zenpha Coins`);
   const refundMsg = refundDetails.length > 0
     ? `Order cancelled. ${refundDetails.join(' & ')} refunded to your account!`
     : "Order cancelled successfully.";

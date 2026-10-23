@@ -243,7 +243,7 @@ export default function CartPage() {
                   <label htmlFor="redeemCoinsCart" className="cursor-pointer select-none">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
-                        <span className="text-amber-500">🪙</span> Redeem She Coins
+                        <span className="text-amber-500">🪙</span> Redeem Zenpha Coins
                       </span>
                       <span className="bg-amber-100 text-amber-900 text-[11px] font-black px-2 py-0.5 rounded-full border border-amber-200">
                         {userCoins} Coins Available
@@ -254,7 +254,7 @@ export default function CartPage() {
                     </p>
                     {userCoins <= 0 && (
                       <p className="text-amber-700 text-[11px] font-medium mt-1">
-                        You have 0 coins. Earn She Coins on every order to redeem here!
+                        You have 0 coins. Earn Zenpha Coins on every order to redeem here!
                       </p>
                     )}
                   </label>
@@ -294,7 +294,7 @@ export default function CartPage() {
                 {useCoins && coinsDeduction > 0 && (
                   <div className="flex justify-between text-[12px] font-bold text-amber-700">
                     <span className="flex items-center gap-1">
-                      <span>🪙</span> She Coins Redeemed ({coinsDeduction} Coins)
+                      <span>🪙</span> Zenpha Coins Redeemed ({coinsDeduction} Coins)
                     </span>
                     <span>- ₹{coinsDeduction.toLocaleString()}</span>
                   </div>
@@ -364,11 +364,11 @@ export default function CartPage() {
               <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-amber-50 to-yellow-50/60 border border-amber-200 rounded-xl p-4 shadow-sm mt-4">
                 <div className="text-[12px] min-w-0">
                   <p className="font-bold text-gray-900 mb-0.5 text-[12px]">Yay! You will earn</p>
-                  <p className="text-amber-700 font-black text-[15px] mb-1">{displayEarnedCoins} She Coins</p>
+                  <p className="text-amber-700 font-black text-[15px] mb-1">{displayEarnedCoins} Zenpha Coins</p>
                   <p className="text-gray-600 text-[10px] leading-tight">These coins will be credited after order delivery</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm shadow-sm ring-2 ring-amber-200">
-                  S
+                  Z
                 </div>
               </div>
 

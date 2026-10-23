@@ -28,7 +28,7 @@ export default function WishlistPage() {
 
   const handleShare = async () => {
     const shareData = {
-      title: 'My He & She Wishlist',
+      title: 'My Zenpha Wishlist',
       text: `Check out my wishlist with ${items.length} amazing items!`,
       url: window.location.origin + '/wishlist'
     }

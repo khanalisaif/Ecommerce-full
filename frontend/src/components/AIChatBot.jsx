@@ -4,7 +4,7 @@ import chatService from '../services/chatService'
 
 export default function AIChatBot({ isOpen, onClose }) {
   const [messages, setMessages] = useState([
-    { role: 'ai', text: "Hi! I'm Hashteli AI. How can I help you today?" }
+    { role: 'ai', text: "Hi! I'm Zenpha AI. How can I help you today?" }
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -56,7 +56,7 @@ export default function AIChatBot({ isOpen, onClose }) {
             <Bot size={20} className="text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-[15px] leading-tight">Hashteli AI</h3>
+            <h3 className="font-bold text-[15px] leading-tight">Zenpha AI</h3>
             <p className="text-[10px] text-purple-100 uppercase tracking-wider font-bold">Virtual Assistant</p>
           </div>
         </div>
@@ -125,7 +125,7 @@ export default function AIChatBot({ isOpen, onClose }) {
           </button>
         </div>
         <div className="text-center mt-2">
-          <p className="text-[9px] text-gray-400">Powered by Hashteli AI</p>
+          <p className="text-[9px] text-gray-400">Powered by Zenpha AI</p>
         </div>
       </div>
     </div>
