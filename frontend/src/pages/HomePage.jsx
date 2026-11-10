@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import HeroProductBanner from '../components/HeroProductBanner'
 import {
   Heart, Home, User, PersonStanding, List, Flower2, Droplet, Camera,
   Music, Gift, Sparkles, Flame, ShoppingBag, Shield, ShieldCheck, Truck, Headphones,
@@ -22,10 +23,29 @@ function hasContent(item) {
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { addToCart, toggleWishlist, isWishlisted, cartCount, products, categories, banners, collections, categoryCards, featureBanners } = useShop()
+  const {
+    addToCart, toggleWishlist, isWishlisted, cartCount, products, categories,
+    banners, collections, categoryCards, featureBanners, heroProductBanner,
+  } = useShop()
   const bestSellers = products.filter((p) => p.isBestSeller)
   const [currentBanner, setCurrentBanner] = useState(0)
   const [activeCategory, setActiveCategory] = useState(0)
+
+  // Resolve active hero product (prefer live product document if present)
+  const activeHeroProduct = useMemo(() => {
+    if (!heroProductBanner) return null
+    const id = heroProductBanner.productId || heroProductBanner.id
+    const live = id ? products.find((p) => String(p.id) === String(id)) : null
+    if (live) {
+      return {
+        ...heroProductBanner,
+        ...live,
+        id: live.id,
+        image: live.image || heroProductBanner.image,
+      }
+    }
+    return (heroProductBanner.name && heroProductBanner.image) ? heroProductBanner : null
+  }, [heroProductBanner, products])
 
   // Filter sections — only show items where admin has set an image
   const bannerList = (banners || []).filter(hasContent)
@@ -63,6 +83,13 @@ export default function HomePage() {
   const handleAddToCart = (e, product) => {
     e.stopPropagation()
     addToCart(product, { quantity: 1, color: getColorName(product.colors?.[0]), size: product.sizes?.[0] })
+  }
+
+  const handleBuyNow = (e, product) => {
+    e.stopPropagation()
+    addToCart(product, { quantity: 1, color: getColorName(product.colors?.[0]), size: product.sizes?.[0] })
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    navigate('/checkout')
   }
 
   return (
@@ -370,6 +397,17 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* ── Hero Product Banner (Spotlight Product directly above Feature Banner) ─────────── */}
+        {activeHeroProduct && (
+          <HeroProductBanner
+            product={activeHeroProduct}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            isWishlisted={isWishlisted}
+            onToggleWishlist={toggleWishlist}
+          />
         )}
 
         {/* ── Feature Banner (Category Promo Strip right above Trust Badges / Footer) ───────────── */}

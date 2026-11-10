@@ -4,7 +4,7 @@ import { DEFAULT_FOOTER_SETTINGS, DEFAULT_FOOTER_SHOP_LINKS, DEFAULT_FOOTER_CATE
 import {
   buildInitialBanners, buildInitialCollections, buildInitialCategoryCards,
   normalizeBanner, normalizeCollection, normalizeCategoryCard, DEFAULT_TRUST_BADGES,
-  buildInitialFeatureBanners, normalizeFeatureBanner,
+  buildInitialFeatureBanners, normalizeFeatureBanner, normalizeHeroProductBanner,
 } from '../data/homepageStore'
 
 import { useAuth } from './AuthContext'
@@ -160,6 +160,7 @@ export function ShopProvider({ children }) {
   const [collections, setCollectionsState] = useState([])
   const [categoryCards, setCategoryCardsState] = useState([])
   const [featureBanners, setFeatureBannersState] = useState([])
+  const [heroProductBanner, setHeroProductBannerState] = useState(null)
   const [trustBadges, setTrustBadgesState] = useState(DEFAULT_TRUST_BADGES)
 
   // Persists a CMS key to the backend (admin only — silently skipped for
@@ -195,6 +196,7 @@ export function ShopProvider({ children }) {
   const setCollections = withPersist(setCollectionsState, 'collections')
   const setCategoryCards = withPersist(setCategoryCardsState, 'category_cards')
   const setFeatureBanners = withPersist(setFeatureBannersState, 'feature_banners')
+  const setHeroProductBanner = withPersist(setHeroProductBannerState, 'hero_product_banner')
   const setTrustBadges = withPersist(setTrustBadgesState, 'trust_badges')
 
   // ---------------- Initial load: public CMS content (works for guests + admin alike) ----------------
@@ -230,6 +232,9 @@ export function ShopProvider({ children }) {
         setCollectionsState(Array.isArray(c.collections) ? c.collections : buildInitialCollections())
         setCategoryCardsState(Array.isArray(c.category_cards) ? c.category_cards : buildInitialCategoryCards())
         setFeatureBannersState(Array.isArray(c.feature_banners) ? c.feature_banners : buildInitialFeatureBanners())
+        if (c.hero_product_banner !== undefined) {
+          setHeroProductBannerState(c.hero_product_banner ? normalizeHeroProductBanner(c.hero_product_banner) : null)
+        }
         if (c.trust_badges?.length) setTrustBadgesState(c.trust_badges)
       })
       .catch((err) => console.error('Failed to load site content:', err.message))
@@ -516,6 +521,17 @@ export function ShopProvider({ children }) {
   const updateFeatureBanner = (id, updates) => setFeatureBanners((prev) => prev.map((b) => (b.id === id ? normalizeFeatureBanner({ ...b, ...updates, id }) : b)))
   const deleteFeatureBanner = (id) => setFeatureBanners((prev) => prev.filter((b) => b.id !== id))
   const reorderFeatureBanner = (id, direction) => reorderList(setFeatureBanners, id, direction)
+
+  // ---------------- Homepage: Hero Product Banner (spotlight product banner above feature banner) ----------------
+  const updateHeroProductBanner = (productOrData) => {
+    if (!productOrData) {
+      setHeroProductBanner(null)
+      return
+    }
+    const normalized = normalizeHeroProductBanner(productOrData)
+    setHeroProductBanner(normalized)
+  }
+  const deleteHeroProductBanner = () => setHeroProductBanner(null)
 
   // ---------------- Footer trust badges ----------------
   const addTrustBadge = (data) => setTrustBadges((prev) => [...prev, { id: `tb-${Date.now()}`, icon: data.icon || 'ShieldCheck', title: data.title.trim(), desc: data.desc.trim() }])
@@ -1001,6 +1017,7 @@ export function ShopProvider({ children }) {
     categoryCards, addCategoryCard, updateCategoryCard, deleteCategoryCard, reorderCategoryCard,
 
     featureBanners, addFeatureBanner, updateFeatureBanner, deleteFeatureBanner, reorderFeatureBanner,
+    heroProductBanner, updateHeroProductBanner, deleteHeroProductBanner,
 
     trustBadges, addTrustBadge, updateTrustBadge, deleteTrustBadge, reorderTrustBadge,
 

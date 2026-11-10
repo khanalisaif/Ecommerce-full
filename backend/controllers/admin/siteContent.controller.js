@@ -20,6 +20,7 @@ export const ALLOWED_KEYS = [
   "feature_banners",
   "trust_badges",
   "category_configs",
+  "hero_product_banner",
 ];
 
 const assertKnownKey = (key) => {

@@ -49,6 +49,25 @@ export function normalizeFeatureBanner(raw) {
   }
 }
 
+export function normalizeHeroProductBanner(raw) {
+  if (!raw) return null
+  return {
+    productId: raw.productId || raw.id || '',
+    name: raw.name || '',
+    subtitle: raw.subtitle || '',
+    description: raw.description || '',
+    price: raw.price || 0,
+    originalPrice: raw.originalPrice || 0,
+    discount: raw.discount || '',
+    rating: raw.rating != null ? raw.rating : 4.5,
+    reviews: raw.reviews != null ? raw.reviews : 0,
+    image: raw.image || '',
+    category: raw.category || '',
+    brand: raw.brand || '',
+    badge: raw.badge || '',
+  }
+}
+
 export function buildInitialBanners() {
   return defaultBanners.map(normalizeBanner)
 }

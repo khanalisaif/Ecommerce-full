@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, ChevronUp, ChevronDown, GalleryHorizontal, LayoutGrid, Layers, Megaphone } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronUp, ChevronDown, GalleryHorizontal, LayoutGrid, Layers, Megaphone, Sparkles, Check } from 'lucide-react'
 import { useShop } from '../../../context/ShopContext'
 import BannerFormModal from '../BannerFormModal'
 import CollectionFormModal from '../CollectionFormModal'
 import CategoryCardFormModal from '../CategoryCardFormModal'
 import FeatureBannerFormModal from '../FeatureBannerFormModal'
+import HeroProductSelectModal from '../HeroProductSelectModal'
 
 function Section({ icon: Icon, title, subtitle, onAdd, children }) {
   return (
@@ -58,6 +59,8 @@ export default function HomepageTab() {
     collections, addCollection, updateCollection, deleteCollection, reorderCollection,
     categoryCards, addCategoryCard, updateCategoryCard, deleteCategoryCard, reorderCategoryCard,
     featureBanners, addFeatureBanner, updateFeatureBanner, deleteFeatureBanner, reorderFeatureBanner,
+    products, categories,
+    heroProductBanner, updateHeroProductBanner, deleteHeroProductBanner,
     showToast,
   } = useShop()
 
@@ -69,7 +72,13 @@ export default function HomepageTab() {
   const [editingCard, setEditingCard] = useState(null)
   const [featureModal, setFeatureModal] = useState(false)
   const [editingFeature, setEditingFeature] = useState(null)
+  const [heroModal, setHeroModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null) // { type, item }
+
+  // Resolve live product details for hero product if present
+  const liveHeroProduct = heroProductBanner?.productId
+    ? (products.find((p) => String(p.id) === String(heroProductBanner.productId)) || heroProductBanner)
+    : heroProductBanner
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start w-full">
@@ -104,6 +113,86 @@ export default function HomepageTab() {
             onDelete={() => setDeleteTarget({ type: 'card', item: c })} />
         ))}
         {!categoryCards.length && <div className="px-6 py-8 text-center text-gray-400 text-sm">No category cards yet</div>}
+      </Section>
+
+      <Section
+        icon={Sparkles}
+        title="Hero Product Banner"
+        subtitle="Spotlight product banner shown directly above the Feature Banner"
+        onAdd={() => setHeroModal(true)}
+      >
+        {liveHeroProduct ? (
+          <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-purple-50/40 rounded-xl m-4 border border-purple-100">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-16 h-16 rounded-xl bg-white border border-gray-200 shrink-0 p-1 flex items-center justify-center shadow-xs overflow-hidden">
+                <img
+                  src={liveHeroProduct.image}
+                  alt={liveHeroProduct.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-purple-100 text-purple-700 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Active Spotlight
+                  </span>
+                  {liveHeroProduct.category && (
+                    <span className="text-gray-400 text-xs font-medium truncate">
+                      • {liveHeroProduct.category}
+                    </span>
+                  )}
+                </div>
+                <h4 className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                  {liveHeroProduct.name}
+                </h4>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="font-black text-gray-900 text-sm">
+                    ₹{liveHeroProduct.price?.toLocaleString()}
+                  </span>
+                  {liveHeroProduct.originalPrice > liveHeroProduct.price && (
+                    <span className="text-xs text-gray-400 line-through">
+                      ₹{liveHeroProduct.originalPrice?.toLocaleString()}
+                    </span>
+                  )}
+                  {liveHeroProduct.discount && (
+                    <span className="text-xs font-bold text-green-600">
+                      {liveHeroProduct.discount}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+              <button
+                type="button"
+                onClick={() => setHeroModal(true)}
+                className="px-3.5 py-1.5 rounded-lg border border-purple-200 bg-white text-purple-700 hover:bg-purple-50 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Change Product
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget({ type: 'hero_product', item: liveHeroProduct })}
+                className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                title="Remove Hero Product"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="px-6 py-8 text-center text-gray-400 text-sm">
+            <p className="mb-2">No hero product selected.</p>
+            <button
+              type="button"
+              onClick={() => setHeroModal(true)}
+              className="text-xs font-bold text-purple-600 hover:underline"
+            >
+              + Select a product category-wise to spotlight
+            </button>
+          </div>
+        )}
       </Section>
 
       <Section icon={Megaphone} title="Feature Banner" subtitle="Full-width dark promo strip with two badges" onAdd={() => { setEditingFeature(null); setFeatureModal(true) }}>
@@ -162,6 +251,33 @@ export default function HomepageTab() {
         />
       )}
 
+      {heroModal && (
+        <HeroProductSelectModal
+          products={products}
+          categories={categories}
+          selectedProductId={heroProductBanner?.productId || heroProductBanner?.id}
+          onClose={() => setHeroModal(false)}
+          onSelect={(selectedProduct) => {
+            updateHeroProductBanner({
+              productId: selectedProduct.id,
+              name: selectedProduct.name,
+              category: selectedProduct.category,
+              price: selectedProduct.price,
+              originalPrice: selectedProduct.originalPrice,
+              discount: selectedProduct.discount,
+              rating: selectedProduct.rating,
+              reviews: selectedProduct.reviews,
+              image: selectedProduct.image,
+              description: selectedProduct.description,
+              badge: selectedProduct.badge || 'Hero Spotlight',
+              brand: selectedProduct.brand_name || selectedProduct.brand || '',
+            })
+            showToast(`"${selectedProduct.name}" set as Hero Product Banner!`)
+            setHeroModal(false)
+          }}
+        />
+      )}
+
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setDeleteTarget(null)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center" onClick={(e) => e.stopPropagation()}>
@@ -177,6 +293,7 @@ export default function HomepageTab() {
                   if (type === 'collection') deleteCollection(item.id)
                   if (type === 'card') deleteCategoryCard(item.id)
                   if (type === 'feature') deleteFeatureBanner(item.id)
+                  if (type === 'hero_product') deleteHeroProductBanner()
                   showToast('Deleted')
                   setDeleteTarget(null)
                 }}
