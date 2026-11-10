@@ -76,39 +76,39 @@ export default function HomePage() {
           <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8">
             <div className="flex justify-between items-center overflow-x-auto scrollbar-hide">
               {validCategories.map((cat, idx) => {
-              const Icon = iconComponents[cat.icon] || Heart
-              const slug = cat.slug || cat.name.replace(/\s+/g, '-')
-              const isActive = activeCategory === idx
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setActiveCategory(idx)
-                    window.scrollTo({ top: 0, behavior: 'instant' })
-                    navigate(`/category/${slug}`)
-                  }}
-                  className={`flex flex-col items-center gap-2 px-2 pb-3 pt-4 flex-shrink-0 min-w-[72px] border-b-[3px] transition-all duration-200 ${isActive
+                const Icon = iconComponents[cat.icon] || Heart
+                const slug = cat.slug || cat.name.replace(/\s+/g, '-')
+                const isActive = activeCategory === idx
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setActiveCategory(idx)
+                      window.scrollTo({ top: 0, behavior: 'instant' })
+                      navigate(`/category/${slug}`)
+                    }}
+                    className={`flex flex-col items-center gap-2 px-2 pb-3 pt-4 flex-shrink-0 min-w-[72px] border-b-[3px] transition-all duration-200 ${isActive
                       ? 'border-purple-600 text-purple-600'
                       : 'border-transparent text-gray-500 hover:text-gray-800'
-                    }`}
-                >
-                  {cat.image ? (
-                    <img src={cat.image} alt="" className={`w-7 h-7 rounded-full object-cover ${isActive ? 'ring-2 ring-purple-600' : ''}`} />
-                  ) : (
-                    <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                  )}
-                  <span className={`text-[12px] whitespace-nowrap ${isActive ? 'font-bold' : 'font-semibold'}`}>
-                    {cat.name}
-                  </span>
-                </button>
-              )
-            })}
+                      }`}
+                  >
+                    {cat.image ? (
+                      <img src={cat.image} alt="" className={`w-7 h-7 rounded-full object-cover ${isActive ? 'ring-2 ring-purple-600' : ''}`} />
+                    ) : (
+                      <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                    )}
+                    <span className={`text-[12px] whitespace-nowrap ${isActive ? 'font-bold' : 'font-semibold'}`}>
+                      {cat.name}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
       )}
 
-      <main className="w-full">
+      <main className="w-full lg:max-w-[1400px] lg:mx-auto">
 
         {/* ── Hero Banner Carousel ────────────────────────── */}
         {/* Auto-hides when admin has not added any banners with images */}
@@ -213,32 +213,32 @@ export default function HomePage() {
           <div className="mt-8 px-4 md:px-8">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {validCollections.map((col) => (
-              <div
-                key={col.id}
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'instant' })
-                  navigate(`/category/${col.slug}`)
-                }}
-                className="relative rounded-2xl overflow-hidden cursor-pointer group h-[140px] md:h-[160px]"
-              >
-                <img
-                  src={col.image}
-                  alt={col.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                <div className="absolute inset-0 flex flex-col justify-between p-3">
-                  <div>
-                    <h3 className="text-white font-black text-base leading-tight drop-shadow">{col.name}</h3>
-                    {col.subtitle && (
-                      <p className="text-white/90 text-[12px] mt-0.5 leading-tight font-medium drop-shadow">{col.subtitle}</p>
-                    )}
-                  </div>
-                  <div className="bg-white w-7 h-7 rounded-full flex items-center justify-center shadow">
-                    <span className="text-gray-900 text-[11px] font-black">→</span>
+                <div
+                  key={col.id}
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: 'instant' })
+                    navigate(`/category/${col.slug}`)
+                  }}
+                  className="relative rounded-2xl overflow-hidden cursor-pointer group h-[140px] md:h-[160px]"
+                >
+                  <img
+                    src={col.image}
+                    alt={col.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <div className="absolute inset-0 flex flex-col justify-between p-3">
+                    <div>
+                      <h3 className="text-white font-black text-base leading-tight drop-shadow">{col.name}</h3>
+                      {col.subtitle && (
+                        <p className="text-white/90 text-[12px] mt-0.5 leading-tight font-medium drop-shadow">{col.subtitle}</p>
+                      )}
+                    </div>
+                    <div className="bg-white w-7 h-7 rounded-full flex items-center justify-center shadow">
+                      <span className="text-gray-900 text-[11px] font-black">→</span>
+                    </div>
                   </div>
                 </div>
-              </div>
               ))}
             </div>
           </div>
@@ -250,46 +250,46 @@ export default function HomePage() {
           <div className="mt-8 px-4 md:px-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {validCategoryCards.map((card) => (
-              <div
-                key={card.id}
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'instant' })
-                  const subParam = card.subcategorySlug || card.subcategory
-                  const targetUrl = subParam
-                    ? `/category/${card.slug}?sub=${encodeURIComponent(subParam)}`
-                    : `/category/${card.slug}`
-                  navigate(targetUrl, { state: { subcategory: card.subcategory, subcategorySlug: card.subcategorySlug } })
-                }}
-                className="relative rounded-3xl overflow-hidden cursor-pointer group h-[220px] md:h-[260px] shadow-md hover:shadow-xl transition-shadow duration-300"
-              >
-                {/* Full card image with zoom on hover */}
-                <img
-                  src={card.image}
-                  alt={card.name}
-                  className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
-                />
-                {/* Gradient overlay for contrast and sleek readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/25 md:bg-gradient-to-r md:from-black/85 md:via-black/55 md:to-black/20 transition-opacity duration-300" />
-                
-                {/* Top content: Title, Subtitle, Button */}
-                <div className="relative z-10 p-5 sm:p-6">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 tracking-tight drop-shadow-md">{card.name}</h3>
-                  <p className="text-gray-200 text-xs sm:text-sm font-semibold leading-relaxed max-w-[200px] mb-4 sm:mb-5 drop-shadow">{card.subtitle}</p>
-                  <button className="mt-1 sm:mt-1.5 bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-xs sm:text-sm transition-all shadow-md w-max cursor-pointer">
-                    {card.cta} →
-                  </button>
-                </div>
+                <div
+                  key={card.id}
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: 'instant' })
+                    const subParam = card.subcategorySlug || card.subcategory
+                    const targetUrl = subParam
+                      ? `/category/${card.slug}?sub=${encodeURIComponent(subParam)}`
+                      : `/category/${card.slug}`
+                    navigate(targetUrl, { state: { subcategory: card.subcategory, subcategorySlug: card.subcategorySlug } })
+                  }}
+                  className="relative rounded-3xl overflow-hidden cursor-pointer group h-[220px] md:h-[260px] shadow-md hover:shadow-xl transition-shadow duration-300"
+                >
+                  {/* Full card image with zoom on hover */}
+                  <img
+                    src={card.image}
+                    alt={card.name}
+                    className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
+                  />
+                  {/* Gradient overlay for contrast and sleek readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/25 md:bg-gradient-to-r md:from-black/85 md:via-black/55 md:to-black/20 transition-opacity duration-300" />
 
-                {/* Bottom badges: Positioned 2x higher up from the edge */}
-                <div className="absolute bottom-7 sm:bottom-8 left-5 sm:left-6 z-20 flex flex-wrap gap-2">
-                  <span className="bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md w-max">
-                    ⚗ {card.styles}
-                  </span>
-                  <span className="bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md w-max">
-                    📐 {card.sizes}
-                  </span>
+                  {/* Top content: Title, Subtitle, Button */}
+                  <div className="relative z-10 p-5 sm:p-6">
+                    <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 tracking-tight drop-shadow-md">{card.name}</h3>
+                    <p className="text-gray-200 text-xs sm:text-sm font-semibold leading-relaxed max-w-[200px] mb-4 sm:mb-5 drop-shadow">{card.subtitle}</p>
+                    <button className="mt-1 sm:mt-1.5 bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-xs sm:text-sm transition-all shadow-md w-max cursor-pointer">
+                      {card.cta} →
+                    </button>
+                  </div>
+
+                  {/* Bottom badges: Positioned 2x higher up from the edge */}
+                  <div className="absolute bottom-7 sm:bottom-8 left-5 sm:left-6 z-20 flex flex-wrap gap-2">
+                    <span className="bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md w-max">
+                      ⚗ {card.styles}
+                    </span>
+                    <span className="bg-black/75 backdrop-blur-md text-white border border-white/20 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md w-max">
+                      📐 {card.sizes}
+                    </span>
+                  </div>
                 </div>
-              </div>
               ))}
             </div>
           </div>
@@ -312,64 +312,64 @@ export default function HomePage() {
               </button>
             </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            {bestSellers.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'instant' })
-                  navigate(`/product/${product.id}`)
-                }}
-                className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-              >
-                {/* Image */}
-                <div className="relative h-[140px] md:h-[160px] bg-gray-100 overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                  {product.badge && (
-                    <span className={`absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded ${product.badge === 'Bestseller' ? 'bg-orange-500' :
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              {bestSellers.map((product) => (
+                <div
+                  key={product.id}
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: 'instant' })
+                    navigate(`/product/${product.id}`)
+                  }}
+                  className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                >
+                  {/* Image */}
+                  <div className="relative h-[140px] md:h-[160px] bg-gray-100 overflow-hidden">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                    {product.badge && (
+                      <span className={`absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded ${product.badge === 'Bestseller' ? 'bg-orange-500' :
                         product.badge === 'Popular' ? 'bg-pink-500' :
                           product.badge === 'New' ? 'bg-green-500' : 'bg-purple-500'
-                      }`}>
-                      {product.badge}
-                    </span>
-                  )}
-                </div>
+                        }`}>
+                        {product.badge}
+                      </span>
+                    )}
+                  </div>
 
-                {/* Info */}
-                <div className="p-3">
-                  <p className="text-gray-500 text-[11px] font-bold mb-0.5 uppercase tracking-wide">{product.category}</p>
-                  <h3 className="text-gray-900 font-bold text-[14px] mb-1.5 line-clamp-1">{product.name}</h3>
+                  {/* Info */}
+                  <div className="p-3">
+                    <p className="text-gray-500 text-[11px] font-bold mb-0.5 uppercase tracking-wide">{product.category}</p>
+                    <h3 className="text-gray-900 font-bold text-[14px] mb-1.5 line-clamp-1">{product.name}</h3>
 
-                  {/* Stars */}
-                  <div className="flex items-center gap-1 mb-2">
-                    <div className="flex text-yellow-400 text-[13px]">
-                      {'★'.repeat(Math.floor(product.rating))}
+                    {/* Stars */}
+                    <div className="flex items-center gap-1 mb-2">
+                      <div className="flex text-yellow-400 text-[13px]">
+                        {'★'.repeat(Math.floor(product.rating))}
+                      </div>
+                      <span className="text-gray-500 text-[11px] font-medium">({product.reviews.toLocaleString()})</span>
                     </div>
-                    <span className="text-gray-500 text-[11px] font-medium">({product.reviews.toLocaleString()})</span>
-                  </div>
 
-                  {/* Price */}
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <span className="text-gray-900 font-black text-[15px]">₹{product.price.toLocaleString()}</span>
-                    <span className="text-gray-400 line-through text-[12px]">₹{product.originalPrice.toLocaleString()}</span>
-                    <span className="text-red-500 text-[11px] font-bold">{product.discount}</span>
-                  </div>
+                    {/* Price */}
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className="text-gray-900 font-black text-[15px]">₹{product.price.toLocaleString()}</span>
+                      <span className="text-gray-400 line-through text-[12px]">₹{product.originalPrice.toLocaleString()}</span>
+                      <span className="text-red-500 text-[11px] font-bold">{product.discount}</span>
+                    </div>
 
-                  <button
-                    onClick={(e) => handleAddToCart(e, product)}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[12px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <ShoppingBag size={14} /> Add to Cart
-                  </button>
+                    <button
+                      onClick={(e) => handleAddToCart(e, product)}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[12px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <ShoppingBag size={14} /> Add to Cart
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
         )}
 
         {/* ── Feature Banner (Category Promo Strip right above Trust Badges / Footer) ───────────── */}
