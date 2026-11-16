@@ -26,14 +26,14 @@ export default function ProductDetailPage() {
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)
   const [activeThumb, setActiveThumb] = useState(0)
 
-  const foundProduct = products.find(p => String(p.id) === String(id))
+  const foundProduct = products.find(p => String(p.id) === String(id) || String(p._id) === String(id))
   const [fetchedProduct, setFetchedProduct] = useState(null)
 
   useEffect(() => {
-    if (!foundProduct && id) {
+    if (!foundProduct && id && /^[0-9a-fA-F]{24}$/.test(id)) {
       productService.getProductById(id)
         .then(res => setFetchedProduct(res.data.product))
-        .catch(() => {})
+        .catch(() => { })
     }
   }, [id, foundProduct])
 
@@ -41,7 +41,8 @@ export default function ProductDetailPage() {
   // _reportedViews Set is keyed by product ID so each new product navigated to
   // gets recorded correctly, even within the same component instance.
   useEffect(() => {
-    if (!id) return
+    const liveProduct = foundProduct || fetchedProduct
+    if (!id || !liveProduct) return
     trackProductView(id)
     // Only fire once per unique product ID per session
     if (!_reportedViews.has(id)) {
@@ -51,9 +52,9 @@ export default function ProductDetailPage() {
         sessionId = Math.random().toString(36).slice(2) + Date.now().toString(36)
         sessionStorage.setItem('htl_session_id', sessionId)
       }
-      adminAnalyticsService.recordProductView(id, sessionId).catch(() => {})
+      adminAnalyticsService.recordProductView(id, sessionId).catch(() => { })
     }
-  }, [id])
+  }, [id, foundProduct, fetchedProduct])
 
   const product = foundProduct || fetchedProduct || {
     id: id || '1',
@@ -138,8 +139,8 @@ export default function ProductDetailPage() {
   const stockInfo = isSizeOutOfStock
     ? 'Out of Stock'
     : isSizeLowStock
-    ? `Only ${currentSizeStock} left in stock - order soon`
-    : 'In Stock'
+      ? `Only ${currentSizeStock} left in stock - order soon`
+      : 'In Stock'
 
   useEffect(() => {
     if (window.location.hash === '#reviews') {
@@ -192,11 +193,11 @@ export default function ProductDetailPage() {
   const relatedProducts = products.filter(p => p.isBestSeller && p.id !== product.id).slice(0, 4)
 
   // ── Delivery estimate widget ──────────────────────────────────────────────
-  const [deliveryPincode, setDeliveryPincode]   = useState('')
-  const [pincodeInput, setPincodeInput]         = useState('')
-  const [deliveryInfo, setDeliveryInfo]         = useState(null)
-  const [deliveryLoading, setDeliveryLoading]   = useState(false)
-  const [deliveryError, setDeliveryError]       = useState('')
+  const [deliveryPincode, setDeliveryPincode] = useState('')
+  const [pincodeInput, setPincodeInput] = useState('')
+  const [deliveryInfo, setDeliveryInfo] = useState(null)
+  const [deliveryLoading, setDeliveryLoading] = useState(false)
+  const [deliveryError, setDeliveryError] = useState('')
   const [showPincodeInput, setShowPincodeInput] = useState(false)
 
   // Weight in grams from product (default 50g)
@@ -242,7 +243,7 @@ export default function ProductDetailPage() {
         }
       })
       .catch(() => setShowPincodeInput(true))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, id])
 
   const handleCheckDelivery = () => {
@@ -283,7 +284,7 @@ export default function ProductDetailPage() {
 
   const StarRating = ({ rating, size = 12 }) => (
     <div className="flex gap-0.5">
-      {[1,2,3,4,5].map(s => <span key={s} style={{ fontSize: size }} className={s <= Math.round(rating) ? 'text-yellow-400' : 'text-gray-200'}>★</span>)}
+      {[1, 2, 3, 4, 5].map(s => <span key={s} style={{ fontSize: size }} className={s <= Math.round(rating) ? 'text-yellow-400' : 'text-gray-200'}>★</span>)}
     </div>
   )
 
@@ -292,10 +293,10 @@ export default function ProductDetailPage() {
       <Navbar />
 
       <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 md:px-6 py-8 flex flex-col gap-8">
-        
+
         {/* TOP SECTION: Gallery & Actions */}
         <div className="bg-white border border-gray-100 rounded-[20px] p-6 shadow-sm flex flex-col md:flex-row gap-10">
-          
+
           {/* Gallery Area */}
           <div className="flex flex-col-reverse md:flex-row gap-4 md:w-[55%]">
             {/* Thumbnails */}
@@ -304,9 +305,8 @@ export default function ProductDetailPage() {
                 <button
                   key={i}
                   onClick={() => setActiveThumb(i)}
-                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
-                    activeThumb === i ? 'border-purple-600 p-0.5' : 'border-transparent bg-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${activeThumb === i ? 'border-purple-600 p-0.5' : 'border-transparent bg-gray-200 hover:border-gray-300'
+                    }`}
                 >
                   <img src={img} alt="thumb" className="w-full h-full object-cover rounded-lg" />
                 </button>
@@ -316,7 +316,7 @@ export default function ProductDetailPage() {
             {/* Main Image */}
             <div className="relative flex-1 bg-gray-200 rounded-2xl overflow-hidden aspect-[4/5] md:aspect-auto md:h-[500px]">
               <img src={displayImages[activeThumb] || displayImages[0] || product.image} alt={product.name} className="w-full h-full object-cover" />
-              
+
               {/* Wishlist Button */}
               <button
                 onClick={(e) => { e.stopPropagation(); toggleWishlist(product) }}
@@ -327,7 +327,7 @@ export default function ProductDetailPage() {
 
               {/* Top Left Badge */}
               <div className="absolute top-4 left-4 bg-pink-500 text-white w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-black leading-tight text-center shadow-md">
-                {discountPercent}%<br/>OFF
+                {discountPercent}%<br />OFF
               </div>
               {/* Fullscreen button */}
               <button className="absolute bottom-4 right-4 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-gray-600 shadow hover:bg-white transition-colors">
@@ -340,7 +340,7 @@ export default function ProductDetailPage() {
           <div className="flex-1 flex flex-col pt-2">
             <h1 className="text-3xl font-bold text-gray-900 mb-1">{product.name}</h1>
             <p className="text-gray-500 text-sm mb-3">{product.description}</p>
-            
+
             <div className="flex items-center gap-2 mb-4">
               <StarRating rating={4.6} size={14} />
               <span className="text-gray-900 font-bold text-sm">4.6</span>
@@ -381,7 +381,7 @@ export default function ProductDetailPage() {
               <p className="text-xs text-gray-800 mb-2">Color: <span className="font-semibold">{selectedColorName}</span></p>
               <div className="flex gap-2">
                 {parsedColors.map((c, i) => (
-                  <button 
+                  <button
                     key={i}
                     onClick={() => setSelectedColorIndex(i)}
                     title={c.name}
@@ -417,13 +417,12 @@ export default function ProductDetailPage() {
                       onClick={() => !isOut && setSelectedSize(s)}
                       disabled={isOut}
                       title={isOut ? `${s} (Out of stock)` : isLow ? `${s} (Only ${qty} left)` : s}
-                      className={`relative min-w-[44px] px-3 h-9 rounded-lg border flex items-center justify-center text-xs font-semibold transition-all ${
-                        isOut
-                          ? 'border-gray-200 text-gray-300 bg-gray-50 cursor-not-allowed line-through'
-                          : isSelected
+                      className={`relative min-w-[44px] px-3 h-9 rounded-lg border flex items-center justify-center text-xs font-semibold transition-all ${isOut
+                        ? 'border-gray-200 text-gray-300 bg-gray-50 cursor-not-allowed line-through'
+                        : isSelected
                           ? 'border-purple-600 text-purple-600 bg-purple-50 shadow-xs font-bold'
                           : 'border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50/40'
-                      }`}
+                        }`}
                     >
                       {s}
                       {isLow && (
@@ -575,19 +574,19 @@ export default function ProductDetailPage() {
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <button 
+              <button
                 onClick={() => displayStock > 0 && addToCart(product, { quantity: 1, size: selectedSize, color: selectedColorName })}
                 disabled={displayStock === 0}
                 className="flex-1 bg-purple-700 text-white rounded-xl py-3.5 flex items-center justify-center gap-2 font-bold text-sm hover:bg-purple-800 transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
               >
                 <ShoppingCart size={16} /> {displayStock === 0 ? 'Out of Stock' : 'Add to Cart'}
               </button>
-              <button 
+              <button
                 onClick={() => {
                   if (displayStock === 0) return
                   addToCart(product, { quantity: 1, size: selectedSize, color: selectedColorName })
                     .then(() => navigate('/checkout'))
-                    .catch(() => {})
+                    .catch(() => { })
                 }}
                 disabled={displayStock === 0}
                 className="flex-1 bg-pink-600 text-white rounded-xl py-3.5 flex items-center justify-center gap-2 font-bold text-sm hover:bg-pink-700 transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
@@ -617,12 +616,12 @@ export default function ProductDetailPage() {
 
         {/* MIDDLE SECTION: Details & Reviews */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
+
           {/* Product Details Card */}
           <div className="bg-white border border-gray-100 rounded-[20px] p-6 shadow-sm">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Product Details</h2>
             <p className="text-xs text-gray-500 mb-4">{product.description || 'Premium quality product with expert craftsmanship'}</p>
-            
+
             <div className="space-y-2 mb-6">
               {[
                 'Premium quality materials for lasting comfort',
@@ -640,13 +639,13 @@ export default function ProductDetailPage() {
 
             <div className="space-y-3">
               {[
-                { l: 'Material',    v: 'Premium Lace & Microfiber' },
-                { l: 'Care',        v: 'Machine Wash Cold, Gentle Cycle' },
-                { l: 'Fit Type',    v: 'Regular Fit' },
-                { l: 'Style',       v: product.category || 'Intimate Apparel' },
-                { l: 'Country',     v: 'Made in India' },
-                { l: 'Unit',        v: '1 Piece' },
-                { l: 'Product Id',  v: String(product.id).padStart(8, '0') },
+                { l: 'Material', v: 'Premium Lace & Microfiber' },
+                { l: 'Care', v: 'Machine Wash Cold, Gentle Cycle' },
+                { l: 'Fit Type', v: 'Regular Fit' },
+                { l: 'Style', v: product.category || 'Intimate Apparel' },
+                { l: 'Country', v: 'Made in India' },
+                { l: 'Unit', v: '1 Piece' },
+                { l: 'Product Id', v: String(product.id).padStart(8, '0') },
               ].map((item, idx) => (
                 <div key={idx} className="flex text-xs">
                   <div className="w-[120px] font-semibold text-gray-900">{item.l}</div>
@@ -749,7 +748,7 @@ export default function ProductDetailPage() {
               View All
             </button>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {relatedProducts.map(prod => (
               <div
@@ -795,7 +794,7 @@ export default function ProductDetailPage() {
               <div>
                 <p className="text-sm font-semibold text-gray-700 mb-2">Your Rating</p>
                 <div className="flex gap-1">
-                  {[1,2,3,4,5].map(s => (
+                  {[1, 2, 3, 4, 5].map(s => (
                     <button key={s} onClick={() => setReviewForm(f => ({ ...f, rating: s }))}>
                       <Star size={28} className={s <= reviewForm.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200 fill-gray-200'} />
                     </button>

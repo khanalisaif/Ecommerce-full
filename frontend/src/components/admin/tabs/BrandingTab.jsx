@@ -31,9 +31,23 @@ function AssetUploadCard({ title, description, assetKey, previewClassName }) {
         const canvas = document.createElement('canvas')
         canvas.width = Math.round(img.width * scale)
         canvas.height = Math.round(img.height * scale)
-        const ctx = canvas.getContext('2d')
+        const ctx = canvas.getContext('2d', { alpha: true })
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-        const compressed = canvas.toDataURL('image/jpeg', 0.82)
+        const isTransparent = file.type === 'image/png' || file.type === 'image/webp' || file.type === 'image/gif' || file.type === 'image/svg+xml'
+        let compressed
+        if (isTransparent) {
+          try {
+            compressed = canvas.toDataURL('image/webp', 0.85)
+            if (!compressed || !compressed.startsWith('data:image/webp')) {
+              compressed = canvas.toDataURL('image/png')
+            }
+          } catch {
+            compressed = canvas.toDataURL('image/png')
+          }
+        } else {
+          compressed = canvas.toDataURL('image/jpeg', 0.82)
+        }
         setSiteAsset(assetKey, compressed)
         showToast(`${title} updated`)
       }

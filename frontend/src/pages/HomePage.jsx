@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import HeroProductBanner from '../components/HeroProductBanner'
+import NewHero from '../components/NewHero'
+import NewHeroCircles from '../components/NewHeroCircles'
+import Hero2GallerySlider from '../components/Hero2GallerySlider'
+import Hero2ProductCarousel from '../components/Hero2ProductCarousel'
 import {
   Heart, Home, User, PersonStanding, List, Flower2, Droplet, Camera,
   Music, Gift, Sparkles, Flame, ShoppingBag, Shield, ShieldCheck, Truck, Headphones,
@@ -26,6 +30,7 @@ export default function HomePage() {
   const {
     addToCart, toggleWishlist, isWishlisted, cartCount, products, categories,
     banners, collections, categoryCards, featureBanners, heroProductBanner,
+    hero2Settings,
   } = useShop()
   const bestSellers = products.filter((p) => p.isBestSeller)
   const [currentBanner, setCurrentBanner] = useState(0)
@@ -96,11 +101,10 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       <Navbar cartCount={cartCount} />
 
-      {/* ── Category Tab Strip ─────────────────────────── */}
-      {/* Auto-hides when admin has not created any categories */}
-      {validCategories.length > 0 && (
+      {/* ── Category Tab Strip (Couples, For Her, For Him, Wellness, Lubricants - Hidden per user request) ─────────────────────────── */}
+      {Boolean(hero2Settings?.showCategoryStrip) && validCategories.length > 0 && (
         <div className="bg-white border-b border-gray-100 sticky top-[72px] z-40">
-          <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8">
+          <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-4 lg:px-4">
             <div className="flex justify-between items-center overflow-x-auto scrollbar-hide">
               {validCategories.map((cat, idx) => {
                 const Icon = iconComponents[cat.icon] || Heart
@@ -135,12 +139,34 @@ export default function HomePage() {
         </div>
       )}
 
-      <main className="w-full lg:max-w-[1400px] lg:mx-auto">
+      <main className="w-full max-w-[1720px] mx-auto px-2 sm:px-3 lg:px-4">
 
-        {/* ── Hero Banner Carousel ────────────────────────── */}
-        {/* Auto-hides when admin has not added any banners with images */}
-        {bannerList.length > 0 && (
-          <div className="relative mx-4 md:mx-8 mt-6 rounded-2xl overflow-hidden h-[280px] md:h-[340px]">
+        {/* ── New Hero Section (with Banner & Certificates Marquee Ticker) ── */}
+        <NewHero settings={hero2Settings} />
+
+        {/* ── Circular Products Showcase Strip (Directly below certificates ticker) ── */}
+        <NewHeroCircles settings={hero2Settings} />
+
+        {/* ── Hero Product Banner (Placed directly below circles showcase) ── */}
+        {activeHeroProduct && (
+          <HeroProductBanner
+            product={activeHeroProduct}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            isWishlisted={isWishlisted}
+            onToggleWishlist={toggleWishlist}
+          />
+        )}
+
+        {/* ── Everyday Wellness Floating Gallery Slider (Right to left slow marquee with hover elevation) ── */}
+        <Hero2GallerySlider settings={hero2Settings} />
+
+        {/* ── Multi-Product Spotlight 3D Carousel (Placed directly below Everyday Wellness) ── */}
+        <Hero2ProductCarousel settings={hero2Settings} />
+
+        {/* ── Main Hero Banner Carousel (Preserved, hidden by default as requested) ── */}
+        {Boolean(hero2Settings?.showOldHero) && bannerList.length > 0 && (
+          <div className="relative mx-3 sm:mx-4 lg:mx-4 mt-6 rounded-3xl overflow-hidden h-[280px] md:h-[340px]">
             {bannerList.map((banner, index) => (
               <div
                 key={banner.id || index}
@@ -237,7 +263,7 @@ export default function HomePage() {
         {/* ── Collections 5-Column Grid ───────────────────── */}
         {/* Auto-hides when admin has not added any collections */}
         {validCollections.length > 0 && (
-          <div className="mt-8 px-4 md:px-8">
+          <div className="mt-8 px-3 sm:px-4 lg:px-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {validCollections.map((col) => (
                 <div
@@ -246,7 +272,7 @@ export default function HomePage() {
                     window.scrollTo({ top: 0, behavior: 'instant' })
                     navigate(`/category/${col.slug}`)
                   }}
-                  className="relative rounded-2xl overflow-hidden cursor-pointer group h-[140px] md:h-[160px]"
+                  className="relative rounded-3xl overflow-hidden cursor-pointer group h-[140px] md:h-[160px] shadow-sm hover:shadow-md transition-all"
                 >
                   <img
                     src={col.image}
@@ -254,7 +280,7 @@ export default function HomePage() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  <div className="absolute inset-0 flex flex-col justify-between p-3">
+                  <div className="absolute inset-0 flex flex-col justify-between p-3.5">
                     <div>
                       <h3 className="text-white font-black text-base leading-tight drop-shadow">{col.name}</h3>
                       {col.subtitle && (
@@ -274,7 +300,7 @@ export default function HomePage() {
         {/* ── Category Cards (Phone / Tab / Laptop) ──────── */}
         {/* Auto-hides when admin has not added any category cards */}
         {validCategoryCards.length > 0 && (
-          <div className="mt-8 px-4 md:px-8">
+          <div className="mt-8 px-3 sm:px-4 lg:px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {validCategoryCards.map((card) => (
                 <div
@@ -322,10 +348,9 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── Best Sellers ────────────────────────────────── */}
-        {/* Auto-hides when no products are marked as isBestSeller */}
-        {bestSellers.length > 0 && (
-          <div className="mt-12 px-4 md:px-8">
+        {/* ── Best Sellers (Ashwagandha Gummies, Herbal Teas, etc. - Hidden per user request) ────────────────────────────────── */}
+        {Boolean(hero2Settings?.showBestSellers) && bestSellers.length > 0 && (
+          <div className="mt-12 px-3 sm:px-4 lg:px-4">
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-xl md:text-2xl font-black text-gray-900">Best Sellers</h2>
               <button
@@ -347,7 +372,7 @@ export default function HomePage() {
                     window.scrollTo({ top: 0, behavior: 'instant' })
                     navigate(`/product/${product.id}`)
                   }}
-                  className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 >
                   {/* Image */}
                   <div className="relative h-[140px] md:h-[160px] bg-gray-100 overflow-hidden">
@@ -357,7 +382,7 @@ export default function HomePage() {
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     />
                     {product.badge && (
-                      <span className={`absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded ${product.badge === 'Bestseller' ? 'bg-orange-500' :
+                      <span className={`absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded-full ${product.badge === 'Bestseller' ? 'bg-orange-500' :
                         product.badge === 'Popular' ? 'bg-pink-500' :
                           product.badge === 'New' ? 'bg-green-500' : 'bg-purple-500'
                         }`}>
@@ -367,7 +392,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Info */}
-                  <div className="p-3">
+                  <div className="p-3.5">
                     <p className="text-gray-500 text-[11px] font-bold mb-0.5 uppercase tracking-wide">{product.category}</p>
                     <h3 className="text-gray-900 font-bold text-[14px] mb-1.5 line-clamp-1">{product.name}</h3>
 
@@ -388,7 +413,7 @@ export default function HomePage() {
 
                     <button
                       onClick={(e) => handleAddToCart(e, product)}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[12px] font-bold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white text-[12px] font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
                     >
                       <ShoppingBag size={14} /> Add to Cart
                     </button>
@@ -399,53 +424,42 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── Hero Product Banner (Spotlight Product directly above Feature Banner) ─────────── */}
-        {activeHeroProduct && (
-          <HeroProductBanner
-            product={activeHeroProduct}
-            onAddToCart={handleAddToCart}
-            onBuyNow={handleBuyNow}
-            isWishlisted={isWishlisted}
-            onToggleWishlist={toggleWishlist}
-          />
-        )}
-
         {/* ── Feature Banner (Category Promo Strip right above Trust Badges / Footer) ───────────── */}
         {/* Auto-hides when admin has not added any feature banners with images */}
         {validFeatureBanners.map((fb) => (
-          <div key={fb.id} className="mt-16 px-4 md:px-8 pb-12">
+          <div key={fb.id} className="mt-16 px-3 sm:px-4 lg:px-4 pb-12">
             <div
               onClick={() => {
                 window.scrollTo({ top: 0, behavior: 'instant' })
                 navigate(`/category/${fb.slug || 'For-Her'}`)
               }}
-              className="relative rounded-3xl overflow-hidden cursor-pointer group min-h-[180px] md:min-h-[220px] flex flex-col md:flex-row items-center justify-between p-6 sm:p-8 md:p-12 gap-6 bg-gray-900"
+              className="relative rounded-3xl sm:rounded-[36px] overflow-hidden cursor-pointer group min-h-[260px] sm:min-h-[300px] md:min-h-[340px] flex flex-col md:flex-row items-center justify-between p-8 sm:p-12 md:p-16 gap-8 bg-gray-900 shadow-xl"
             >
               <img
                 src={fb.image}
                 alt={fb.title}
                 className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-transparent" />
 
-              <div className="relative z-10 text-center md:text-left flex flex-col items-center md:items-start">
-                <h2 className="text-2xl md:text-4xl font-black text-white mb-1.5 md:mb-2 tracking-tight">{fb.title}</h2>
-                <p className="text-white/90 text-xs md:text-sm leading-relaxed whitespace-pre-line">
+              <div className="relative z-10 text-center md:text-left flex flex-col items-center md:items-start max-w-2xl">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 md:mb-3 tracking-tight">{fb.title}</h2>
+                <p className="text-white/90 text-sm sm:text-base md:text-lg leading-relaxed whitespace-pre-line">
                   {fb.subtitle}
                 </p>
-                <button className="mt-3 md:mt-5 border-2 border-white text-white px-5 py-2 md:px-6 md:py-2.5 rounded-full font-bold text-xs md:text-sm hover:bg-white hover:text-gray-900 transition-colors w-max">
+                <button className="mt-4 md:mt-6 border-2 border-white text-white px-7 py-3 md:px-8 md:py-3.5 rounded-full font-extrabold text-sm md:text-base hover:bg-white hover:text-gray-900 transition-all shadow-md w-max cursor-pointer">
                   {fb.buttonText || 'Shop Now'}
                 </button>
               </div>
 
-              <div className="relative z-10 flex flex-row md:flex-col gap-2 md:gap-3 flex-wrap justify-center">
+              <div className="relative z-10 flex flex-row md:flex-col gap-3 md:gap-4 flex-wrap justify-center">
                 {fb.badge1 && (
-                  <span className="bg-white/20 backdrop-blur-md text-white text-[11px] md:text-xs font-bold px-3.5 py-1.5 md:px-5 md:py-2.5 rounded-lg flex items-center gap-2 border border-white/10 shadow-sm w-max">
+                  <span className="bg-white/20 backdrop-blur-md text-white text-xs sm:text-sm md:text-base font-bold px-5 py-2.5 md:px-6 md:py-3.5 rounded-xl flex items-center gap-2.5 border border-white/20 shadow-md w-max">
                     {fb.badge1}
                   </span>
                 )}
                 {fb.badge2 && (
-                  <span className="bg-white/20 backdrop-blur-md text-white text-[11px] md:text-xs font-bold px-3.5 py-1.5 md:px-5 md:py-2.5 rounded-lg flex items-center gap-2 border border-white/10 shadow-sm w-max">
+                  <span className="bg-white/20 backdrop-blur-md text-white text-xs sm:text-sm md:text-base font-bold px-5 py-2.5 md:px-6 md:py-3.5 rounded-xl flex items-center gap-2.5 border border-white/20 shadow-md w-max">
                     {fb.badge2}
                   </span>
                 )}

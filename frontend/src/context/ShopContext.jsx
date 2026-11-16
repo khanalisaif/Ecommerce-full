@@ -5,6 +5,7 @@ import {
   buildInitialBanners, buildInitialCollections, buildInitialCategoryCards,
   normalizeBanner, normalizeCollection, normalizeCategoryCard, DEFAULT_TRUST_BADGES,
   buildInitialFeatureBanners, normalizeFeatureBanner, normalizeHeroProductBanner,
+  DEFAULT_HERO2_SETTINGS, normalizeHero2Settings,
 } from '../data/homepageStore'
 
 import { useAuth } from './AuthContext'
@@ -161,6 +162,7 @@ export function ShopProvider({ children }) {
   const [categoryCards, setCategoryCardsState] = useState([])
   const [featureBanners, setFeatureBannersState] = useState([])
   const [heroProductBanner, setHeroProductBannerState] = useState(null)
+  const [hero2Settings, setHero2SettingsState] = useState(DEFAULT_HERO2_SETTINGS)
   const [trustBadges, setTrustBadgesState] = useState(DEFAULT_TRUST_BADGES)
 
   // Persists a CMS key to the backend (admin only — silently skipped for
@@ -197,6 +199,7 @@ export function ShopProvider({ children }) {
   const setCategoryCards = withPersist(setCategoryCardsState, 'category_cards')
   const setFeatureBanners = withPersist(setFeatureBannersState, 'feature_banners')
   const setHeroProductBanner = withPersist(setHeroProductBannerState, 'hero_product_banner')
+  const setHero2Settings = withPersist(setHero2SettingsState, 'hero2_settings')
   const setTrustBadges = withPersist(setTrustBadgesState, 'trust_badges')
 
   // ---------------- Initial load: public CMS content (works for guests + admin alike) ----------------
@@ -234,6 +237,9 @@ export function ShopProvider({ children }) {
         setFeatureBannersState(Array.isArray(c.feature_banners) ? c.feature_banners : buildInitialFeatureBanners())
         if (c.hero_product_banner !== undefined) {
           setHeroProductBannerState(c.hero_product_banner ? normalizeHeroProductBanner(c.hero_product_banner) : null)
+        }
+        if (c.hero2_settings !== undefined) {
+          setHero2SettingsState(normalizeHero2Settings(c.hero2_settings))
         }
         if (c.trust_badges?.length) setTrustBadgesState(c.trust_badges)
       })
@@ -532,6 +538,11 @@ export function ShopProvider({ children }) {
     setHeroProductBanner(normalized)
   }
   const deleteHeroProductBanner = () => setHeroProductBanner(null)
+
+  // ---------------- Homepage: Hero 2 / New Hero Settings ----------------
+  const updateHero2Settings = (updates) => {
+    setHero2Settings((prev) => normalizeHero2Settings({ ...prev, ...updates }))
+  }
 
   // ---------------- Footer trust badges ----------------
   const addTrustBadge = (data) => setTrustBadges((prev) => [...prev, { id: `tb-${Date.now()}`, icon: data.icon || 'ShieldCheck', title: data.title.trim(), desc: data.desc.trim() }])
@@ -1018,6 +1029,7 @@ export function ShopProvider({ children }) {
 
     featureBanners, addFeatureBanner, updateFeatureBanner, deleteFeatureBanner, reorderFeatureBanner,
     heroProductBanner, updateHeroProductBanner, deleteHeroProductBanner,
+    hero2Settings, updateHero2Settings,
 
     trustBadges, addTrustBadge, updateTrustBadge, deleteTrustBadge, reorderTrustBadge,
 

@@ -21,6 +21,7 @@ export const ALLOWED_KEYS = [
   "trust_badges",
   "category_configs",
   "hero_product_banner",
+  "hero2_settings",
 ];
 
 const assertKnownKey = (key) => {

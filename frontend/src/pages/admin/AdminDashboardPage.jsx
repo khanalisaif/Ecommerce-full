@@ -4,6 +4,7 @@ import AdminSidebar from '../../components/admin/AdminSidebar'
 import OverviewTab from '../../components/admin/tabs/OverviewTab'
 import ProductsTab from '../../components/admin/tabs/ProductsTab'
 import HomepageTab from '../../components/admin/tabs/HomepageTab'
+import Hero2Tab from '../../components/admin/tabs/Hero2Tab'
 import CategoriesTab from '../../components/admin/tabs/CategoriesTab'
 import CategoryFiltersTab from '../../components/admin/tabs/CategoryFiltersTab'
 import InventoryTab from '../../components/admin/tabs/InventoryTab'
@@ -22,6 +23,7 @@ const titles = {
   overview: 'Dashboard Overview',
   products: 'Products',
   homepage: 'Homepage',
+  'hero-2': 'Hero 2',
   categories: 'Categories',
   'category-filters': 'Category Filters',
   inventory: 'Inventory',
@@ -101,6 +103,7 @@ export default function AdminDashboardPage() {
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'products' && <ProductsTab />}
           {activeTab === 'homepage' && <HomepageTab />}
+          {activeTab === 'hero-2' && <Hero2Tab />}
           {activeTab === 'categories' && <CategoriesTab />}
           {activeTab === 'category-filters' && <CategoryFiltersTab />}
           {activeTab === 'inventory' && <InventoryTab />}

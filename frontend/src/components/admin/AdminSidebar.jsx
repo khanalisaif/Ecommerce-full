@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, X, Image, FolderTree, PanelTop, LayoutTemplate, FileText, GalleryHorizontal, Boxes, ExternalLink, ListFilter, Megaphone, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, X, Image, FolderTree, PanelTop, LayoutTemplate, FileText, GalleryHorizontal, Boxes, ExternalLink, ListFilter, Megaphone, BarChart2, Sparkles } from 'lucide-react'
 import { useAdminAuth } from '../../context/AdminAuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useShop } from '../../context/ShopContext'
@@ -6,6 +6,7 @@ import { useShop } from '../../context/ShopContext'
 const navItems = [
   { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'homepage', label: 'Homepage', icon: GalleryHorizontal },
+  // { id: 'hero-2', label: 'Hero 2', icon: Sparkles },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'inventory', label: 'Inventory', icon: Boxes },
   { id: 'categories', label: 'Categories', icon: FolderTree },
@@ -38,9 +39,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, isOpen, onClose,
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 z-50 flex flex-col text-white transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed top-0 left-0 h-screen w-64 z-50 flex flex-col text-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
         style={{ background: 'linear-gradient(180deg, #581c87 0%, #7e22ce 55%, #9333ea 100%)' }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
@@ -57,11 +57,10 @@ export default function AdminSidebar({ activeTab, setActiveTab, isOpen, onClose,
             <button
               key={id}
               onClick={() => { setActiveTab(id); onClose?.() }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === id
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === id
                   ? 'bg-white text-purple-700 shadow-lg'
                   : 'text-white/80 hover:bg-white/10 hover:text-white'
-              }`}
+                }`}
             >
               <Icon size={18} />
               {label}

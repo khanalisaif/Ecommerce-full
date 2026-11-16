@@ -21,11 +21,11 @@ export default function HeroProductBanner({ product, onAddToCart, onBuyNow, isWi
       : null)
 
   return (
-    <div className="mt-14 px-4 md:px-8">
+    <div className="mt-10 sm:mt-14 px-3 sm:px-4 lg:px-4">
       {/* ── Outer Hero Card Container (min-h-[360px] md:min-h-[440px] - exactly 2x Feature Banner height) ── */}
       <div
         onClick={handleCardClick}
-        className="relative rounded-3xl overflow-hidden cursor-pointer group min-h-[360px] md:min-h-[440px] bg-gradient-to-br from-purple-50/70 via-white to-pink-50/50 border border-purple-100/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col md:flex-row items-stretch"
+        className="relative rounded-3xl sm:rounded-[36px] overflow-hidden cursor-pointer group min-h-[360px] md:min-h-[440px] bg-gradient-to-br from-purple-50/70 via-white to-pink-50/50 border border-purple-100/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col md:flex-row items-stretch"
       >
         {/* Subtle decorative background glow circles */}
         <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-purple-200/30 blur-3xl pointer-events-none" />
