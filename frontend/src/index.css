@@ -79,6 +79,12 @@ html {
   @apply shadow-lg hover:shadow-xl transition-shadow;
 }
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Line clamp utility for truncating text */
 .line-clamp-2 {
   display: -webkit-box;

@@ -22,8 +22,8 @@ export default function Hero2GallerySlider({ settings }) {
 
   if (!settings || settings.galleryEnabled === false) return null
 
-  const title = settings.galleryTitle || 'EVERYDAY WELLNESS.'
-  const titleHighlight = settings.galleryTitleHighlight || 'SIMPLY PURNA.'
+  const title = settings.galleryTitle || ''
+  const titleHighlight = settings.galleryTitleHighlight || ''
   const cards = settings.galleryCards || []
 
   if (cards.length === 0) return null

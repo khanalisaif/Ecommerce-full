@@ -149,10 +149,39 @@ export default function Hero2Tab() {
     handleFieldChange('tickerItems', updated)
   }
 
+  const handleTickerImageUpload = async (idx, file) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file (PNG, JPG, WEBP)')
+      return
+    }
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(`Image must be under ${MAX_MB}MB`)
+      return
+    }
+    setError('')
+    try {
+      const compressed = await compressImageFile(file)
+      const updated = [...(form.tickerItems || [])]
+      updated[idx] = { ...updated[idx], image: compressed }
+      handleFieldChange('tickerItems', updated)
+      showToast('Certificate badge image uploaded successfully')
+    } catch {
+      setError('Failed to upload certificate image')
+    }
+  }
+
+  const handleTickerImageClear = (idx) => {
+    const updated = [...(form.tickerItems || [])]
+    updated[idx] = { ...updated[idx], image: '' }
+    handleFieldChange('tickerItems', updated)
+    showToast('Badge image removed')
+  }
+
   const handleAddTickerItem = () => {
     const updated = [
       ...(form.tickerItems || []),
-      { id: `t-${Date.now()}`, text: 'New Certificate', icon: 'Leaf' },
+      { id: `t-${Date.now()}`, text: 'New Certificate', icon: 'Leaf', image: '' },
     ]
     handleFieldChange('tickerItems', updated)
   }
@@ -207,7 +236,7 @@ export default function Hero2Tab() {
       {
         id: `c-${Date.now()}`,
         name: 'New Product',
-        image: '/circle-pretty-woman.png',
+        image: '',
         link: '/category/Best-Sellers',
         bg: '#fce4ec',
       },
@@ -348,7 +377,7 @@ export default function Hero2Tab() {
       description: 'Orange flavoured gummies with Vitamin C, D3 & Zinc for immunity and clear, glowing skin. Daily essential vitamins for your overall vitality and wellness.',
       buttonText: 'EXPLORE >',
       link: '/category/Best-Sellers',
-      image: '/spotlight-bottle-bright-as-day.png',
+      image: '',
       bgColor: '#f99d26',
       bgGradientEnd: '#ea580c',
     }
@@ -501,7 +530,17 @@ export default function Hero2Tab() {
           <div className="flex items-center gap-5 overflow-x-auto scrollbar-none py-0.5">
             {(form.tickerItems || []).map((t, idx) => (
               <span key={idx} className="whitespace-nowrap flex items-center gap-1.5 text-[11px]">
-                ✓ {t.text} <span className="opacity-40">•</span>
+                {t.image ? (
+                  <img
+                    src={t.image}
+                    alt=""
+                    className="h-4 w-auto max-w-[28px] object-contain inline-block drop-shadow-xs"
+                  />
+                ) : (
+                  <span>✓</span>
+                )}
+                {t.text && <span>{t.text}</span>}
+                <span className="opacity-40 ml-1">•</span>
               </span>
             ))}
           </div>
@@ -685,11 +724,11 @@ export default function Hero2Tab() {
             </div>
 
             {/* Visibility Toggles */}
-            <div className="pt-2 border-t border-gray-100 space-y-3">
+            <div className="pt-2 border-t border-gray-100 space-y-2.5">
               <label className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-gray-50 transition-colors">
                 <div>
                   <span className="font-bold text-xs text-gray-800 block">Enable Hero 2 Banner</span>
-                  <span className="text-[11px] text-gray-400">Shows the new hero on the homepage</span>
+                  <span className="text-[11px] text-gray-400">Shows the new hero banner on the homepage</span>
                 </div>
                 <input
                   type="checkbox"
@@ -702,7 +741,7 @@ export default function Hero2Tab() {
               <label className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-gray-50 transition-colors">
                 <div>
                   <span className="font-bold text-xs text-gray-800 block">Show Legacy Hero Carousel</span>
-                  <span className="text-[11px] text-gray-400">Hidden by default as requested; check to unhide</span>
+                  <span className="text-[11px] text-gray-400">Rotating carousel at the top of the homepage</span>
                 </div>
                 <input
                   type="checkbox"
@@ -727,6 +766,32 @@ export default function Hero2Tab() {
 
               <label className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-gray-50 transition-colors">
                 <div>
+                  <span className="font-bold text-xs text-gray-800 block">Show Category Cards</span>
+                  <span className="text-[11px] text-gray-400">The 5-column image grid below the hero banner</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={form.showCollections !== false}
+                  onChange={(e) => handleFieldChange('showCollections', e.target.checked)}
+                  className="w-4 h-4 accent-pink-600 rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                <div>
+                  <span className="font-bold text-xs text-gray-800 block">Show Sub Category Cards</span>
+                  <span className="text-[11px] text-gray-400">The large feature cards further down the homepage</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={form.showSubCategoryCards !== false}
+                  onChange={(e) => handleFieldChange('showSubCategoryCards', e.target.checked)}
+                  className="w-4 h-4 accent-pink-600 rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                <div>
                   <span className="font-bold text-xs text-gray-800 block">Show Best Sellers Section</span>
                   <span className="text-[11px] text-gray-400">Ashwagandha Gummies, Herbal Teas, etc.</span>
                 </div>
@@ -734,6 +799,32 @@ export default function Hero2Tab() {
                   type="checkbox"
                   checked={Boolean(form.showBestSellers)}
                   onChange={(e) => handleFieldChange('showBestSellers', e.target.checked)}
+                  className="w-4 h-4 accent-pink-600 rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                <div>
+                  <span className="font-bold text-xs text-gray-800 block">Show Hero Product Banner</span>
+                  <span className="text-[11px] text-gray-400">Spotlight product banner shown directly above Feature Banner or below Best Sellers</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={form.showHeroProductBanner !== false}
+                  onChange={(e) => handleFieldChange('showHeroProductBanner', e.target.checked)}
+                  className="w-4 h-4 accent-pink-600 rounded cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                <div>
+                  <span className="font-bold text-xs text-gray-800 block">Show Feature Banner</span>
+                  <span className="text-[11px] text-gray-400">Full-width dark promo strip with two badges</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={form.showFeatureBanner !== false}
+                  onChange={(e) => handleFieldChange('showFeatureBanner', e.target.checked)}
                   className="w-4 h-4 accent-pink-600 rounded cursor-pointer"
                 />
               </label>
@@ -750,7 +841,7 @@ export default function Hero2Tab() {
               <Sliders size={16} className="text-pink-600 shrink-0" /> Continuous Certification Ticker (Right to Left)
             </h3>
             <p className="text-[11px] text-gray-400 mt-0.5">
-              These items continuously scroll right-to-left under the banner (Keto Friendly, GMP Certified, Halal Certified, ISO Certified, FSSAI Approved, Gelatin-Free)
+              These items continuously scroll right-to-left under the banner. Upload transparent PNG or JPG badges (under 2MB, clear background recommended).
             </p>
           </div>
           <button
@@ -762,39 +853,90 @@ export default function Hero2Tab() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
           {(form.tickerItems || []).map((item, idx) => (
             <div
               key={item.id || idx}
-              className="p-2.5 sm:p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-2 min-w-0"
+              className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200/80 flex flex-col sm:flex-row items-start gap-3.5 relative group hover:border-pink-300 transition-colors min-w-0"
             >
-              <select
-                value={item.icon || 'Leaf'}
-                onChange={(e) => handleTickerIconChange(idx, e.target.value)}
-                className="bg-white border border-gray-300 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none max-w-[125px] sm:max-w-[135px] truncate shrink-0"
-              >
-                {ICON_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              {/* Badge Image Preview & Upload Trigger */}
+              <div className="flex flex-row sm:flex-col items-center justify-between sm:justify-start w-full sm:w-auto gap-2 shrink-0">
+                <div
+                  className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 bg-white flex items-center justify-center p-2 shadow-xs relative overflow-hidden shrink-0"
+                  style={{
+                    backgroundImage: !item.image
+                      ? 'none'
+                      : 'linear-gradient(45deg, #f3f4f6 25%, transparent 25%), linear-gradient(-45deg, #f3f4f6 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f3f4f6 75%), linear-gradient(-45deg, transparent 75%, #f3f4f6 75%)',
+                    backgroundSize: '10px 10px',
+                    backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px',
+                  }}
+                >
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.text || 'Certificate'}
+                      className="w-full h-full object-contain drop-shadow-xs"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-gray-400">
+                      <UploadCloud size={20} className="text-gray-400" />
+                      <span className="text-[9px] font-bold text-gray-400 mt-0.5">Badge</span>
+                    </div>
+                  )}
+                </div>
 
-              <input
-                type="text"
-                value={item.text || ''}
-                onChange={(e) => handleTickerTextChange(idx, e.target.value)}
-                className="flex-1 min-w-0 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:border-pink-500"
-              />
+                <label
+                  htmlFor={`ticker-file-${idx}`}
+                  className="text-[11px] font-bold text-pink-600 hover:text-pink-700 cursor-pointer underline decoration-dotted px-2 py-0.5 rounded bg-pink-50 sm:bg-transparent"
+                >
+                  {item.image ? 'Change' : 'Upload'}
+                </label>
+                <input
+                  id={`ticker-file-${idx}`}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleTickerImageUpload(idx, e.target.files?.[0])}
+                />
+              </div>
 
-              <button
-                type="button"
-                onClick={() => handleRemoveTickerItem(idx)}
-                className="text-gray-400 hover:text-red-500 p-1 transition-colors cursor-pointer shrink-0"
-                title="Remove"
-              >
-                <Trash2 size={15} />
-              </button>
+              {/* Text Field & Info */}
+              <div className="flex-1 space-y-2 min-w-0 w-full">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                    Certificate Title
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTickerItem(idx)}
+                    className="text-gray-400 hover:text-red-500 p-1 transition-colors cursor-pointer shrink-0"
+                    title="Remove Certification"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  value={item.text || ''}
+                  onChange={(e) => handleTickerTextChange(idx, e.target.value)}
+                  placeholder="e.g. Halal Certified"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-gray-800 focus:outline-none focus:border-pink-500"
+                />
+
+                <div className="flex items-center justify-between text-[10px] text-gray-400 pt-0.5">
+                  <span className="truncate">PNG or JPG under 2MB. Clear background.</span>
+                  {item.image && (
+                    <button
+                      type="button"
+                      onClick={() => handleTickerImageClear(idx)}
+                      className="text-red-500 hover:text-red-700 font-semibold cursor-pointer shrink-0 ml-1 underline decoration-dotted"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>

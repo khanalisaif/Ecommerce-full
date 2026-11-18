@@ -295,46 +295,13 @@ export const CATEGORY_PRODUCTS = {
 }
 
 // Banner/Hero section data
-export const banners = [
-  {
-    id: 1,
-    title: 'Elevate Your',
-    subtitle: 'We here',
-    description: 'Carefully curated products, confidence and well-being.',
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
-    buttonText: 'Shop Best Sellers'
-  },
-  {
-    id: 2,
-    title: 'Premium Quality',
-    subtitle: 'Experience Luxury',
-    description: 'Discover our exclusive collection curated for you.',
-    image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=800&q=80',
-    buttonText: 'Explore Collections'
-  }
-]
+export const banners = []
 
 // Collections - 5-column grid (each has a slug for direct routing)
-export const collections = [
-  { id: 1, name: 'Laptop', subtitle: 'Explore Premium Essentials', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80', category: 'Tech', slug: 'Laptop' },
-  { id: 2, name: 'Tablet', subtitle: 'Designed for Pleasure', image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&q=80', category: 'Tech', slug: 'Tablet' },
-  { id: 3, name: 'For Couples', subtitle: 'Stronger Together, Better Intimacy', image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&q=80', category: 'Couples', slug: 'For-Couples' },
-  { id: 4, name: 'Gadget', subtitle: 'The Best Mobile Accessories 2026', image: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&q=80', category: 'Gadgets', slug: 'Gadget' },
-  { id: 5, name: 'Accessories', subtitle: 'Complete Your Collection', image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&q=80', category: 'Accessories', slug: 'Accessories' }
-]
+export const collections = []
 
 // Search Dropdown - Popular searches
-export const popularSearches = [
-  'Vibrators',
-  'Sports Massager',
-  'Lace Lubricant',
-  'Push Up Kit',
-  'Seamless Gift Set'
-]
+export const popularSearches = []
 
-// Category Cards - Large 3-column cards (Phone / Tab / Laptop) - each has a slug
-export const categoryCards = [
-  { id: 1, name: 'Phone', slug: 'Phone', subtitle: 'Designed for Comfort. Made to Empower.', image: 'https://images.unsplash.com/photo-1511707271537-b85faf00021e?w=600&q=80', styles: '100+ Styles', sizes: 'Sizes 30A - 44H', cta: 'Shop Phone' },
-  { id: 2, name: 'Tab', slug: 'Tab', subtitle: 'Soft. Stylish. Made for Every You.', image: 'https://images.unsplash.com/photo-1519824712712-190481ab1da6?w=600&q=80', styles: '200+ Styles', sizes: 'Sizes XS - 3XL', cta: 'Shop Tab' },
-  { id: 3, name: 'Laptop', slug: 'Laptop', subtitle: 'Feel Confident. Feel Irresistible.', image: 'https://images.unsplash.com/photo-1542272604-787c62002182?w=600&q=80', styles: '150+ Styles', sizes: 'Sizes XS - 3XL', cta: 'Shop Laptop' }
-]
+// Category Cards - Large 3-column cards
+export const categoryCards = []

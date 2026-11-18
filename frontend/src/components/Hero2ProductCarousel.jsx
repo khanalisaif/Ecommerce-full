@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -78,7 +78,7 @@ export default function Hero2ProductCarousel({ settings }) {
     }, 850)
   }
 
-  const handleNext = useCallback(() => {
+  const handleNext = () => {
     if (isSlidingRef.current || items.length <= 1) return
     isSlidingRef.current = true
     setIsTransitioning(true)
@@ -86,7 +86,7 @@ export default function Hero2ProductCarousel({ settings }) {
     setTimeout(() => {
       isSlidingRef.current = false
     }, 850)
-  }, [items.length])
+  }
 
   // When transition ends, silently normalize virtualIndex within the middle set to loop infinitely
   const handleTransitionEnd = () => {

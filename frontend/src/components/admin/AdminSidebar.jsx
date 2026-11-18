@@ -6,7 +6,7 @@ import { useShop } from '../../context/ShopContext'
 const navItems = [
   { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'homepage', label: 'Homepage', icon: GalleryHorizontal },
-  // { id: 'hero-2', label: 'Hero 2', icon: Sparkles },
+  { id: 'hero-2', label: 'Hero 2', icon: Sparkles },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'inventory', label: 'Inventory', icon: Boxes },
   { id: 'categories', label: 'Categories', icon: FolderTree },

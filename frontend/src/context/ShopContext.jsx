@@ -142,6 +142,11 @@ export function ShopProvider({ children }) {
   const [toast, setToast] = useState('')
   const [isChatOpen, setIsChatOpen] = useState(false)
 
+  // ---------------- Loading states for zero-dummy shimmer experience ----------------
+  const [isContentLoading, setIsContentLoading] = useState(true)
+  const [isProductsLoading, setIsProductsLoading] = useState(true)
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true)
+
   // ---------------- Real backend collections: products, categories, orders ----------------
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -229,38 +234,46 @@ export function ShopProvider({ children }) {
         if (c.footer_category_links?.length) setFooterCategoryLinksState(c.footer_category_links)
         if (c.pages?.length) setPagesState(c.pages)
         if (c.faqs?.length) setFaqsState(c.faqs)
-        // Only fall back to dummy/initial data when the backend has NEVER saved the key (null).
-        // If backend returns [], that means admin intentionally deleted all items — respect that.
-        setBannersState(Array.isArray(c.banners) ? c.banners : buildInitialBanners())
-        setCollectionsState(Array.isArray(c.collections) ? c.collections : buildInitialCollections())
-        setCategoryCardsState(Array.isArray(c.category_cards) ? c.category_cards : buildInitialCategoryCards())
-        setFeatureBannersState(Array.isArray(c.feature_banners) ? c.feature_banners : buildInitialFeatureBanners())
+        // Zero dummy fallback: only use real CMS items from the database
+        setBannersState(Array.isArray(c.banners) ? c.banners : [])
+        setCollectionsState(Array.isArray(c.collections) ? c.collections : [])
+        setCategoryCardsState(Array.isArray(c.category_cards) ? c.category_cards : [])
+        setFeatureBannersState(Array.isArray(c.feature_banners) ? c.feature_banners : [])
         if (c.hero_product_banner !== undefined) {
           setHeroProductBannerState(c.hero_product_banner ? normalizeHeroProductBanner(c.hero_product_banner) : null)
+        } else {
+          setHeroProductBannerState(null)
         }
         if (c.hero2_settings !== undefined) {
           setHero2SettingsState(normalizeHero2Settings(c.hero2_settings))
+        } else {
+          setHero2SettingsState(DEFAULT_HERO2_SETTINGS)
         }
         if (c.trust_badges?.length) setTrustBadgesState(c.trust_badges)
       })
       .catch((err) => console.error('Failed to load site content:', err.message))
+      .finally(() => setIsContentLoading(false))
   }, [])
 
   // ---------------- Initial + admin-aware load: products & categories ----------------
   const refreshProducts = () => {
+    setIsProductsLoading(true)
     const request = isAdminAuthenticated
       ? adminProductService.getAllProducts({ limit: 1000 })
       : productService.getProducts({ limit: 1000 })
-    request
+    return request
       .then((res) => setProducts((res.data.products || []).map(mapBackendProduct)))
       .catch((err) => console.error('Failed to load products:', err.message))
+      .finally(() => setIsProductsLoading(false))
   }
 
   const refreshCategories = () => {
+    setIsCategoriesLoading(true)
     const request = isAdminAuthenticated ? adminCategoryService.getAllCategories() : categoryService.getCategories()
-    request
+    return request
       .then((res) => setCategories(res.data.categories || []))
       .catch((err) => console.error('Failed to load categories:', err.message))
+      .finally(() => setIsCategoriesLoading(false))
   }
 
   const notifyCategoryChange = () => {
@@ -994,6 +1007,8 @@ export function ShopProvider({ children }) {
   const wishlistCount = wishlistItems.length
 
   const value = {
+    isContentLoading, isProductsLoading, isCategoriesLoading, isLoading: isContentLoading || isProductsLoading,
+
     cartItems, addToCart, removeFromCart, updateQuantity, setQuantity, clearCart, isInCart,
     cartCount, cartSubtotal, cartOriginalTotal, cartDiscount,
 

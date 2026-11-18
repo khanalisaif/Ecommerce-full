@@ -73,86 +73,30 @@ export const DEFAULT_HERO2_SETTINGS = {
   showOldHero: false,
   showCategoryStrip: false,
   showBestSellers: false,
-  tagline: 'PURNA GUMMIES · ONE A DAY',
-  title: 'Your Daily',
-  titleHighlight: 'Dose of Goodness',
-  description: 'Tasty, vegan gummies for beauty, immunity, sleep and everyday wellness. Just one a day.',
-  badges: ['100% Vegan', 'Gelatin-Free', 'One a Day'],
+  showCollections: false,
+  showSubCategoryCards: false,
+  showHeroProductBanner: false,
+  showFeatureBanner: false,
+  tagline: '',
+  title: '',
+  titleHighlight: '',
+  description: '',
+  badges: [],
   buttonText: 'SHOP NOW',
   buttonLink: '/category/Best-Sellers',
   image: '',
   bgColor: '#fce4ec',
   bgGradientEnd: '#fed7e2',
   tickerBgColor: '#d81b60',
-  tickerItems: [
-    { id: 't1', text: 'Halal Certified', icon: 'Halal' },
-    { id: 't2', text: 'ISO Certified', icon: 'ISO' },
-    { id: 't3', text: 'FSSAI Approved', icon: 'FSSAI' },
-    { id: 't4', text: 'Gelatin-Free', icon: 'Leaf' },
-    { id: 't5', text: 'Keto Friendly', icon: 'Keto' },
-    { id: 't6', text: 'GMP Certified', icon: 'GMP' },
-  ],
+  tickerItems: [],
   circlesEnabled: true,
-  circles: [
-    { id: 'c1', name: 'Pretty Woman', image: '', link: '/category/Best-Sellers', bg: '#fce4ec' },
-    { id: 'c2', name: 'Sweet Dreamzzz', image: '', link: '/category/Best-Sellers', bg: '#ede7f6' },
-    { id: 'c3', name: 'Bright as Day', image: '', link: '/category/Best-Sellers', bg: '#fff3e0' },
-    { id: 'c4', name: 'A Thing of Beauty', image: '', link: '/category/Best-Sellers', bg: '#fffde7' },
-    { id: 'c5', name: 'Excalibur', image: '', link: '/category/Best-Sellers', bg: '#e8eaf6' },
-    { id: 'c6', name: 'Mama Bear', image: '', link: '/category/Best-Sellers', bg: '#fce4ec' },
-    { id: 'c7', name: 'Youthful You', image: '', link: '/category/Best-Sellers', bg: '#fff3e0' },
-    { id: 'c8', name: 'Wonderful Tonight', image: '', link: '/category/Best-Sellers', bg: '#ffebee' },
-  ],
+  circles: [],
   galleryEnabled: true,
-  galleryTitle: 'EVERYDAY WELLNESS.',
-  galleryTitleHighlight: 'SIMPLY PURNA.',
-  galleryCards: [
-    { id: 'g1', title: 'Youthful You', image: '', link: '/category/Best-Sellers' },
-    { id: 'g2', title: 'Excalibur', image: '', link: '/category/Best-Sellers' },
-    { id: 'g3', title: 'Wonderful Tonight', image: '', link: '/category/Best-Sellers' },
-    { id: 'g4', title: 'A Thing of Beauty', image: '', link: '/category/Best-Sellers' },
-    { id: 'g5', title: 'Sweet Dreamzzz', image: '', link: '/category/Best-Sellers' },
-    { id: 'g6', title: 'Mama Bear', image: '', link: '/category/Best-Sellers' },
-  ],
+  galleryTitle: '',
+  galleryTitleHighlight: '',
+  galleryCards: [],
   spotlightCarouselEnabled: true,
-  spotlightCarousel: [
-    {
-      id: 'sc-1',
-      productId: '',
-      tagline: 'Say Hello to Purna',
-      name: 'Bright as Day',
-      description: 'Orange flavoured gummies with Vitamin C, D3 & Zinc for immunity and clear, glowing skin.',
-      buttonText: 'EXPLORE >',
-      link: '/category/Best-Sellers',
-      image: '',
-      bgColor: '#f99d26',
-      bgGradientEnd: '#ea580c',
-    },
-    {
-      id: 'sc-2',
-      productId: '',
-      tagline: 'Say Hello to Purna',
-      name: 'Youthful You',
-      description: 'Superfruits & Collagen Builder with Anti-Aging Beauty & Wellness. Just one delicious gummy a day.',
-      buttonText: 'EXPLORE >',
-      link: '/category/Best-Sellers',
-      image: '',
-      bgColor: '#fb923c',
-      bgGradientEnd: '#f97316',
-    },
-    {
-      id: 'sc-3',
-      productId: '',
-      tagline: 'Say Hello to Purna',
-      name: 'Sweet Dreamzzz',
-      description: 'Melatonin & Valerian Root infused gummies for peaceful nights and refreshing mornings.',
-      buttonText: 'EXPLORE >',
-      link: '/category/Best-Sellers',
-      image: '',
-      bgColor: '#8b5cf6',
-      bgGradientEnd: '#7c3aed',
-    },
-  ],
+  spotlightCarousel: [],
 }
 
 export function normalizeHero2Settings(raw) {
@@ -162,6 +106,10 @@ export function normalizeHero2Settings(raw) {
     showOldHero: Boolean(raw.showOldHero),
     showCategoryStrip: Boolean(raw.showCategoryStrip),
     showBestSellers: Boolean(raw.showBestSellers),
+    showCollections: raw.showCollections !== undefined ? Boolean(raw.showCollections) : true,
+    showSubCategoryCards: raw.showSubCategoryCards !== undefined ? Boolean(raw.showSubCategoryCards) : true,
+    showHeroProductBanner: raw.showHeroProductBanner !== undefined ? Boolean(raw.showHeroProductBanner) : true,
+    showFeatureBanner: raw.showFeatureBanner !== undefined ? Boolean(raw.showFeatureBanner) : true,
     tagline: raw.tagline !== undefined ? raw.tagline : DEFAULT_HERO2_SETTINGS.tagline,
     title: raw.title !== undefined ? raw.title : DEFAULT_HERO2_SETTINGS.title,
     titleHighlight: raw.titleHighlight !== undefined ? raw.titleHighlight : DEFAULT_HERO2_SETTINGS.titleHighlight,
@@ -173,7 +121,14 @@ export function normalizeHero2Settings(raw) {
     bgColor: raw.bgColor || DEFAULT_HERO2_SETTINGS.bgColor,
     bgGradientEnd: raw.bgGradientEnd || DEFAULT_HERO2_SETTINGS.bgGradientEnd,
     tickerBgColor: raw.tickerBgColor || DEFAULT_HERO2_SETTINGS.tickerBgColor,
-    tickerItems: Array.isArray(raw.tickerItems) && raw.tickerItems.length ? raw.tickerItems : DEFAULT_HERO2_SETTINGS.tickerItems,
+    tickerItems: Array.isArray(raw.tickerItems) && raw.tickerItems.length
+      ? raw.tickerItems.map((t, idx) => ({
+          id: t.id || `t-${idx}`,
+          text: t.text || '',
+          icon: t.icon || 'Leaf',
+          image: t.image || '',
+        }))
+      : DEFAULT_HERO2_SETTINGS.tickerItems,
     circlesEnabled: raw.circlesEnabled !== undefined ? Boolean(raw.circlesEnabled) : DEFAULT_HERO2_SETTINGS.circlesEnabled,
     circles: Array.isArray(raw.circles) && raw.circles.length ? raw.circles : DEFAULT_HERO2_SETTINGS.circles,
     galleryEnabled: raw.galleryEnabled !== undefined ? Boolean(raw.galleryEnabled) : DEFAULT_HERO2_SETTINGS.galleryEnabled,
@@ -186,30 +141,19 @@ export function normalizeHero2Settings(raw) {
 }
 
 export function buildInitialBanners() {
-  return defaultBanners.map(normalizeBanner)
+  return []
 }
 
 export function buildInitialCollections() {
-  return defaultCollections.map(normalizeCollection)
+  return []
 }
 
 export function buildInitialCategoryCards() {
-  return defaultCategoryCards.map(normalizeCategoryCard)
+  return []
 }
 
 export function buildInitialFeatureBanners() {
-  return [
-    normalizeFeatureBanner({
-      id: 'fb-1',
-      title: 'Roleplay Costumes',
-      subtitle: 'Unleash Your Fantasy.\nOwn the Moment.',
-      buttonText: 'Shop Costumes',
-      badge1: '50+ Themes',
-      badge2: 'Premium Quality',
-      image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200&q=80',
-      slug: 'for-her',
-    }),
-  ]
+  return []
 }
 
 // Trust badges shown in the features strip above the footer.

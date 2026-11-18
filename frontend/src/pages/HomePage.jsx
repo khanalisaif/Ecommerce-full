@@ -7,6 +7,7 @@ import NewHero from '../components/NewHero'
 import NewHeroCircles from '../components/NewHeroCircles'
 import Hero2GallerySlider from '../components/Hero2GallerySlider'
 import Hero2ProductCarousel from '../components/Hero2ProductCarousel'
+import HomePageShimmer from '../components/shimmer/HomePageShimmer'
 import {
   Heart, Home, User, PersonStanding, List, Flower2, Droplet, Camera,
   Music, Gift, Sparkles, Flame, ShoppingBag, Shield, ShieldCheck, Truck, Headphones,
@@ -30,7 +31,7 @@ export default function HomePage() {
   const {
     addToCart, toggleWishlist, isWishlisted, cartCount, products, categories,
     banners, collections, categoryCards, featureBanners, heroProductBanner,
-    hero2Settings,
+    hero2Settings, isContentLoading,
   } = useShop()
   const bestSellers = products.filter((p) => p.isBestSeller)
   const [currentBanner, setCurrentBanner] = useState(0)
@@ -97,6 +98,24 @@ export default function HomePage() {
     navigate('/checkout')
   }
 
+  const isBestSellersVisible = Boolean(hero2Settings?.showBestSellers) && bestSellers.length > 0
+  const isHeroProductVisible = (hero2Settings?.showHeroProductBanner !== false) && Boolean(activeHeroProduct)
+  const isCollectionsVisible = (hero2Settings?.showCollections !== false) && validCollections.length > 0
+  const isCategoryCardsVisible = (hero2Settings?.showSubCategoryCards !== false) && validCategoryCards.length > 0
+  const isFeatureBannerVisible = (hero2Settings?.showFeatureBanner !== false) && validFeatureBanners.length > 0
+
+  if (isContentLoading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Navbar cartCount={cartCount} />
+        <main className="flex-1 w-full max-w-[1720px] mx-auto px-2 sm:px-3 lg:px-4">
+          <HomePageShimmer />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar cartCount={cartCount} />
@@ -147,8 +166,8 @@ export default function HomePage() {
         {/* ── Circular Products Showcase Strip (Directly below certificates ticker) ── */}
         <NewHeroCircles settings={hero2Settings} />
 
-        {/* ── Hero Product Banner (Placed directly below circles showcase) ── */}
-        {activeHeroProduct && (
+        {/* ── Hero Product Banner (Shown here when Best Sellers is NOT visible) ── */}
+        {isHeroProductVisible && !isBestSellersVisible && (
           <HeroProductBanner
             product={activeHeroProduct}
             onAddToCart={handleAddToCart}
@@ -261,8 +280,8 @@ export default function HomePage() {
         )}
 
         {/* ── Collections 5-Column Grid ───────────────────── */}
-        {/* Auto-hides when admin has not added any collections */}
-        {validCollections.length > 0 && (
+        {/* Auto-hides when admin has not added any collections or disabled by admin */}
+        {isCollectionsVisible && (
           <div className="mt-8 px-3 sm:px-4 lg:px-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {validCollections.map((col) => (
@@ -298,8 +317,8 @@ export default function HomePage() {
         )}
 
         {/* ── Category Cards (Phone / Tab / Laptop) ──────── */}
-        {/* Auto-hides when admin has not added any category cards */}
-        {validCategoryCards.length > 0 && (
+        {/* Auto-hides when admin has not added any category cards or disabled by admin */}
+        {isCategoryCardsVisible && (
           <div className="mt-8 px-3 sm:px-4 lg:px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {validCategoryCards.map((card) => (
@@ -348,8 +367,8 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── Best Sellers (Ashwagandha Gummies, Herbal Teas, etc. - Hidden per user request) ────────────────────────────────── */}
-        {Boolean(hero2Settings?.showBestSellers) && bestSellers.length > 0 && (
+        {/* ── Best Sellers (Ashwagandha Gummies, Herbal Teas, etc.) ────────────────────────────────── */}
+        {isBestSellersVisible && (
           <div className="mt-12 px-3 sm:px-4 lg:px-4">
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-xl md:text-2xl font-black text-gray-900">Best Sellers</h2>
@@ -424,9 +443,22 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* ── Hero Product Banner (Placed directly BELOW Best Sellers when Best Sellers is shown) ── */}
+        {isHeroProductVisible && isBestSellersVisible && (
+          <div className="mt-8">
+            <HeroProductBanner
+              product={activeHeroProduct}
+              onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
+              isWishlisted={isWishlisted}
+              onToggleWishlist={toggleWishlist}
+            />
+          </div>
+        )}
+
         {/* ── Feature Banner (Category Promo Strip right above Trust Badges / Footer) ───────────── */}
-        {/* Auto-hides when admin has not added any feature banners with images */}
-        {validFeatureBanners.map((fb) => (
+        {/* Auto-hides when admin has not added any feature banners with images or disabled by admin */}
+        {isFeatureBannerVisible && validFeatureBanners.map((fb) => (
           <div key={fb.id} className="mt-16 px-3 sm:px-4 lg:px-4 pb-12">
             <div
               onClick={() => {

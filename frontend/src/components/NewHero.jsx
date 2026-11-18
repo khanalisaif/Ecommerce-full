@@ -2,7 +2,16 @@ import { useNavigate } from 'react-router-dom'
 import { Sparkles, Leaf, CheckCircle2, ShieldCheck, Award } from 'lucide-react'
 
 // Custom certificate badge icons matching the image (scaled 2x for prominent visibility)
-function CertIcon({ type }) {
+function CertIcon({ type, image }) {
+  if (image) {
+    return (
+      <img
+        src={image}
+        alt={type || 'Certificate Badge'}
+        className="h-7 sm:h-8 w-auto max-w-[48px] object-contain drop-shadow-xs shrink-0"
+      />
+    )
+  }
   switch (type) {
     case 'Halal':
       return (
@@ -49,26 +58,23 @@ export default function NewHero({ settings }) {
   if (!settings || settings.enabled === false) return null
 
   const {
-    tagline = 'PURNA GUMMIES · ONE A DAY',
-    title = 'Your Daily',
-    titleHighlight = 'Dose of Goodness',
-    description = 'Tasty, vegan gummies for beauty, immunity, sleep and everyday wellness. Just one a day.',
-    badges = ['100% Vegan', 'Gelatin-Free', 'One a Day'],
+    tagline = '',
+    title = '',
+    titleHighlight = '',
+    description = '',
+    badges = [],
     buttonText = 'SHOP NOW',
     buttonLink = '/category/Best-Sellers',
     image = '',
     bgColor = '#fce4ec',
     bgGradientEnd = '#fed7e2',
     tickerBgColor = '#d81b60',
-    tickerItems = [
-      { id: 't1', text: 'Halal Certified', icon: 'Halal' },
-      { id: 't2', text: 'ISO Certified', icon: 'ISO' },
-      { id: 't3', text: 'FSSAI Approved', icon: 'FSSAI' },
-      { id: 't4', text: 'Gelatin-Free', icon: 'Leaf' },
-      { id: 't5', text: 'Keto Friendly', icon: 'Keto' },
-      { id: 't6', text: 'GMP Certified', icon: 'GMP' },
-    ],
-  } = settings
+    tickerItems = [],
+  } = settings || {}
+
+  const hasBannerContent = Boolean(title || titleHighlight || description || image)
+  const hasTickerContent = Array.isArray(tickerItems) && tickerItems.length > 0
+  if (!hasBannerContent && !hasTickerContent) return null
 
   const handleButtonClick = (e) => {
     e.stopPropagation()
@@ -79,70 +85,72 @@ export default function NewHero({ settings }) {
   return (
     <div className="w-full mx-auto px-3 sm:px-4 lg:px-4 mt-5">
       {/* ── Main Banner Box ──────────────────────────────────── */}
-      <div
-        className="relative rounded-3xl sm:rounded-[36px] overflow-hidden shadow-sm border border-pink-100 flex flex-col md:flex-row items-stretch"
-        style={{
-          background: `linear-gradient(135deg, ${bgColor} 0%, ${bgGradientEnd || bgColor} 100%)`,
-        }}
-      >
-        {/* Subtle background glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-pink-300/20 blur-3xl pointer-events-none" />
+      {hasBannerContent && (
+        <div
+          className="relative rounded-3xl sm:rounded-[36px] overflow-hidden shadow-sm border border-pink-100 flex flex-col md:flex-row items-stretch"
+          style={{
+            background: `linear-gradient(135deg, ${bgColor} 0%, ${bgGradientEnd || bgColor} 100%)`,
+          }}
+        >
+          {/* Subtle background glow */}
+          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-pink-300/20 blur-3xl pointer-events-none" />
 
-        {/* ── Text Content (Desktop Left / Mobile Bottom) ────── */}
-        <div className="relative z-10 flex-1 p-6 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-center order-2 md:order-1 text-center md:text-left">
-          {tagline && (
-            <p className="text-[10px] sm:text-xs font-black text-pink-600 tracking-[0.22em] uppercase mb-2 sm:mb-3">
-              {tagline}
-            </p>
-          )}
-
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.15] mb-3 sm:mb-4 tracking-tight">
-            {title}{' '}
-            {titleHighlight && (
-              <span className="text-pink-600 block sm:inline">
-                {titleHighlight}
-              </span>
+          {/* ── Text Content (Desktop Left / Mobile Bottom) ────── */}
+          <div className="relative z-10 flex-1 p-6 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-center order-2 md:order-1 text-center md:text-left">
+            {tagline && (
+              <p className="text-[10px] sm:text-xs font-black text-pink-600 tracking-[0.22em] uppercase mb-2 sm:mb-3">
+                {tagline}
+              </p>
             )}
-          </h2>
 
-          {description && (
-            <p className="text-gray-700 text-xs sm:text-sm md:text-base leading-relaxed mb-5 sm:mb-6 max-w-xl mx-auto md:mx-0 font-medium">
-              {description}
-            </p>
-          )}
-
-          {badges && badges.length > 0 && (
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-6 mb-6 sm:mb-8 text-xs sm:text-sm font-bold text-gray-800">
-              {badges.map((b, i) => (
-                <span key={i} className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-pink-500 inline-block" />
-                  {b}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.15] mb-3 sm:mb-4 tracking-tight">
+              {title}{' '}
+              {titleHighlight && (
+                <span className="text-pink-600 block sm:inline">
+                  {titleHighlight}
                 </span>
-              ))}
-            </div>
-          )}
+              )}
+            </h2>
 
-          <div>
-            <button
-              onClick={handleButtonClick}
-              className="inline-flex items-center justify-center bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs sm:text-sm px-8 py-3.5 sm:px-9 sm:py-4 rounded-full shadow-lg shadow-pink-500/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all tracking-wider uppercase cursor-pointer"
-            >
-              {buttonText || 'SHOP NOW'}
-            </button>
+            {description && (
+              <p className="text-gray-700 text-xs sm:text-sm md:text-base leading-relaxed mb-5 sm:mb-6 max-w-xl mx-auto md:mx-0 font-medium">
+                {description}
+              </p>
+            )}
+
+            {badges && badges.length > 0 && (
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-6 mb-6 sm:mb-8 text-xs sm:text-sm font-bold text-gray-800">
+                {badges.map((b, i) => (
+                  <span key={i} className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500 inline-block" />
+                    {b}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div>
+              <button
+                onClick={handleButtonClick}
+                className="inline-flex items-center justify-center bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs sm:text-sm px-8 py-3.5 sm:px-9 sm:py-4 rounded-full shadow-lg shadow-pink-500/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all tracking-wider uppercase cursor-pointer"
+              >
+                {buttonText || 'SHOP NOW'}
+              </button>
+            </div>
+          </div>
+
+          {/* ── Product Mockup Image (Desktop Right / Mobile Top: takes ~half view) ── */}
+          <div className="relative flex-1 order-1 md:order-2 flex items-center justify-center p-4 sm:p-6 md:p-8 min-h-[260px] sm:min-h-[320px] md:min-h-[380px] lg:min-h-[440px]">
+            {image && (
+              <img
+                src={image}
+                alt={title}
+                className="w-full max-h-[280px] sm:max-h-[340px] md:max-h-[420px] object-contain drop-shadow-xl hover:scale-102 transition-transform duration-500"
+              />
+            )}
           </div>
         </div>
-
-        {/* ── Product Mockup Image (Desktop Right / Mobile Top: takes ~half view) ── */}
-        <div className="relative flex-1 order-1 md:order-2 flex items-center justify-center p-4 sm:p-6 md:p-8 min-h-[260px] sm:min-h-[320px] md:min-h-[380px] lg:min-h-[440px]">
-          {image && (
-            <img
-              src={image}
-              alt={title}
-              className="w-full max-h-[280px] sm:max-h-[340px] md:max-h-[420px] object-contain drop-shadow-xl hover:scale-102 transition-transform duration-500"
-            />
-          )}
-        </div>
-      </div>
+      )}
 
       {/* ── Scrolling Certifications Ticker Strip (Right to Left Marquee) ── */}
       {tickerItems && tickerItems.length > 0 && (
@@ -159,10 +167,12 @@ export default function NewHero({ settings }) {
             <div className="marquee-track flex items-center gap-10 sm:gap-14 shrink-0 animate-marquee">
               {tickerItems.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-3 sm:gap-4 text-white whitespace-nowrap">
-                  <CertIcon type={item.icon || item.text} />
-                  <span className="font-extrabold text-sm sm:text-base md:text-lg tracking-wide">
-                    {item.text}
-                  </span>
+                  <CertIcon type={item.icon || item.text} image={item.image} />
+                  {item.text && (
+                    <span className="font-extrabold text-sm sm:text-base md:text-lg tracking-wide">
+                      {item.text}
+                    </span>
+                  )}
                   <span className="text-white/40 text-base sm:text-lg ml-6 sm:ml-10">•</span>
                 </div>
               ))}
@@ -172,10 +182,12 @@ export default function NewHero({ settings }) {
             <div className="marquee-track flex items-center gap-10 sm:gap-14 shrink-0 animate-marquee" aria-hidden="true">
               {tickerItems.map((item, idx) => (
                 <div key={`dup-${idx}`} className="flex items-center gap-3 sm:gap-4 text-white whitespace-nowrap">
-                  <CertIcon type={item.icon || item.text} />
-                  <span className="font-extrabold text-sm sm:text-base md:text-lg tracking-wide">
-                    {item.text}
-                  </span>
+                  <CertIcon type={item.icon || item.text} image={item.image} />
+                  {item.text && (
+                    <span className="font-extrabold text-sm sm:text-base md:text-lg tracking-wide">
+                      {item.text}
+                    </span>
+                  )}
                   <span className="text-white/40 text-base sm:text-lg ml-6 sm:ml-10">•</span>
                 </div>
               ))}
@@ -185,10 +197,12 @@ export default function NewHero({ settings }) {
             <div className="marquee-track flex items-center gap-10 sm:gap-14 shrink-0 animate-marquee" aria-hidden="true">
               {tickerItems.map((item, idx) => (
                 <div key={`trip-${idx}`} className="flex items-center gap-3 sm:gap-4 text-white whitespace-nowrap">
-                  <CertIcon type={item.icon || item.text} />
-                  <span className="font-extrabold text-sm sm:text-base md:text-lg tracking-wide">
-                    {item.text}
-                  </span>
+                  <CertIcon type={item.icon || item.text} image={item.image} />
+                  {item.text && (
+                    <span className="font-extrabold text-sm sm:text-base md:text-lg tracking-wide">
+                      {item.text}
+                    </span>
+                  )}
                   <span className="text-white/40 text-base sm:text-lg ml-6 sm:ml-10">•</span>
                 </div>
               ))}

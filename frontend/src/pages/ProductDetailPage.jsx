@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import ProductDetailShimmer from '../components/shimmer/ProductDetailShimmer'
 import { Heart, ShoppingCart, Zap, Check, Maximize2, ChevronRight, ShieldCheck, Box, RotateCcw, Lock, X, Star, MapPin, Truck, ArrowRight, Loader } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
@@ -21,10 +22,7 @@ const _reportedViews = new Set()
 export default function ProductDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { addToCart, toggleWishlist, isWishlisted, showToast, products } = useShop()
-
-  const [selectedColorIndex, setSelectedColorIndex] = useState(0)
-  const [activeThumb, setActiveThumb] = useState(0)
+  const { products, isProductsLoading } = useShop()
 
   const foundProduct = products.find(p => String(p.id) === String(id) || String(p._id) === String(id))
   const [fetchedProduct, setFetchedProduct] = useState(null)
@@ -37,14 +35,62 @@ export default function ProductDetailPage() {
     }
   }, [id, foundProduct])
 
+  const product = foundProduct || fetchedProduct
+
+  // If products are still loading, show Shimmer UI instead of dummy fallback
+  if (isProductsLoading && !product) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Navbar />
+        <main className="flex-1">
+          <ProductDetailShimmer />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  // If finished loading and product still not found
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[60vh]">
+          <div className="w-16 h-16 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center mb-4">
+            <Box size={32} />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Product Not Found</h2>
+          <p className="text-sm text-gray-500 max-w-md mb-6">
+            The product you are looking for may have been removed or is temporarily unavailable.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-2.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm shadow transition-colors cursor-pointer"
+          >
+            Browse Products
+          </button>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  return <ProductDetailContent product={product} />
+}
+
+function ProductDetailContent({ product }) {
+  const navigate = useNavigate()
+  const { addToCart, toggleWishlist, isWishlisted, showToast, products } = useShop()
+  const { isAuthenticated } = useAuth()
+  const id = product.id
+
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0)
+  const [activeThumb, setActiveThumb] = useState(0)
+
   // Track this product as recently viewed in localStorage AND on the backend.
-  // _reportedViews Set is keyed by product ID so each new product navigated to
-  // gets recorded correctly, even within the same component instance.
   useEffect(() => {
-    const liveProduct = foundProduct || fetchedProduct
-    if (!id || !liveProduct) return
+    if (!id || !product) return
     trackProductView(id)
-    // Only fire once per unique product ID per session
     if (!_reportedViews.has(id)) {
       _reportedViews.add(id)
       let sessionId = sessionStorage.getItem('htl_session_id')
@@ -54,21 +100,7 @@ export default function ProductDetailPage() {
       }
       adminAnalyticsService.recordProductView(id, sessionId).catch(() => { })
     }
-  }, [id, foundProduct, fetchedProduct])
-
-  const product = foundProduct || fetchedProduct || {
-    id: id || '1',
-    name: 'Wireless Noise Canceling Headphones',
-    price: 1999,
-    originalPrice: 2999,
-    rating: 4.8,
-    reviews: 124,
-    description: 'Experience pure sound with industry-leading noise cancellation technology.',
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
-    colors: ['Black', 'Silver'],
-    sizes: ['Standard'],
-    category: 'Gadget'
-  }
+  }, [id, product])
 
   const parsedColors = normalizeColorList(Array.isArray(product.colors) ? product.colors : (product.color ? [product.color] : ['Black', 'Grey', 'White']))
   const currentColorVariant = parsedColors[selectedColorIndex]
@@ -157,7 +189,6 @@ export default function ProductDetailPage() {
 
   // Real reviews for this product, fetched from the backend
   const [reviewsList, setReviewsList] = useState([])
-  const { isAuthenticated } = useAuth()
 
   // ── 15-second login prompt for guest users ────────────────────────────────
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)

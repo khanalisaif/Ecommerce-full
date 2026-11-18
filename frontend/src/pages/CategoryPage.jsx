@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import CategoryStrip from '../components/CategoryStrip'
 import Footer from '../components/Footer'
+import ProductCardShimmer from '../components/shimmer/ProductCardShimmer'
 import { ChevronDown, ChevronRight, Heart, ShieldCheck, X, SlidersHorizontal } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
 
@@ -20,13 +21,15 @@ export default function CategoryPage() {
   const navigate = useNavigate()
   const { category = 'For-You' } = useParams()
   const location = useLocation()
-  const { toggleWishlist, isWishlisted, products, categories, categoryConfigs } = useShop()
+  const { toggleWishlist, isWishlisted, products, categories, categoryConfigs, isProductsLoading } = useShop()
 
   // Get config for this category slug (fallback to empty)
   const catConfig = categoryConfigs[category] || {}
   // Get products for this category slug (live, admin-editable catalog)
-  const categoryProducts = products.filter((p) => p.category === category)
-  const allProducts = categoryProducts.length ? categoryProducts : products.slice(0, 48)
+  const categoryProducts = category === 'default' || category === 'All'
+    ? products
+    : products.filter((p) => p.category === category)
+  const allProducts = categoryProducts
 
   // Dynamic filter data from config
   const SIZES = (catConfig.sizes || []).map(s => typeof s === 'string' ? s : s.label)
@@ -125,7 +128,7 @@ export default function CategoryPage() {
   // Filtered + sorted products
   const processed = useMemo(() => {
     let data = [...allProducts]
-    
+
     // Filter by active sidebar subcategory
     if (activeSubCat && activeSubCat !== categoryTitle) {
       const matchedSub = (matchedCategory?.subcategories || []).find(
@@ -151,7 +154,7 @@ export default function CategoryPage() {
     if (selectedSizes.length) data = data.filter(p => selectedSizes.some(s => p.sizesStr.includes(s)))
     if (selectedBrands.length) data = data.filter(p => selectedBrands.includes(p.brand_name))
     if (selectedColors.length) data = data.filter(p => selectedColors.some(c => p.colors.some(col => (col.name || col) === c)))
-    
+
     if (selectedDiscount) {
       const discountInt = parseInt(selectedDiscount)
       data = data.filter(p => {
@@ -166,7 +169,7 @@ export default function CategoryPage() {
     }
 
     data = data.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1])
-    
+
     if (sortBy === 'Price - Low to High') data.sort((a, b) => a.price - b.price)
     else if (sortBy === 'Price - High to Low') data.sort((a, b) => b.price - a.price)
     else if (sortBy === 'Customer Rating') data.sort((a, b) => b.rating - a.rating)
@@ -228,11 +231,10 @@ export default function CategoryPage() {
                 className="flex items-center gap-3 cursor-pointer group"
               >
                 <div
-                  className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors ${
-                    activeSubCat === categoryTitle
-                      ? 'bg-purple-600 border-purple-600'
-                      : 'border-gray-300 group-hover:border-purple-400'
-                  }`}
+                  className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors ${activeSubCat === categoryTitle
+                    ? 'bg-purple-600 border-purple-600'
+                    : 'border-gray-300 group-hover:border-purple-400'
+                    }`}
                 >
                   {activeSubCat === categoryTitle && <span className="text-white text-[8px] font-black">✓</span>}
                 </div>
@@ -250,11 +252,10 @@ export default function CategoryPage() {
                   className="flex items-center gap-3 cursor-pointer group"
                 >
                   <div
-                    className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors ${
-                      activeSubCat === sub.name
-                        ? 'bg-purple-600 border-purple-600'
-                        : 'border-gray-300 group-hover:border-purple-400'
-                    }`}
+                    className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors ${activeSubCat === sub.name
+                      ? 'bg-purple-600 border-purple-600'
+                      : 'border-gray-300 group-hover:border-purple-400'
+                      }`}
                   >
                     {activeSubCat === sub.name && <span className="text-white text-[8px] font-black">✓</span>}
                   </div>
@@ -292,9 +293,8 @@ export default function CategoryPage() {
                 <div className="flex items-center gap-3">
                   <div
                     onClick={() => { toggleSize(s); setCurrentPage(1) }}
-                    className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${
-                      selectedSizes.includes(s) ? 'bg-purple-600 border-purple-600' : 'border-gray-300 group-hover:border-purple-400'
-                    }`}
+                    className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${selectedSizes.includes(s) ? 'bg-purple-600 border-purple-600' : 'border-gray-300 group-hover:border-purple-400'
+                      }`}
                   >
                     {selectedSizes.includes(s) && <span className="text-white text-[8px] font-black">✓</span>}
                   </div>
@@ -321,9 +321,8 @@ export default function CategoryPage() {
               <label key={b} className="flex items-center gap-3 cursor-pointer group">
                 <div
                   onClick={() => { toggleBrand(b); setCurrentPage(1) }}
-                  className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${
-                    selectedBrands.includes(b) ? 'bg-purple-600 border-purple-600' : 'border-gray-300 group-hover:border-purple-400'
-                  }`}
+                  className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${selectedBrands.includes(b) ? 'bg-purple-600 border-purple-600' : 'border-gray-300 group-hover:border-purple-400'
+                    }`}
                 >
                   {selectedBrands.includes(b) && <span className="text-white text-[8px] font-black">✓</span>}
                 </div>
@@ -343,11 +342,10 @@ export default function CategoryPage() {
               <button
                 key={c}
                 onClick={() => { toggleColor(c); setCurrentPage(1) }}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
-                  selectedColors.includes(c)
-                    ? 'bg-purple-600 text-white border-purple-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-purple-400'
-                }`}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors ${selectedColors.includes(c)
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-purple-400'
+                  }`}
               >
                 {c}
               </button>
@@ -365,9 +363,8 @@ export default function CategoryPage() {
               <label key={d} className="flex items-center gap-3 cursor-pointer">
                 <div
                   onClick={() => { setSelectedDiscount(selectedDiscount === d ? '' : d); setCurrentPage(1) }}
-                  className={`w-4 h-4 border-2 rounded-full flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${
-                    selectedDiscount === d ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
-                  }`}
+                  className={`w-4 h-4 border-2 rounded-full flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${selectedDiscount === d ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
+                    }`}
                 >
                   {selectedDiscount === d && <span className="w-2 h-2 bg-white rounded-full block"></span>}
                 </div>
@@ -388,9 +385,8 @@ export default function CategoryPage() {
               <label key={r} className="flex items-center gap-3 cursor-pointer">
                 <div
                   onClick={() => { setSelectedRating(selectedRating === r ? '' : r); setCurrentPage(1) }}
-                  className={`w-4 h-4 border-2 rounded-full flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${
-                    selectedRating === r ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
-                  }`}
+                  className={`w-4 h-4 border-2 rounded-full flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${selectedRating === r ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
+                    }`}
                 >
                   {selectedRating === r && <span className="w-2 h-2 bg-white rounded-full block"></span>}
                 </div>
@@ -412,19 +408,18 @@ export default function CategoryPage() {
 
         {/* ── Sidebar — Drawer on Mobile, Inline on Desktop ──────── */}
         {sidebarOpen && (
-          <div 
-            className="md:hidden fixed inset-0 bg-black/50 z-40" 
-            onClick={() => setSidebarOpen(false)} 
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setSidebarOpen(false)}
           />
         )}
         <div
           className={`
             fixed md:relative top-0 left-0 h-full md:h-auto z-50 md:z-0 bg-white md:bg-transparent shadow-2xl md:shadow-none
             flex-shrink-0 overflow-y-auto md:overflow-visible transition-all duration-300 ease-in-out
-            ${
-              sidebarOpen 
-                ? 'w-[280px] md:w-[270px] translate-x-0 opacity-100 md:mr-6' 
-                : 'w-[280px] md:w-0 -translate-x-full md:translate-x-0 opacity-0 md:mr-0'
+            ${sidebarOpen
+              ? 'w-[280px] md:w-[270px] translate-x-0 opacity-100 md:mr-6'
+              : 'w-[280px] md:w-0 -translate-x-full md:translate-x-0 opacity-0 md:mr-0'
             }
           `}
         >
@@ -483,9 +478,8 @@ export default function CategoryPage() {
                       <button
                         key={opt}
                         onClick={() => { setSortBy(opt); setSortOpen(false); setCurrentPage(1) }}
-                        className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors ${
-                          sortBy === opt ? 'bg-purple-100 text-purple-700 font-bold' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
+                        className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors ${sortBy === opt ? 'bg-purple-100 text-purple-700 font-bold' : 'text-gray-700 hover:bg-gray-50'
+                          }`}
                       >
                         {opt}
                       </button>
@@ -509,7 +503,13 @@ export default function CategoryPage() {
           )}
 
           {/* Product Grid */}
-          {paginated.length > 0 ? (
+          {isProductsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+              {[...Array(8)].map((_, i) => (
+                <ProductCardShimmer key={i} />
+              ))}
+            </div>
+          ) : paginated.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
               {paginated.map(product => (
                 <div
@@ -576,11 +576,10 @@ export default function CategoryPage() {
                   <button
                     key={p}
                     onClick={() => goPage(p)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-colors ${
-                      currentPage === p
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:border-purple-500 hover:text-purple-600'
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-colors ${currentPage === p
+                      ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-purple-500 hover:text-purple-600'
+                      }`}
                   >
                     {p}
                   </button>

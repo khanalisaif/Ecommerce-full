@@ -7,26 +7,46 @@ import CategoryCardFormModal from '../CategoryCardFormModal'
 import FeatureBannerFormModal from '../FeatureBannerFormModal'
 import HeroProductSelectModal from '../HeroProductSelectModal'
 
-function Section({ icon: Icon, title, subtitle, onAdd, children }) {
+function Section({ icon: Icon, title, subtitle, onAdd, children, isVisible = true, onToggleVisible }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}>
             <Icon size={18} className="text-white" />
           </div>
-          <div>
-            <h3 className="font-bold text-gray-900">{title}</h3>
-            <p className="text-gray-500 text-sm">{subtitle}</p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-gray-900 truncate">{title}</h3>
+              {onToggleVisible && (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isVisible ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {isVisible ? 'Visible' : 'Hidden'}
+                </span>
+              )}
+            </div>
+            <p className="text-gray-500 text-sm truncate">{subtitle}</p>
           </div>
         </div>
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-white whitespace-nowrap transition-all hover:shadow-lg"
-          style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}
-        >
-          <Plus size={15} /> Add
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {onToggleVisible && (
+            <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 cursor-pointer px-2.5 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={isVisible}
+                onChange={(e) => onToggleVisible(e.target.checked)}
+                className="w-4 h-4 accent-purple-600 rounded cursor-pointer"
+              />
+              <span className="hidden sm:inline">{isVisible ? 'Shown' : 'Hidden'}</span>
+            </label>
+          )}
+          <button
+            onClick={onAdd}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-white whitespace-nowrap transition-all hover:shadow-lg cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}
+          >
+            <Plus size={15} /> Add
+          </button>
+        </div>
       </div>
       <div className="divide-y divide-gray-50">{children}</div>
     </div>
@@ -61,6 +81,7 @@ export default function HomepageTab() {
     featureBanners, addFeatureBanner, updateFeatureBanner, deleteFeatureBanner, reorderFeatureBanner,
     products, categories,
     heroProductBanner, updateHeroProductBanner, deleteHeroProductBanner,
+    hero2Settings, updateHero2Settings,
     showToast,
   } = useShop()
 
@@ -82,7 +103,14 @@ export default function HomepageTab() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start w-full">
-      <Section icon={GalleryHorizontal} title="Hero Banners" subtitle="Rotating carousel at the top of the homepage" onAdd={() => { setEditingBanner(null); setBannerModal(true) }}>
+      <Section
+        icon={GalleryHorizontal}
+        title="Hero Banners"
+        subtitle="Rotating carousel at the top of the homepage"
+        isVisible={Boolean(hero2Settings?.showOldHero)}
+        onToggleVisible={(val) => updateHero2Settings({ showOldHero: val })}
+        onAdd={() => { setEditingBanner(null); setBannerModal(true) }}
+      >
         {banners.map((b, idx) => (
           <Row key={b.id} image={b.image} title={b.title} subtitle={b.subtitle}
             idx={idx} total={banners.length}
@@ -93,7 +121,14 @@ export default function HomepageTab() {
         {!banners.length && <div className="px-6 py-8 text-center text-gray-400 text-sm">No banners yet</div>}
       </Section>
 
-      <Section icon={LayoutGrid} title="Category Cards" subtitle="The 5-column image grid below the hero banner" onAdd={() => { setEditingCollection(null); setCollectionModal(true) }}>
+      <Section
+        icon={LayoutGrid}
+        title="Category Cards"
+        subtitle="The 5-column image grid below the hero banner"
+        isVisible={hero2Settings?.showCollections !== false}
+        onToggleVisible={(val) => updateHero2Settings({ showCollections: val })}
+        onAdd={() => { setEditingCollection(null); setCollectionModal(true) }}
+      >
         {collections.map((c, idx) => (
           <Row key={c.id} image={c.image} title={c.name} subtitle={c.subtitle}
             idx={idx} total={collections.length}
@@ -104,7 +139,14 @@ export default function HomepageTab() {
         {!collections.length && <div className="px-6 py-8 text-center text-gray-400 text-sm">No collections yet</div>}
       </Section>
 
-      <Section icon={Layers} title="Sub Category Cards" subtitle="The large feature cards further down the homepage" onAdd={() => { setEditingCard(null); setCardModal(true) }}>
+      <Section
+        icon={Layers}
+        title="Sub Category Cards"
+        subtitle="The large feature cards further down the homepage"
+        isVisible={hero2Settings?.showSubCategoryCards !== false}
+        onToggleVisible={(val) => updateHero2Settings({ showSubCategoryCards: val })}
+        onAdd={() => { setEditingCard(null); setCardModal(true) }}
+      >
         {categoryCards.map((c, idx) => (
           <Row key={c.id} image={c.image} title={c.name} subtitle={`${c.subtitle || ''}${c.subcategory ? ` • Subcategory: ${c.subcategory}` : ''}`}
             idx={idx} total={categoryCards.length}
@@ -118,7 +160,9 @@ export default function HomepageTab() {
       <Section
         icon={Sparkles}
         title="Hero Product Banner"
-        subtitle="Spotlight product banner shown directly above the Feature Banner"
+        subtitle="Spotlight product banner shown directly above the Feature Banner or below Best Sellers"
+        isVisible={hero2Settings?.showHeroProductBanner !== false}
+        onToggleVisible={(val) => updateHero2Settings({ showHeroProductBanner: val })}
         onAdd={() => setHeroModal(true)}
       >
         {liveHeroProduct ? (
@@ -195,7 +239,14 @@ export default function HomepageTab() {
         )}
       </Section>
 
-      <Section icon={Megaphone} title="Feature Banner" subtitle="Full-width dark promo strip with two badges" onAdd={() => { setEditingFeature(null); setFeatureModal(true) }}>
+      <Section
+        icon={Megaphone}
+        title="Feature Banner"
+        subtitle="Full-width dark promo strip with two badges"
+        isVisible={hero2Settings?.showFeatureBanner !== false}
+        onToggleVisible={(val) => updateHero2Settings({ showFeatureBanner: val })}
+        onAdd={() => { setEditingFeature(null); setFeatureModal(true) }}
+      >
         {featureBanners.map((fb, idx) => (
           <Row key={fb.id} image={fb.image} title={fb.title} subtitle={fb.subtitle?.replace(/\n/g, ' ')}
             idx={idx} total={featureBanners.length}
