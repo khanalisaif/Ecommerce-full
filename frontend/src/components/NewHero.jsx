@@ -158,9 +158,19 @@ export default function NewHero({ settings }) {
           className="relative w-full rounded-2xl md:rounded-3xl lg:rounded-[32px] overflow-hidden mt-3 shadow-md py-5 sm:py-6 md:py-7"
           style={{ backgroundColor: tickerBgColor || '#d81b60' }}
         >
-          {/* Subtle edge fade overlays for infinite scroll effect */}
-          <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-r from-[#d81b60] to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-l from-[#d81b60] to-transparent z-10 pointer-events-none" />
+          {/* Subtle edge fade overlays matching dynamic tickerBgColor */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-12 sm:w-24 z-10 pointer-events-none"
+            style={{
+              background: `linear-gradient(to right, ${tickerBgColor || '#d81b60'} 0%, transparent 100%)`,
+            }}
+          />
+          <div
+            className="absolute right-0 top-0 bottom-0 w-12 sm:w-24 z-10 pointer-events-none"
+            style={{
+              background: `linear-gradient(to left, ${tickerBgColor || '#d81b60'} 0%, transparent 100%)`,
+            }}
+          />
 
           {/* Marquee Track: duplicated seamlessly for 100% infinite continuous loop */}
           <div className="marquee-wrapper flex overflow-hidden select-none">

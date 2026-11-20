@@ -40,7 +40,7 @@ export default function HomePageShimmer() {
       </div>
 
       {/* ── Marquee Ticker Shimmer ── */}
-      <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden py-5 sm:py-6 bg-[#d81b60]/25 border border-pink-200/30 flex items-center justify-between px-6 gap-6 animate-pulse">
+      <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden py-5 sm:py-6 bg-gray-200/60 border border-gray-200/40 flex items-center justify-between px-6 gap-6 animate-pulse">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="flex items-center gap-2.5 shrink-0">
             <div className="w-7 h-7 rounded-full bg-white/40" />
