@@ -59,11 +59,20 @@ export default function NewHero({ settings }) {
 
   const {
     tagline = '',
+    taglineColor = '#db2777',
     title = '',
+    titleColor = '#111827',
     titleHighlight = '',
+    titleHighlightColor = '#db2777',
     description = '',
+    descriptionColor = '#374151',
     badges = [],
+    badgeColor = '#1f2937',
+    badgeDotColor = '#ec4899',
     buttonText = 'SHOP NOW',
+    buttonTextColor = '#ffffff',
+    buttonBgColor = '#ec4899',
+    buttonBgGradientEnd = '#f43f5e',
     buttonLink = '/category/Best-Sellers',
     image = '',
     bgColor = '#fce4ec',
@@ -98,31 +107,50 @@ export default function NewHero({ settings }) {
           {/* ── Text Content (Desktop Left / Mobile Bottom) ────── */}
           <div className="relative z-10 flex-1 p-6 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-center order-2 md:order-1 text-center md:text-left">
             {tagline && (
-              <p className="text-[10px] sm:text-xs font-black text-pink-600 tracking-[0.22em] uppercase mb-2 sm:mb-3">
+              <p
+                className="text-[10px] sm:text-xs font-black tracking-[0.22em] uppercase mb-2 sm:mb-3"
+                style={{ color: taglineColor || '#db2777' }}
+              >
                 {tagline}
               </p>
             )}
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.15] mb-3 sm:mb-4 tracking-tight">
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.15] mb-3 sm:mb-4 tracking-tight"
+              style={{ color: titleColor || '#111827' }}
+            >
               {title}{' '}
               {titleHighlight && (
-                <span className="text-pink-600 block sm:inline">
+                <span
+                  className="block sm:inline"
+                  style={{ color: titleHighlightColor || '#db2777' }}
+                >
                   {titleHighlight}
                 </span>
               )}
             </h2>
 
             {description && (
-              <p className="text-gray-700 text-xs sm:text-sm md:text-base leading-relaxed mb-5 sm:mb-6 max-w-xl mx-auto md:mx-0 font-medium">
+              <p
+                className="text-xs sm:text-sm md:text-base leading-relaxed mb-5 sm:mb-6 max-w-xl mx-auto md:mx-0 font-medium"
+                style={{ color: descriptionColor || '#374151' }}
+              >
                 {description}
               </p>
             )}
 
             {badges && badges.length > 0 && (
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-6 mb-6 sm:mb-8 text-xs sm:text-sm font-bold text-gray-800">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-6 mb-6 sm:mb-8 text-xs sm:text-sm font-bold">
                 {badges.map((b, i) => (
-                  <span key={i} className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500 inline-block" />
+                  <span
+                    key={i}
+                    className="flex items-center gap-1.5"
+                    style={{ color: badgeColor || '#1f2937' }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full inline-block"
+                      style={{ backgroundColor: badgeDotColor || '#ec4899' }}
+                    />
                     {b}
                   </span>
                 ))}
@@ -132,7 +160,11 @@ export default function NewHero({ settings }) {
             <div>
               <button
                 onClick={handleButtonClick}
-                className="inline-flex items-center justify-center bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs sm:text-sm px-8 py-3.5 sm:px-9 sm:py-4 rounded-full shadow-lg shadow-pink-500/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all tracking-wider uppercase cursor-pointer"
+                className="inline-flex items-center justify-center font-black text-xs sm:text-sm px-8 py-3.5 sm:px-9 sm:py-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all tracking-wider uppercase cursor-pointer"
+                style={{
+                  color: buttonTextColor || '#ffffff',
+                  background: `linear-gradient(to right, ${buttonBgColor || '#ec4899'}, ${buttonBgGradientEnd || '#f43f5e'})`,
+                }}
               >
                 {buttonText || 'SHOP NOW'}
               </button>

@@ -47,9 +47,14 @@ export default function Hero2GallerySlider({ settings }) {
     >
       {/* ── Section Title ─────────────────────────────────────── */}
       <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-4 lg:px-4 text-center mb-6 sm:mb-10">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-gray-900 leading-tight">
-          <span>{title} </span>
-          <span className="text-pink-600 block sm:inline">{titleHighlight}</span>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+          <span style={{ color: settings.galleryTitleColor || '#111827' }}>{title} </span>
+          <span
+            className="block sm:inline"
+            style={{ color: settings.galleryTitleHighlightColor || '#db2777' }}
+          >
+            {titleHighlight}
+          </span>
         </h2>
       </div>
 

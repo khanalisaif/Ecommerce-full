@@ -125,11 +125,8 @@ export default function Hero2ProductCarousel({ settings }) {
 
   const handleExplore = (item) => {
     window.scrollTo({ top: 0, behavior: 'instant' })
-    if (item.productId) {
-      navigate(`/product/${item.productId}`)
-    } else {
-      navigate(item.link || '/category/Best-Sellers')
-    }
+    const targetLink = item.link || (item.productId ? `/product/${item.productId}` : '/category/Best-Sellers')
+    navigate(targetLink)
   }
 
   // Calculate card width & gap for physical sliding track
@@ -222,17 +219,26 @@ export default function Hero2ProductCarousel({ settings }) {
                   {/* ── TEXT CONTENT (Mobile Bottom: order-2, Desktop Left: order-1) ── */}
                   <div className="flex-1 w-full md:w-[50%] lg:w-[48%] order-2 md:order-1 flex flex-col justify-end md:justify-center text-left z-10 pt-1 pb-1 md:py-1">
                     {item.tagline && (
-                      <p className="text-white/85 text-[11px] sm:text-xs md:text-sm font-black tracking-widest uppercase mb-1 drop-shadow-xs">
+                      <p
+                        className="text-[11px] sm:text-xs md:text-sm font-black tracking-widest uppercase mb-1 drop-shadow-xs"
+                        style={{ color: item.taglineColor || '#ffffff' }}
+                      >
                         {item.tagline}
                       </p>
                     )}
 
-                    <h3 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-1.5 sm:mb-2.5 tracking-tight drop-shadow-xs">
+                    <h3
+                      className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black leading-tight mb-1.5 sm:mb-2.5 tracking-tight drop-shadow-xs"
+                      style={{ color: item.nameColor || item.titleColor || '#ffffff' }}
+                    >
                       {item.name}
                     </h3>
 
                     {/* Clean 3-line description matching reference design */}
-                    <p className="text-white/95 text-xs sm:text-sm md:text-[15px] font-medium leading-relaxed mb-4 sm:mb-6 md:mb-8 line-clamp-3 drop-shadow-xs max-w-md">
+                    <p
+                      className="text-xs sm:text-sm md:text-[15px] font-medium leading-relaxed mb-4 sm:mb-6 md:mb-8 line-clamp-3 drop-shadow-xs max-w-md"
+                      style={{ color: item.descriptionColor || 'rgba(255, 255, 255, 0.95)' }}
+                    >
                       {format3LineDescription(item.description, item.name)}
                     </p>
 
@@ -243,7 +249,11 @@ export default function Hero2ProductCarousel({ settings }) {
                           e.stopPropagation()
                           handleExplore(item)
                         }}
-                        className="inline-flex items-center justify-center bg-white hover:bg-gray-50 text-gray-900 font-black text-xs sm:text-sm px-7 py-3 sm:px-9 sm:py-3.5 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all tracking-wider uppercase cursor-pointer w-max"
+                        className="inline-flex items-center justify-center font-black text-xs sm:text-sm px-7 py-3 sm:px-9 sm:py-3.5 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all tracking-wider uppercase cursor-pointer w-max"
+                        style={{
+                          color: item.buttonTextColor || '#111827',
+                          backgroundColor: item.buttonBgColor || '#ffffff',
+                        }}
                       >
                         {item.buttonText || 'EXPLORE >'}
                       </button>

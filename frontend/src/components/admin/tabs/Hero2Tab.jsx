@@ -354,9 +354,14 @@ export default function Hero2Tab() {
       id: `sc-${Date.now()}`,
       productId: selectedProduct.id,
       tagline: `Say Hello to ${selectedProduct.brand_name || selectedProduct.brand || 'Zenpha'}`,
+      taglineColor: '#ffffff',
       name: selectedProduct.name,
+      nameColor: '#ffffff',
       description: shortDesc,
+      descriptionColor: '#ffffff',
       buttonText: 'EXPLORE >',
+      buttonTextColor: '#111827',
+      buttonBgColor: '#ffffff',
       link: `/product/${selectedProduct.id}`,
       image: selectedProduct.image,
       bgColor: '#f99d26',
@@ -373,9 +378,14 @@ export default function Hero2Tab() {
       id: `sc-${Date.now()}`,
       productId: '',
       tagline: 'Say Hello to Zenpha',
+      taglineColor: '#ffffff',
       name: 'New Spotlight Product',
+      nameColor: '#ffffff',
       description: 'Orange flavoured gummies with Vitamin C, D3 & Zinc for immunity and clear, glowing skin. Daily essential vitamins for your overall vitality and wellness.',
+      descriptionColor: '#ffffff',
       buttonText: 'EXPLORE >',
+      buttonTextColor: '#111827',
+      buttonBgColor: '#ffffff',
       link: '/category/Best-Sellers',
       image: '',
       bgColor: '#f99d26',
@@ -488,24 +498,55 @@ export default function Hero2Tab() {
           }}
         >
           <div className="flex-1 text-center md:text-left">
-            <p className="text-[10px] font-black text-pink-600 tracking-widest uppercase mb-1">
-              {form.tagline}
-            </p>
-            <h4 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight mb-2">
+            {form.tagline && (
+              <p
+                className="text-[10px] font-black tracking-widest uppercase mb-1"
+                style={{ color: form.taglineColor || '#db2777' }}
+              >
+                {form.tagline}
+              </p>
+            )}
+            <h4
+              className="text-2xl sm:text-3xl font-black leading-tight mb-2"
+              style={{ color: form.titleColor || '#111827' }}
+            >
               {form.title}{' '}
-              <span className="text-pink-600">{form.titleHighlight}</span>
+              {form.titleHighlight && (
+                <span style={{ color: form.titleHighlightColor || '#db2777' }}>
+                  {form.titleHighlight}
+                </span>
+              )}
             </h4>
-            <p className="text-gray-700 text-xs leading-relaxed max-w-md mb-4 font-medium">
-              {form.description}
-            </p>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4 text-[11px] font-bold text-gray-800">
+            {form.description && (
+              <p
+                className="text-xs leading-relaxed max-w-md mb-4 font-medium"
+                style={{ color: form.descriptionColor || '#374151' }}
+              >
+                {form.description}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4 text-[11px] font-bold">
               {(form.badges || []).map((b, i) => (
-                <span key={i} className="flex items-center gap-1">
-                  • {b}
+                <span
+                  key={i}
+                  className="flex items-center gap-1.5"
+                  style={{ color: form.badgeColor || '#1f2937' }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full inline-block"
+                    style={{ backgroundColor: form.badgeDotColor || '#ec4899' }}
+                  />
+                  {b}
                 </span>
               ))}
             </div>
-            <button className="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-xs px-6 py-2.5 rounded-full shadow-md uppercase tracking-wider">
+            <button
+              className="font-black text-xs px-6 py-2.5 rounded-full shadow-md uppercase tracking-wider"
+              style={{
+                color: form.buttonTextColor || '#ffffff',
+                background: `linear-gradient(to right, ${form.buttonBgColor || '#ec4899'}, ${form.buttonBgGradientEnd || '#f43f5e'})`,
+              }}
+            >
               {form.buttonText || 'SHOP NOW'}
             </button>
           </div>
@@ -579,81 +620,162 @@ export default function Hero2Tab() {
             <Tag size={16} className="text-pink-600 shrink-0" /> Banner Typography & Content
           </h3>
 
-          <div>
-            <label className="block text-gray-700 font-bold text-xs mb-1.5">Top Tagline / Kicker</label>
-            <input
-              type="text"
-              value={form.tagline || ''}
-              onChange={(e) => handleFieldChange('tagline', e.target.value)}
-              placeholder="e.g. PURNA GUMMIES · ONE A DAY"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div className="sm:col-span-8">
+              <label className="block text-gray-700 font-bold text-xs mb-1.5">Top Tagline / Kicker</label>
+              <input
+                type="text"
+                value={form.tagline || ''}
+                onChange={(e) => handleFieldChange('tagline', e.target.value)}
+                placeholder="e.g. PURNA GUMMIES · ONE A DAY"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium"
+                style={{ color: form.taglineColor || '#db2777' }}
+              />
+            </div>
+            <div className="sm:col-span-4">
+              <ColorPickerInput
+                label="Tagline Color"
+                value={form.taglineColor}
+                onChange={(val) => handleFieldChange('taglineColor', val)}
+                fallback="#db2777"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <div>
+                <label className="block text-gray-700 font-bold text-xs mb-1.5">Main Title (Start)</label>
+                <input
+                  type="text"
+                  value={form.title || ''}
+                  onChange={(e) => handleFieldChange('title', e.target.value)}
+                  placeholder="e.g. Your Daily"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium"
+                  style={{ color: form.titleColor || '#111827' }}
+                />
+              </div>
+              <ColorPickerInput
+                label="Title Color"
+                value={form.titleColor}
+                onChange={(val) => handleFieldChange('titleColor', val)}
+                fallback="#111827"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div>
+                <label className="block text-gray-700 font-bold text-xs mb-1.5">Highlighted Text (Pink / Accent)</label>
+                <input
+                  type="text"
+                  value={form.titleHighlight || ''}
+                  onChange={(e) => handleFieldChange('titleHighlight', e.target.value)}
+                  placeholder="e.g. Dose of Goodness"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium"
+                  style={{ color: form.titleHighlightColor || '#db2777' }}
+                />
+              </div>
+              <ColorPickerInput
+                label="Highlight Color"
+                value={form.titleHighlightColor}
+                onChange={(val) => handleFieldChange('titleHighlightColor', val)}
+                fallback="#db2777"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <div>
-              <label className="block text-gray-700 font-bold text-xs mb-1.5">Main Title (Start)</label>
+              <label className="block text-gray-700 font-bold text-xs mb-1.5">Description / Subtitle</label>
+              <textarea
+                rows={3}
+                value={form.description || ''}
+                onChange={(e) => handleFieldChange('description', e.target.value)}
+                placeholder="Tasty, vegan gummies for beauty, immunity, sleep and everyday wellness. Just one a day."
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium resize-none leading-relaxed"
+                style={{ color: form.descriptionColor || '#374151' }}
+              />
+            </div>
+            <div className="w-full sm:w-1/2">
+              <ColorPickerInput
+                label="Description Text Color"
+                value={form.descriptionColor}
+                onChange={(val) => handleFieldChange('descriptionColor', val)}
+                fallback="#374151"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div>
+              <label className="block text-gray-700 font-bold text-xs mb-1.5">Feature Badges (comma-separated)</label>
               <input
                 type="text"
-                value={form.title || ''}
-                onChange={(e) => handleFieldChange('title', e.target.value)}
-                placeholder="e.g. Your Daily"
+                value={badgesInput}
+                onChange={(e) => setBadgesInput(e.target.value)}
+                onBlur={handleBadgesBlur}
+                placeholder="100% Vegan, Gelatin-Free, One a Day"
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium"
+                style={{ color: form.badgeColor || '#1f2937' }}
               />
+              <p className="text-[11px] text-gray-400 mt-1">Separate each feature tag with a comma</p>
             </div>
-            <div>
-              <label className="block text-gray-700 font-bold text-xs mb-1.5">Highlighted Text (Pink)</label>
-              <input
-                type="text"
-                value={form.titleHighlight || ''}
-                onChange={(e) => handleFieldChange('titleHighlight', e.target.value)}
-                placeholder="e.g. Dose of Goodness"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium text-pink-600"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <ColorPickerInput
+                label="Badge Text Color"
+                value={form.badgeColor}
+                onChange={(val) => handleFieldChange('badgeColor', val)}
+                fallback="#1f2937"
+              />
+              <ColorPickerInput
+                label="Badge Dot / Bullet Color"
+                value={form.badgeDotColor}
+                onChange={(val) => handleFieldChange('badgeDotColor', val)}
+                fallback="#ec4899"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-gray-700 font-bold text-xs mb-1.5">Description / Subtitle</label>
-            <textarea
-              rows={3}
-              value={form.description || ''}
-              onChange={(e) => handleFieldChange('description', e.target.value)}
-              placeholder="Tasty, vegan gummies for beauty, immunity, sleep and everyday wellness. Just one a day."
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium resize-none leading-relaxed"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-bold text-xs mb-1.5">Feature Badges (comma-separated)</label>
-            <input
-              type="text"
-              value={badgesInput}
-              onChange={(e) => setBadgesInput(e.target.value)}
-              onBlur={handleBadgesBlur}
-              placeholder="100% Vegan, Gelatin-Free, One a Day"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium"
-            />
-            <p className="text-[11px] text-gray-400 mt-1">Separate each feature tag with a comma</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div>
-              <label className="block text-gray-700 font-bold text-xs mb-1.5">Button Text</label>
-              <input
-                type="text"
-                value={form.buttonText || ''}
-                onChange={(e) => handleFieldChange('buttonText', e.target.value)}
-                placeholder="SHOP NOW"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium"
+          <div className="space-y-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-gray-700 font-bold text-xs mb-1.5">Button Text</label>
+                <input
+                  type="text"
+                  value={form.buttonText || ''}
+                  onChange={(e) => handleFieldChange('buttonText', e.target.value)}
+                  placeholder="SHOP NOW"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-pink-500 font-medium"
+                />
+              </div>
+              <CategoryLinkSelect
+                label="Button Link / Category"
+                value={form.buttonLink}
+                onChange={(val) => handleFieldChange('buttonLink', val)}
+                categories={categories}
               />
             </div>
-            <CategoryLinkSelect
-              label="Button Link / Category"
-              value={form.buttonLink}
-              onChange={(val) => handleFieldChange('buttonLink', val)}
-              categories={categories}
-            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <ColorPickerInput
+                label="Button Text Color"
+                value={form.buttonTextColor}
+                onChange={(val) => handleFieldChange('buttonTextColor', val)}
+                fallback="#ffffff"
+              />
+              <ColorPickerInput
+                label="Button Bg Start"
+                value={form.buttonBgColor}
+                onChange={(val) => handleFieldChange('buttonBgColor', val)}
+                fallback="#ec4899"
+              />
+              <ColorPickerInput
+                label="Button Bg End"
+                value={form.buttonBgGradientEnd}
+                onChange={(val) => handleFieldChange('buttonBgGradientEnd', val)}
+                fallback="#f43f5e"
+              />
+            </div>
           </div>
         </div>
 
@@ -1105,24 +1227,43 @@ export default function Hero2Tab() {
         {/* Section Title & Background Colors Settings */}
         <div className="p-4 bg-gray-50 rounded-xl border border-gray-200/80 space-y-3.5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-gray-700 font-bold text-xs mb-1">Section Title (Dark)</label>
-              <input
-                type="text"
-                value={form.galleryTitle || ''}
-                onChange={(e) => handleFieldChange('galleryTitle', e.target.value)}
-                placeholder="EVERYDAY WELLNESS."
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-pink-500"
+            <div className="space-y-1.5">
+              <div>
+                <label className="block text-gray-700 font-bold text-xs mb-1">Section Title (Dark)</label>
+                <input
+                  type="text"
+                  value={form.galleryTitle || ''}
+                  onChange={(e) => handleFieldChange('galleryTitle', e.target.value)}
+                  placeholder="EVERYDAY WELLNESS."
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-bold focus:outline-none focus:border-pink-500"
+                  style={{ color: form.galleryTitleColor || '#111827' }}
+                />
+              </div>
+              <ColorPickerInput
+                label="Section Title Color"
+                value={form.galleryTitleColor}
+                onChange={(val) => handleFieldChange('galleryTitleColor', val)}
+                fallback="#111827"
               />
             </div>
-            <div>
-              <label className="block text-gray-700 font-bold text-xs mb-1">Highlight Title (Pink)</label>
-              <input
-                type="text"
-                value={form.galleryTitleHighlight || ''}
-                onChange={(e) => handleFieldChange('galleryTitleHighlight', e.target.value)}
-                placeholder="SIMPLY PURNA."
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-bold text-pink-600 focus:outline-none focus:border-pink-500"
+
+            <div className="space-y-1.5">
+              <div>
+                <label className="block text-gray-700 font-bold text-xs mb-1">Highlight Title (Pink)</label>
+                <input
+                  type="text"
+                  value={form.galleryTitleHighlight || ''}
+                  onChange={(e) => handleFieldChange('galleryTitleHighlight', e.target.value)}
+                  placeholder="SIMPLY PURNA."
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-bold focus:outline-none focus:border-pink-500"
+                  style={{ color: form.galleryTitleHighlightColor || '#db2777' }}
+                />
+              </div>
+              <ColorPickerInput
+                label="Highlight Title Color"
+                value={form.galleryTitleHighlightColor}
+                onChange={(val) => handleFieldChange('galleryTitleHighlightColor', val)}
+                fallback="#db2777"
               />
             </div>
           </div>
@@ -1319,30 +1460,44 @@ export default function Hero2Tab() {
                 {/* Left/Middle: Text, Description, Button, Callouts */}
                 <div className="lg:col-span-7 xl:col-span-8 space-y-3 min-w-0">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="min-w-0">
-                      <label className="block text-[10px] font-bold text-gray-500 mb-1">Top Tagline</label>
+                    <div className="space-y-1.5 min-w-0">
+                      <label className="block text-[10px] font-bold text-gray-500">Top Tagline</label>
                       <input
                         type="text"
                         value={slide.tagline || ''}
                         onChange={(e) => handleSpotlightChange(idx, 'tagline', e.target.value)}
                         placeholder="Say Hello to Zenpha"
                         className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-semibold focus:outline-none focus:border-orange-500"
+                        style={{ color: slide.taglineColor || '#ffffff' }}
+                      />
+                      <ColorPickerInput
+                        label="Tagline Color"
+                        value={slide.taglineColor}
+                        onChange={(val) => handleSpotlightChange(idx, 'taglineColor', val)}
+                        fallback="#ffffff"
                       />
                     </div>
-                    <div className="min-w-0">
-                      <label className="block text-[10px] font-bold text-gray-500 mb-1">Product Title</label>
+                    <div className="space-y-1.5 min-w-0">
+                      <label className="block text-[10px] font-bold text-gray-500">Product Title</label>
                       <input
                         type="text"
                         value={slide.name || ''}
                         onChange={(e) => handleSpotlightChange(idx, 'name', e.target.value)}
                         placeholder="Bright as Day"
-                        className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-orange-500"
+                        className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold focus:outline-none focus:border-orange-500"
+                        style={{ color: slide.nameColor || '#ffffff' }}
+                      />
+                      <ColorPickerInput
+                        label="Title Color"
+                        value={slide.nameColor}
+                        onChange={(val) => handleSpotlightChange(idx, 'nameColor', val)}
+                        fallback="#ffffff"
                       />
                     </div>
                   </div>
 
-                  <div className="min-w-0">
-                    <label className="block text-[10px] font-bold text-gray-500 mb-1">
+                  <div className="space-y-1.5 min-w-0">
+                    <label className="block text-[10px] font-bold text-gray-500">
                       Description (~3 lines)
                     </label>
                     <textarea
@@ -1351,7 +1506,16 @@ export default function Hero2Tab() {
                       onChange={(e) => handleSpotlightChange(idx, 'description', e.target.value)}
                       placeholder="Orange flavoured gummies with Vitamin C, D3 & Zinc for immunity and clear, glowing skin. Daily essential vitamins for your overall health & vitality."
                       className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium resize-none focus:outline-none focus:border-orange-500 leading-relaxed"
+                      style={{ color: slide.descriptionColor || '#ffffff' }}
                     />
+                    <div className="w-full sm:w-1/2">
+                      <ColorPickerInput
+                        label="Description Color"
+                        value={slide.descriptionColor}
+                        onChange={(val) => handleSpotlightChange(idx, 'descriptionColor', val)}
+                        fallback="#ffffff"
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1380,6 +1544,22 @@ export default function Hero2Tab() {
                           ]
                           : []
                       }
+                    />
+                  </div>
+
+                  {/* Button Colors */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    <ColorPickerInput
+                      label="Button Text Color"
+                      value={slide.buttonTextColor}
+                      onChange={(val) => handleSpotlightChange(idx, 'buttonTextColor', val)}
+                      fallback="#111827"
+                    />
+                    <ColorPickerInput
+                      label="Button Bg Color"
+                      value={slide.buttonBgColor}
+                      onChange={(val) => handleSpotlightChange(idx, 'buttonBgColor', val)}
+                      fallback="#ffffff"
                     />
                   </div>
                 </div>
