@@ -6,7 +6,7 @@ import ProductDetailShimmer from '../components/shimmer/ProductDetailShimmer'
 import { Heart, ShoppingCart, Zap, Check, Maximize2, ChevronRight, ShieldCheck, Box, RotateCcw, Lock, X, Star, MapPin, Truck, ArrowRight, Loader } from 'lucide-react'
 import { useShop } from '../context/ShopContext'
 import { useAuth } from '../context/AuthContext'
-import { normalizeColorList, getSwatchStyle } from '../data/colorUtils'
+import { normalizeColorList, getSwatchStyle, getColorName } from '../data/colorUtils'
 import reviewService from '../services/reviewService'
 import productService from '../services/productService'
 import addressService from '../services/addressService'
@@ -221,7 +221,12 @@ function ProductDetailContent({ product }) {
   }))
   const maxBreakdown = Math.max(1, ...ratingBreakdown.map(r => r.count))
 
-  const relatedProducts = products.filter(p => p.isBestSeller && p.id !== product.id).slice(0, 4)
+  const relatedProducts = useMemo(() => {
+    const list = products.filter((p) => String(p.id) !== String(product.id) && String(p._id) !== String(product.id))
+    const bestOrCategory = list.filter((p) => p.isBestSeller || p.category === product.category)
+    const others = list.filter((p) => !bestOrCategory.some((b) => String(b.id) === String(p.id)))
+    return [...bestOrCategory, ...others].slice(0, 4)
+  }, [products, product])
 
   // ── Delivery estimate widget ──────────────────────────────────────────────
   const [deliveryPincode, setDeliveryPincode] = useState('')
@@ -326,49 +331,60 @@ function ProductDetailContent({ product }) {
       <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 md:px-6 py-8 flex flex-col gap-8">
 
         {/* TOP SECTION: Gallery & Actions */}
-        <div className="bg-white border border-gray-100 rounded-[20px] p-6 shadow-sm flex flex-col md:flex-row gap-10">
+        <div className="bg-white border border-gray-100 rounded-[20px] p-6 shadow-sm flex flex-col md:flex-row gap-8 lg:gap-10 items-start">
 
           {/* Gallery Area */}
-          <div className="flex flex-col-reverse md:flex-row gap-4 md:w-[55%]">
+          <div className="flex flex-col-reverse md:flex-row gap-4 md:w-[50%] lg:w-[48%] items-start md:sticky md:top-24">
             {/* Thumbnails */}
-            <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible">
+            <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible flex-shrink-0">
               {displayImages.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveThumb(i)}
-                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all flex items-center justify-center bg-gray-50 p-1 ${activeThumb === i ? 'border-purple-600' : 'border-gray-200 hover:border-gray-300'
+                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all flex items-center justify-center bg-white ${activeThumb === i ? 'border-purple-600 shadow-sm' : 'border-gray-200 hover:border-gray-300'
                     }`}
                 >
-                  <img src={img} alt="thumb" className="w-full h-full object-contain rounded-lg" />
+                  <img src={img} alt="thumb" className="w-full h-full object-cover rounded-lg" />
                 </button>
               ))}
             </div>
 
             {/* Main Image */}
-            <div className="relative flex-1 bg-gray-50 rounded-2xl overflow-hidden aspect-[4/5] md:aspect-auto md:h-[500px] flex items-center justify-center p-3 sm:p-5">
-              <img src={displayImages[activeThumb] || displayImages[0] || product.image} alt={product.name} className="w-full h-full object-contain object-center" />
+            <div className="flex-1 flex items-start justify-start min-w-0">
+              <div className="relative w-fit max-w-full rounded-2xl overflow-hidden shadow-xs border border-gray-100 bg-white group">
+                <img
+                  src={displayImages[activeThumb] || displayImages[0] || product.image}
+                  alt={product.name}
+                  className="w-auto h-auto max-h-[520px] max-w-full object-contain rounded-2xl block"
+                />
 
-              {/* Wishlist Button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); toggleWishlist(product) }}
-                className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md text-gray-400 hover:text-pink-500 transition-colors z-10"
-              >
-                <Heart size={18} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} className={isWishlisted(product.id) ? 'text-pink-500' : ''} />
-              </button>
+                {/* Wishlist Button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleWishlist(product) }}
+                  className="absolute top-3.5 right-3.5 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-md text-gray-400 hover:text-pink-500 transition-colors z-10 hover:scale-105 active:scale-95"
+                >
+                  <Heart size={18} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} className={isWishlisted(product.id) ? 'text-pink-500' : ''} />
+                </button>
 
-              {/* Top Left Badge */}
-              <div className="absolute top-4 left-4 bg-pink-500 text-white w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-black leading-tight text-center shadow-md">
-                {discountPercent}%<br />OFF
+                {/* Top Left Badge */}
+                {discountPercent > 0 && (
+                  <div className="absolute top-3.5 left-3.5 bg-pink-500 text-white w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-black leading-tight text-center shadow-md z-10">
+                    {discountPercent}%<br />OFF
+                  </div>
+                )}
+
+                {/* Fullscreen button */}
+                <button
+                  className="absolute bottom-3.5 right-3.5 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-gray-600 shadow hover:bg-white transition-colors z-10 hover:scale-105"
+                >
+                  <Maximize2 size={14} />
+                </button>
               </div>
-              {/* Fullscreen button */}
-              <button className="absolute bottom-4 right-4 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-gray-600 shadow hover:bg-white transition-colors">
-                <Maximize2 size={14} />
-              </button>
             </div>
           </div>
 
           {/* Details & Actions Area */}
-          <div className="flex-1 flex flex-col pt-2">
+          <div className="flex-1 flex flex-col">
             <h1 className="text-3xl font-bold text-gray-900 mb-1">{product.name}</h1>
             <p className="text-gray-500 text-sm mb-3">{product.description}</p>
 
@@ -772,36 +788,58 @@ function ProductDetailContent({ product }) {
         </div>
 
         {/* BOTTOM SECTION: You may also like */}
-        <div className="mt-4">
-          <div className="flex justify-between items-center mb-6 px-1">
-            <h2 className="text-lg font-bold text-gray-900">You may also like</h2>
-            <button onClick={() => navigate('/category/Best-Sellers')} className="border border-purple-200 text-purple-700 bg-white px-4 py-1.5 rounded-full text-xs font-bold hover:bg-purple-50 transition-colors">
+        <div className="mt-8 mb-4">
+          <div className="flex justify-between items-end mb-4 border-b border-gray-200 pb-3">
+            <h2 className="text-[15px] sm:text-base font-bold text-gray-900">You May Also Like</h2>
+            <button onClick={() => navigate('/category/Best-Sellers')} className="text-purple-600 font-medium text-[12px] sm:text-sm hover:underline">
               View All
             </button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {relatedProducts.map(prod => (
+            {relatedProducts.map((item) => (
               <div
-                key={prod.id}
-                onClick={() => navigate(`/product/${prod.id}`)}
-                className="bg-white rounded-[20px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                key={item.id}
+                onClick={() => navigate(`/product/${item.id}`)}
+                className="group cursor-pointer"
               >
-                <div className="relative aspect-[4/3] sm:aspect-[16/11] bg-gray-50 flex items-center justify-center p-2 sm:p-2.5 overflow-hidden group">
-                  <img src={prod.image} alt={prod.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                <div className="relative w-full aspect-square bg-white rounded-xl overflow-hidden mb-3 flex items-center justify-center border border-gray-100 shadow-xs">
+                  <button onClick={() => navigate(`/product/${item.id}`)} className="w-full h-full flex items-center justify-center">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); toggleWishlist(prod) }}
-                    className="absolute top-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-pink-500 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); toggleWishlist(item) }}
+                    className="absolute top-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-pink-500 transition-colors z-10"
                   >
-                    <Heart size={16} fill={isWishlisted(prod.id) ? 'currentColor' : 'none'} className={isWishlisted(prod.id) ? 'text-pink-500' : ''} />
+                    <Heart size={16} fill={isWishlisted(item.id) ? 'currentColor' : 'none'} className={isWishlisted(item.id) ? 'text-pink-500' : ''} />
                   </button>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-gray-900 font-bold text-xs mb-2 line-clamp-1">{prod.name}</h3>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-gray-900 font-black text-sm">₹{prod.price.toLocaleString()}</span>
-                    <span className="text-gray-400 line-through text-[10px]">₹{prod.originalPrice.toLocaleString()}</span>
-                    <span className="text-green-500 text-[10px] font-bold">{prod.discount}</span>
+                <div className="px-1">
+                  <h4 className="font-bold text-[12px] text-gray-900 line-clamp-1 mb-1">{item.name}</h4>
+                  <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                    <span className="font-bold text-[13px] text-gray-900">₹{item.price?.toLocaleString()}</span>
+                    <span className="line-through text-gray-400 text-[10px]">₹{item.originalPrice?.toLocaleString()}</span>
+                    <span className="text-[#00b368] text-[10px] font-bold">{item.discount}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1 text-[10px] text-gray-500 font-medium">
+                      <Star size={10} className="fill-yellow-400 text-yellow-400" /> {item.rating || 4.5} ({item.reviews || 0})
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        addToCart(item, { quantity: 1, color: getColorName(item.colors?.[0]), size: item.sizes?.[0] })
+                      }}
+                      className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white hover:bg-purple-700 transition-colors flex-shrink-0 cursor-pointer shadow-sm"
+                      title="Add to Cart"
+                    >
+                      <ShoppingCart size={11} />
+                    </button>
                   </div>
                 </div>
               </div>
