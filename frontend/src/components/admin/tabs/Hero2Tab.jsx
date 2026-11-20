@@ -1102,27 +1102,47 @@ export default function Hero2Tab() {
           </div>
         </div>
 
-        {/* Section Title Settings */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200/80">
-          <div>
-            <label className="block text-gray-700 font-bold text-xs mb-1">Section Title (Dark)</label>
-            <input
-              type="text"
-              value={form.galleryTitle || ''}
-              onChange={(e) => handleFieldChange('galleryTitle', e.target.value)}
-              placeholder="EVERYDAY WELLNESS."
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-pink-500"
-            />
+        {/* Section Title & Background Colors Settings */}
+        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200/80 space-y-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-gray-700 font-bold text-xs mb-1">Section Title (Dark)</label>
+              <input
+                type="text"
+                value={form.galleryTitle || ''}
+                onChange={(e) => handleFieldChange('galleryTitle', e.target.value)}
+                placeholder="EVERYDAY WELLNESS."
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-pink-500"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 font-bold text-xs mb-1">Highlight Title (Pink)</label>
+              <input
+                type="text"
+                value={form.galleryTitleHighlight || ''}
+                onChange={(e) => handleFieldChange('galleryTitleHighlight', e.target.value)}
+                placeholder="SIMPLY PURNA."
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-bold text-pink-600 focus:outline-none focus:border-pink-500"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-gray-700 font-bold text-xs mb-1">Highlight Title (Pink)</label>
-            <input
-              type="text"
-              value={form.galleryTitleHighlight || ''}
-              onChange={(e) => handleFieldChange('galleryTitleHighlight', e.target.value)}
-              placeholder="SIMPLY PURNA."
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-bold text-pink-600 focus:outline-none focus:border-pink-500"
-            />
+
+          <div className="pt-2 border-t border-gray-200/80">
+            <span className="block text-gray-700 font-bold text-xs mb-2">Slider Background Colors</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <ColorPickerInput
+                label="Slider Start Color"
+                value={form.galleryBgColor}
+                onChange={(val) => handleFieldChange('galleryBgColor', val)}
+                fallback="#fce4ec"
+              />
+              <ColorPickerInput
+                label="Slider End Color"
+                value={form.galleryBgGradientEnd}
+                onChange={(val) => handleFieldChange('galleryBgGradientEnd', val)}
+                fallback="#fed7e2"
+              />
+            </div>
           </div>
         </div>
 

@@ -25,6 +25,8 @@ export default function Hero2GallerySlider({ settings }) {
   const title = settings.galleryTitle || ''
   const titleHighlight = settings.galleryTitleHighlight || ''
   const cards = settings.galleryCards || []
+  const bgColor = settings.galleryBgColor || '#fce4ec'
+  const bgGradientEnd = settings.galleryBgGradientEnd || bgColor
 
   if (cards.length === 0) return null
 
@@ -37,7 +39,12 @@ export default function Hero2GallerySlider({ settings }) {
   }
 
   return (
-    <section className="relative w-full overflow-hidden py-10 sm:py-14 md:py-16 bg-gradient-to-b from-[#fce4ec] via-[#fdf2f8] to-[#fce4ec] border-t border-b border-pink-100/60 my-4 sm:my-6 select-none">
+    <section
+      className="relative w-full overflow-hidden py-10 sm:py-14 md:py-16 border-t border-b border-black/5 my-4 sm:my-6 select-none"
+      style={{
+        background: `linear-gradient(135deg, ${bgColor} 0%, ${bgGradientEnd || bgColor} 100%)`,
+      }}
+    >
       {/* ── Section Title ─────────────────────────────────────── */}
       <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-4 lg:px-4 text-center mb-6 sm:mb-10">
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-gray-900 leading-tight">
@@ -72,9 +79,8 @@ export default function Hero2GallerySlider({ settings }) {
               >
                 {/* Poster Card: matching Image 2 with smooth rounded corners and no white frame */}
                 <div
-                  className={`w-52 h-72 sm:w-60 sm:h-84 md:w-68 md:h-92 lg:w-72 lg:h-96 rounded-[32px] sm:rounded-[36px] overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-400 relative ${
-                    isTouched ? 'shadow-2xl' : ''
-                  }`}
+                  className={`w-52 h-72 sm:w-60 sm:h-84 md:w-68 md:h-92 lg:w-72 lg:h-96 rounded-[32px] sm:rounded-[36px] overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-400 relative ${isTouched ? 'shadow-2xl' : ''
+                    }`}
                 >
                   {card.image ? (
                     <img
