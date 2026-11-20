@@ -63,7 +63,7 @@ export default function CartPage() {
             setUserCoins(res.data.shePoints)
           }
         })
-        .catch(() => {})
+        .catch(() => { })
     } else {
       setUserCoins(0)
     }
@@ -72,7 +72,7 @@ export default function CartPage() {
   useEffect(() => {
     try {
       localStorage.setItem('hashtelicom_use_coins', useCoins ? 'true' : 'false')
-    } catch {}
+    } catch { }
   }, [useCoins])
 
   const isCartEmpty = cartItems.length === 0 || subtotal === 0
@@ -113,8 +113,8 @@ export default function CartPage() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] overflow-hidden">
                 {cartItems.map((item, idx) => {
                   const savedPerUnit = Math.max(0, (item.originalPrice ?? item.price) - item.price)
-                  const discountStr = item.discount || (savedPerUnit > 0 ? `${Math.round((savedPerUnit/(item.originalPrice||1))*100)}% OFF` : null)
-                  
+                  const discountStr = item.discount || (savedPerUnit > 0 ? `${Math.round((savedPerUnit / (item.originalPrice || 1)) * 100)}% OFF` : null)
+
                   return (
                     <div key={item.cartId} className={`p-5 flex gap-4 ${idx !== cartItems.length - 1 ? 'border-b border-gray-100' : ''}`}>
                       <div className="w-[100px] h-[100px] bg-[#d3d3d3] rounded-lg flex-shrink-0 overflow-hidden shadow-sm">
@@ -223,11 +223,10 @@ export default function CartPage() {
             </div>
 
             {/* Super Coins / She Points Redemption Card */}
-            <div className={`rounded-xl border p-4 transition-all ${
-              useCoins 
-                ? 'bg-gradient-to-r from-amber-50 to-yellow-50/80 border-amber-300 shadow-sm' 
+            <div className={`rounded-xl border p-4 transition-all ${useCoins
+                ? 'bg-gradient-to-r from-amber-50 to-yellow-50/80 border-amber-300 shadow-sm'
                 : 'bg-white border-amber-200/70 hover:border-amber-300'
-            }`}>
+              }`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="pt-0.5">
@@ -414,7 +413,7 @@ export default function CartPage() {
                           {item.discount && <span className="text-[#00b368] text-[11px] font-bold">{item.discount}</span>}
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mt-4">
                         <button
                           onClick={() => moveToCart(item)}
@@ -445,9 +444,9 @@ export default function CartPage() {
             <div className="flex overflow-x-auto gap-4 pb-6 snap-x">
               {youMayAlsoLike.map(item => (
                 <div key={item.id} className="w-[180px] sm:w-[200px] flex-shrink-0 snap-start group cursor-pointer">
-                  <div className="relative w-full aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden mb-3">
-                    <button onClick={() => navigate(`/product/${item.id}`)} className="w-full h-full block">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="relative w-full aspect-[4/3] sm:aspect-[16/11] bg-gray-50 rounded-xl overflow-hidden mb-3 flex items-center justify-center p-2">
+                    <button onClick={() => navigate(`/product/${item.id}`)} className="w-full h-full flex items-center justify-center">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleWishlist(item) }}
@@ -491,7 +490,7 @@ export default function CartPage() {
             <h3 className="text-[17px] font-bold text-gray-900 mb-2">Remove Item?</h3>
             <p className="text-gray-500 text-[13px] mb-6">Are you sure you want to remove this item from your cart?</p>
             <div className="flex gap-3">
-              <button 
+              <button
                 onClick={() => {
                   removeFromCart(itemToDelete.cartId)
                   setItemToDelete(null)
@@ -500,7 +499,7 @@ export default function CartPage() {
               >
                 Delete
               </button>
-              <button 
+              <button
                 onClick={() => {
                   saveForLater(itemToDelete)
                   setItemToDelete(null)
@@ -510,7 +509,7 @@ export default function CartPage() {
                 Save for later
               </button>
             </div>
-            <button 
+            <button
               onClick={() => setItemToDelete(null)}
               className="w-full mt-3 px-4 py-2.5 text-[13px] font-bold text-gray-500 hover:text-gray-700"
             >

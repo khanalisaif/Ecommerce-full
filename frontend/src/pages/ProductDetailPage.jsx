@@ -336,17 +336,17 @@ function ProductDetailContent({ product }) {
                 <button
                   key={i}
                   onClick={() => setActiveThumb(i)}
-                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${activeThumb === i ? 'border-purple-600 p-0.5' : 'border-transparent bg-gray-200 hover:border-gray-300'
+                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all flex items-center justify-center bg-gray-50 p-1 ${activeThumb === i ? 'border-purple-600' : 'border-gray-200 hover:border-gray-300'
                     }`}
                 >
-                  <img src={img} alt="thumb" className="w-full h-full object-cover rounded-lg" />
+                  <img src={img} alt="thumb" className="w-full h-full object-contain rounded-lg" />
                 </button>
               ))}
             </div>
 
             {/* Main Image */}
-            <div className="relative flex-1 bg-gray-200 rounded-2xl overflow-hidden aspect-[4/5] md:aspect-auto md:h-[500px]">
-              <img src={displayImages[activeThumb] || displayImages[0] || product.image} alt={product.name} className="w-full h-full object-cover" />
+            <div className="relative flex-1 bg-gray-50 rounded-2xl overflow-hidden aspect-[4/5] md:aspect-auto md:h-[500px] flex items-center justify-center p-3 sm:p-5">
+              <img src={displayImages[activeThumb] || displayImages[0] || product.image} alt={product.name} className="w-full h-full object-contain object-center" />
 
               {/* Wishlist Button */}
               <button
@@ -787,8 +787,8 @@ function ProductDetailContent({ product }) {
                 onClick={() => navigate(`/product/${prod.id}`)}
                 className="bg-white rounded-[20px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               >
-                <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden group">
-                  <img src={prod.image} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="relative aspect-[4/3] sm:aspect-[16/11] bg-gray-50 flex items-center justify-center p-2 sm:p-2.5 overflow-hidden group">
+                  <img src={prod.image} alt={prod.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod) }}
                     className="absolute top-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-pink-500 transition-colors"

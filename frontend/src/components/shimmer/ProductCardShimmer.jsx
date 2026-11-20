@@ -2,7 +2,7 @@ export default function ProductCardShimmer() {
   return (
     <div className="bg-white rounded-2xl border border-gray-150 p-3 sm:p-3.5 flex flex-col h-full shadow-xs relative overflow-hidden animate-pulse">
       {/* Product Image Box */}
-      <div className="aspect-square w-full rounded-xl bg-gray-200/80 relative overflow-hidden mb-3">
+      <div className="aspect-[4/3] sm:aspect-[16/11] w-full rounded-xl bg-gray-200/80 relative overflow-hidden mb-3">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
       </div>
 

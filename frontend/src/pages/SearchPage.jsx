@@ -438,8 +438,8 @@ export default function SearchPage() {
                   className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all cursor-pointer group flex flex-col"
                   onClick={() => navigate(`/product/${product.id}`)}
                 >
-                  <div className="relative aspect-square bg-[#cecece] overflow-hidden">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="relative aspect-[4/3] sm:aspect-[16/11] bg-gray-50 flex items-center justify-center p-2 sm:p-2.5 overflow-hidden">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     <button
                       onClick={e => { e.stopPropagation(); toggleWishlist(product) }}
                       className="absolute top-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-pink-500 transition-colors"

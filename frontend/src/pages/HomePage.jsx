@@ -394,14 +394,15 @@ export default function HomePage() {
                   className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 >
                   {/* Image */}
-                  <div className="relative h-[140px] md:h-[160px] bg-gray-100 overflow-hidden">
+                  <div className="relative aspect-[4/3] sm:aspect-[16/11] bg-gray-50 flex items-center justify-center overflow-hidden p-2 sm:p-2.5">
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-contain object-center hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                     {product.badge && (
-                      <span className={`absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded-full ${product.badge === 'Bestseller' ? 'bg-orange-500' :
+                      <span className={`absolute top-2 left-2 text-white text-[9px] font-bold px-2 py-0.5 rounded-full z-10 ${product.badge === 'Bestseller' ? 'bg-orange-500' :
                         product.badge === 'Popular' ? 'bg-pink-500' :
                           product.badge === 'New' ? 'bg-green-500' : 'bg-purple-500'
                         }`}>

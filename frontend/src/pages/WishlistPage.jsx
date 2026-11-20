@@ -33,7 +33,7 @@ export default function WishlistPage() {
       url: window.location.origin + '/wishlist'
     }
     if (navigator.share) {
-      try { await navigator.share(shareData) } catch {}
+      try { await navigator.share(shareData) } catch { }
     } else {
       // Safe clipboard — works on HTTP too
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -73,7 +73,7 @@ export default function WishlistPage() {
       <CategoryStrip />
 
       <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 md:px-6 py-8">
-        
+
         {/* ── Header ──────────────────────────────────────── */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div className="flex items-center gap-4">
@@ -87,7 +87,7 @@ export default function WishlistPage() {
               <p className="text-gray-500 text-[13px] font-medium">Items you love, all in one place.</p>
             </div>
           </div>
-          
+
           <div className="flex gap-3">
             <button onClick={handleShare} className="px-5 py-2.5 border border-gray-300 bg-white rounded-lg font-bold text-[13px] text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
               <Share2 size={16} />
@@ -117,8 +117,8 @@ export default function WishlistPage() {
           {items.map((item) => (
             <div key={item.id} className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
               
-              <div className="relative aspect-square bg-gray-500 overflow-hidden group">
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" />
+              <div className="relative aspect-[4/3] sm:aspect-[16/11] bg-gray-50 flex items-center justify-center p-2 sm:p-2.5 overflow-hidden group">
+                <img src={item.image} alt={item.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                 <button
                   onClick={() => handleRemove(item.id)}
                   className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md text-pink-500 hover:scale-110 transition-transform"
@@ -127,40 +127,50 @@ export default function WishlistPage() {
                 </button>
               </div>
 
-              <div className="p-4">
-                <p className="text-gray-400 text-[10px] font-bold tracking-wider uppercase mb-1">{item.brand}</p>
-                <h3 className="text-gray-900 text-[13px] font-semibold mb-2 line-clamp-2 min-h-[38px] leading-snug">
-                  {item.name}
-                </h3>
-
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="text-gray-900 font-black text-lg">₹{item.price.toLocaleString()}</span>
-                  <span className="text-gray-400 line-through text-[12px]">₹{item.originalPrice.toLocaleString()}</span>
-                  <span className="text-red-500 text-[11px] font-bold">{item.discount}</span>
-                </div>
-
-                <p className="text-[10px] text-gray-500 font-medium mb-4">
-                  Size: {item.size} <span className="mx-1">|</span> Color: {item.color}
-                </p>
-
-                <div className="flex gap-2">
+                <div className="relative aspect-square bg-gray-500 overflow-hidden group">
+                  <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" />
                   <button
                     onClick={() => handleRemove(item.id)}
-                    className="w-11 h-11 flex-shrink-0 flex items-center justify-center border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
+                    className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md text-pink-500 hover:scale-110 transition-transform"
                   >
-                    <Trash2 size={16} />
-                  </button>
-                  <button
-                    onClick={() => moveWishlistItemToCart(item)}
-                    className="flex-1 bg-[#5b32d1] hover:bg-purple-800 text-white rounded-lg font-bold text-[13px] transition-colors shadow-sm"
-                  >
-                    Move to Cart
+                    <Heart size={16} fill="currentColor" />
                   </button>
                 </div>
+
+                <div className="p-4">
+                  <p className="text-gray-400 text-[10px] font-bold tracking-wider uppercase mb-1">{item.brand}</p>
+                  <h3 className="text-gray-900 text-[13px] font-semibold mb-2 line-clamp-2 min-h-[38px] leading-snug">
+                    {item.name}
+                  </h3>
+
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-gray-900 font-black text-lg">₹{item.price.toLocaleString()}</span>
+                    <span className="text-gray-400 line-through text-[12px]">₹{item.originalPrice.toLocaleString()}</span>
+                    <span className="text-red-500 text-[11px] font-bold">{item.discount}</span>
+                  </div>
+
+                  <p className="text-[10px] text-gray-500 font-medium mb-4">
+                    Size: {item.size} <span className="mx-1">|</span> Color: {item.color}
+                  </p>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleRemove(item.id)}
+                      className="w-11 h-11 flex-shrink-0 flex items-center justify-center border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => moveWishlistItemToCart(item)}
+                      className="flex-1 bg-[#5b32d1] hover:bg-purple-800 text-white rounded-lg font-bold text-[13px] transition-colors shadow-sm"
+                    >
+                      Move to Cart
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
         )}
 
         {/* ── You might also love ─────────────────────────── */}
