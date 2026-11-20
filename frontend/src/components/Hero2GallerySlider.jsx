@@ -55,10 +55,6 @@ export default function Hero2GallerySlider({ settings }) {
 
       {/* ── Infinite Slow Scrolling Circular Arc Marquee Track ─────────── */}
       <div className="wellness-marquee-container relative w-full overflow-hidden py-14 sm:py-18 md:py-22">
-        {/* Soft edge blur overlays */}
-        <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-28 bg-gradient-to-r from-[#fce4ec] to-transparent z-20 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-28 bg-gradient-to-l from-[#fce4ec] to-transparent z-20 pointer-events-none" />
-
         <div className="wellness-marquee-track flex items-center gap-5 sm:gap-7 md:gap-9 shrink-0">
           {duplicatedCards.map((card, idx) => {
             const arc = ARC_STYLES[idx % ARC_STYLES.length]
