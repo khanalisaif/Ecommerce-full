@@ -444,9 +444,9 @@ export default function CartPage() {
             <div className="flex overflow-x-auto gap-4 pb-6 snap-x">
               {youMayAlsoLike.map(item => (
                 <div key={item.id} className="w-[180px] sm:w-[200px] flex-shrink-0 snap-start group cursor-pointer">
-                  <div className="relative w-full aspect-[4/3] sm:aspect-[16/11] bg-gray-50 rounded-xl overflow-hidden mb-3 flex items-center justify-center p-2">
+                  <div className="relative w-full aspect-square bg-white rounded-xl overflow-hidden mb-3 flex items-center justify-center">
                     <button onClick={() => navigate(`/product/${item.id}`)} className="w-full h-full flex items-center justify-center">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleWishlist(item) }}

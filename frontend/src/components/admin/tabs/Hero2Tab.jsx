@@ -1402,6 +1402,25 @@ export default function Hero2Tab() {
           </div>
         </div>
 
+        {/* Carousel Section Background Colors Settings */}
+        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200/80 space-y-2">
+          <span className="block text-gray-700 font-bold text-xs mb-1">Section Background Colors</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <ColorPickerInput
+              label="Section Start Color"
+              value={form.spotlightBgColor}
+              onChange={(val) => handleFieldChange('spotlightBgColor', val)}
+              fallback="#fce4ec"
+            />
+            <ColorPickerInput
+              label="Section End Color"
+              value={form.spotlightBgGradientEnd}
+              onChange={(val) => handleFieldChange('spotlightBgGradientEnd', val)}
+              fallback="#fed7e2"
+            />
+          </div>
+        </div>
+
         {/* Carousel Slides List */}
         <div className="space-y-4">
           {(form.spotlightCarousel || []).map((slide, idx) => (

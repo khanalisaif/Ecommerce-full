@@ -79,7 +79,7 @@ export default function HomePageShimmer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-4 shadow-xs animate-pulse">
-              <div className="aspect-[4/3] sm:aspect-[16/11] w-full rounded-xl bg-gray-200/80 mb-3" />
+              <div className="aspect-square w-full rounded-xl bg-gray-200/80 mb-3" />
               <div className="h-3 w-16 bg-gray-200 rounded mb-2" />
               <div className="h-4 w-3/4 bg-gray-200 rounded mb-2" />
               <div className="h-4 w-20 bg-gray-200 rounded mb-3" />

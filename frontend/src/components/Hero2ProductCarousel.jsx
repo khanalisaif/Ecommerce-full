@@ -24,6 +24,8 @@ export default function Hero2ProductCarousel({ settings }) {
   const isSlidingRef = useRef(false)
 
   const items = settings?.spotlightCarousel || []
+  const bgColor = settings?.spotlightBgColor || '#fce4ec'
+  const bgGradientEnd = settings?.spotlightBgGradientEnd || bgColor
 
   // Initialize virtualIndex so that by default, Item 1 (Ashwagandha Gummies) is in the center
   // with Item 0 (Bright as Day) on the left and Item 2 (Loss Herbal Tea) on the right.
@@ -155,7 +157,12 @@ export default function Hero2ProductCarousel({ settings }) {
   const activeOriginalIndex = items.length > 0 ? ((virtualIndex % items.length) + items.length) % items.length : 0
 
   return (
-    <section className="relative w-full overflow-hidden py-10 sm:py-14 md:py-18 bg-gradient-to-b from-[#fce4ec] via-[#fdf2f8] to-[#fce4ec] select-none">
+    <section
+      className="relative w-full overflow-hidden py-10 sm:py-14 md:py-18 select-none border-t border-b border-black/5"
+      style={{
+        background: `linear-gradient(135deg, ${bgColor} 0%, ${bgGradientEnd || bgColor} 100%)`,
+      }}
+    >
       <div className="w-full max-w-[1720px] mx-auto px-2 sm:px-3 lg:px-4">
         
         {/* ── Carousel Container with Physical Sliding Track ─── */}

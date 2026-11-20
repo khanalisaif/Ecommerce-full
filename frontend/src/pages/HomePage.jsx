@@ -394,11 +394,11 @@ export default function HomePage() {
                   className="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 >
                   {/* Image */}
-                  <div className="relative aspect-[4/3] sm:aspect-[16/11] bg-gray-50 flex items-center justify-center overflow-hidden p-2 sm:p-2.5">
+                  <div className="relative aspect-square w-full bg-white overflow-hidden">
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-full object-contain object-center hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
                       loading="lazy"
                     />
                     {product.badge && (

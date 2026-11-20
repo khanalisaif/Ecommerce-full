@@ -113,22 +113,11 @@ export default function WishlistPage() {
             </button>
           </div>
         ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {items.map((item) => (
-            <div key={item.id} className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
-              
-              <div className="relative aspect-[4/3] sm:aspect-[16/11] bg-gray-50 flex items-center justify-center p-2 sm:p-2.5 overflow-hidden group">
-                <img src={item.image} alt={item.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                <button
-                  onClick={() => handleRemove(item.id)}
-                  className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md text-pink-500 hover:scale-110 transition-transform"
-                >
-                  <Heart size={16} fill="currentColor" />
-                </button>
-              </div>
-
-                <div className="relative aspect-square bg-gray-500 overflow-hidden group">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {items.map((item) => (
+              <div key={item.id} className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
+                <div className="relative aspect-square w-full bg-white overflow-hidden group">
+                  <img src={item.image} alt={item.name} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                   <button
                     onClick={() => handleRemove(item.id)}
                     className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md text-pink-500 hover:scale-110 transition-transform"
@@ -209,5 +198,5 @@ export default function WishlistPage() {
       </main>
       <Footer />
     </div>
-  )
-}
+        )
+        }

@@ -109,6 +109,8 @@ export const DEFAULT_HERO2_SETTINGS = {
   galleryBgGradientEnd: '#fed7e2',
   galleryCards: [],
   spotlightCarouselEnabled: true,
+  spotlightBgColor: '#fce4ec',
+  spotlightBgGradientEnd: '#fed7e2',
   spotlightCarousel: [],
 }
 
@@ -131,7 +133,7 @@ export function normalizeHero2Settings(raw) {
     titleHighlightColor: raw.titleHighlightColor || DEFAULT_HERO2_SETTINGS.titleHighlightColor,
     description: raw.description !== undefined ? raw.description : DEFAULT_HERO2_SETTINGS.description,
     descriptionColor: raw.descriptionColor || DEFAULT_HERO2_SETTINGS.descriptionColor,
-    badges: Array.isArray(raw.badges) ? raw.badges : (typeof raw.badges === 'string' ? raw.badges.split(',').map(s=>s.trim()).filter(Boolean) : DEFAULT_HERO2_SETTINGS.badges),
+    badges: Array.isArray(raw.badges) ? raw.badges : (typeof raw.badges === 'string' ? raw.badges.split(',').map(s => s.trim()).filter(Boolean) : DEFAULT_HERO2_SETTINGS.badges),
     badgeColor: raw.badgeColor || DEFAULT_HERO2_SETTINGS.badgeColor,
     badgeDotColor: raw.badgeDotColor || DEFAULT_HERO2_SETTINGS.badgeDotColor,
     buttonText: raw.buttonText || DEFAULT_HERO2_SETTINGS.buttonText,
@@ -140,18 +142,18 @@ export function normalizeHero2Settings(raw) {
     buttonBgGradientEnd: raw.buttonBgGradientEnd || DEFAULT_HERO2_SETTINGS.buttonBgGradientEnd,
     buttonLink: raw.buttonLink || DEFAULT_HERO2_SETTINGS.buttonLink,
     image: raw.image || DEFAULT_HERO2_SETTINGS.image,
-    bgColor: raw.bgColor || DEFAULT_HERO2_SETTINGS.bgColor,
-    bgGradientEnd: raw.bgGradientEnd || DEFAULT_HERO2_SETTINGS.bgGradientEnd,
-    tickerBgColor: raw.tickerBgColor || DEFAULT_HERO2_SETTINGS.tickerBgColor,
-    tickerItems: Array.isArray(raw.tickerItems) && raw.tickerItems.length
-      ? raw.tickerItems.map((t, idx) => ({
-          id: t.id || `t-${idx}`,
-          text: t.text || '',
-          icon: t.icon || 'Leaf',
-          image: t.image || '',
-        }))
-      : DEFAULT_HERO2_SETTINGS.tickerItems,
-    circlesEnabled: raw.circlesEnabled !== undefined ? Boolean(raw.circlesEnabled) : DEFAULT_HERO2_SETTINGS.circlesEnabled,
+      bgColor: raw.bgColor || DEFAULT_HERO2_SETTINGS.bgColor,
+        bgGradientEnd: raw.bgGradientEnd || DEFAULT_HERO2_SETTINGS.bgGradientEnd,
+          tickerBgColor: raw.tickerBgColor || DEFAULT_HERO2_SETTINGS.tickerBgColor,
+            tickerItems: Array.isArray(raw.tickerItems) && raw.tickerItems.length
+              ? raw.tickerItems.map((t, idx) => ({
+                id: t.id || `t-${idx}`,
+                text: t.text || '',
+                icon: t.icon || 'Leaf',
+                image: t.image || '',
+              }))
+              : DEFAULT_HERO2_SETTINGS.tickerItems,
+              circlesEnabled: raw.circlesEnabled !== undefined ? Boolean(raw.circlesEnabled) : DEFAULT_HERO2_SETTINGS.circlesEnabled,
     circles: Array.isArray(raw.circles) && raw.circles.length ? raw.circles : DEFAULT_HERO2_SETTINGS.circles,
     galleryEnabled: raw.galleryEnabled !== undefined ? Boolean(raw.galleryEnabled) : DEFAULT_HERO2_SETTINGS.galleryEnabled,
     galleryTitle: raw.galleryTitle !== undefined ? raw.galleryTitle : DEFAULT_HERO2_SETTINGS.galleryTitle,
@@ -162,6 +164,8 @@ export function normalizeHero2Settings(raw) {
     galleryBgGradientEnd: raw.galleryBgGradientEnd || DEFAULT_HERO2_SETTINGS.galleryBgGradientEnd,
     galleryCards: Array.isArray(raw.galleryCards) && raw.galleryCards.length ? raw.galleryCards : DEFAULT_HERO2_SETTINGS.galleryCards,
     spotlightCarouselEnabled: raw.spotlightCarouselEnabled !== undefined ? Boolean(raw.spotlightCarouselEnabled) : DEFAULT_HERO2_SETTINGS.spotlightCarouselEnabled,
+    spotlightBgColor: raw.spotlightBgColor || DEFAULT_HERO2_SETTINGS.spotlightBgColor,
+    spotlightBgGradientEnd: raw.spotlightBgGradientEnd || DEFAULT_HERO2_SETTINGS.spotlightBgGradientEnd,
     spotlightCarousel: Array.isArray(raw.spotlightCarousel) && raw.spotlightCarousel.length ? raw.spotlightCarousel : DEFAULT_HERO2_SETTINGS.spotlightCarousel,
   }
 }

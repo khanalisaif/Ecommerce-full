@@ -67,7 +67,7 @@ export default function SearchPage() {
     const sizesMap = {}
     let minP = 999999
     let maxP = 0
-    
+
     baseProducts.forEach(p => {
       if (p.brand_name) brands.add(p.brand_name)
       if (p.color) colors.add(p.color)
@@ -78,12 +78,12 @@ export default function SearchPage() {
           sizesMap[s] = (sizesMap[s] || 0) + 1
         })
       } else if (typeof p.sizes === 'string') {
-        const parts = p.sizes.split(',').map(s=>s.trim())
+        const parts = p.sizes.split(',').map(s => s.trim())
         parts.forEach(s => { sizesMap[s] = (sizesMap[s] || 0) + 1 })
       }
     })
 
-    const sizeArr = Object.entries(sizesMap).map(([label, count]) => ({ label, count })).sort((a,b)=>b.count-a.count)
+    const sizeArr = Object.entries(sizesMap).map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count)
 
     return {
       BRANDS: Array.from(brands),
@@ -148,14 +148,14 @@ export default function SearchPage() {
   // Filtered + sorted products
   const processed = useMemo(() => {
     let data = [...baseProducts]
-    
+
     if (selectedSizes.length) data = data.filter(p => {
-      const pSizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? p.sizes.split(',').map(s=>s.trim()) : [])
+      const pSizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? p.sizes.split(',').map(s => s.trim()) : [])
       return selectedSizes.some(s => pSizes.includes(s))
     })
     if (selectedBrands.length) data = data.filter(p => selectedBrands.includes(p.brand_name))
     if (selectedColors.length) data = data.filter(p => selectedColors.includes(p.color))
-    
+
     if (selectedDiscount) {
       const discountInt = parseInt(selectedDiscount)
       data = data.filter(p => {
@@ -170,7 +170,7 @@ export default function SearchPage() {
     }
 
     data = data.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1])
-    
+
     if (sortBy === 'Price - Low to High') data.sort((a, b) => a.price - b.price)
     else if (sortBy === 'Price - High to Low') data.sort((a, b) => b.price - a.price)
     else if (sortBy === 'Customer Rating') data.sort((a, b) => b.rating - a.rating)
@@ -236,9 +236,8 @@ export default function SearchPage() {
                   <div className="flex items-center gap-3">
                     <div
                       onClick={() => { toggleSize(s.label); setCurrentPage(1) }}
-                      className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${
-                        selectedSizes.includes(s.label) ? 'bg-purple-600 border-purple-600' : 'border-gray-300 group-hover:border-purple-400'
-                      }`}
+                      className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${selectedSizes.includes(s.label) ? 'bg-purple-600 border-purple-600' : 'border-gray-300 group-hover:border-purple-400'
+                        }`}
                     >
                       {selectedSizes.includes(s.label) && <span className="text-white text-[8px] font-black">✓</span>}
                     </div>
@@ -270,9 +269,8 @@ export default function SearchPage() {
                 <label key={b} className="flex items-center gap-3 cursor-pointer group">
                   <div
                     onClick={() => { toggleBrand(b); setCurrentPage(1) }}
-                    className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${
-                      selectedBrands.includes(b) ? 'bg-purple-600 border-purple-600' : 'border-gray-300 group-hover:border-purple-400'
-                    }`}
+                    className={`w-4 h-4 border-2 rounded flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${selectedBrands.includes(b) ? 'bg-purple-600 border-purple-600' : 'border-gray-300 group-hover:border-purple-400'
+                      }`}
                   >
                     {selectedBrands.includes(b) && <span className="text-white text-[8px] font-black">✓</span>}
                   </div>
@@ -294,11 +292,10 @@ export default function SearchPage() {
                 <button
                   key={c}
                   onClick={() => { toggleColor(c); setCurrentPage(1) }}
-                  className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
-                    selectedColors.includes(c)
-                      ? 'bg-purple-600 text-white border-purple-600'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-purple-400'
-                  }`}
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors ${selectedColors.includes(c)
+                    ? 'bg-purple-600 text-white border-purple-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-purple-400'
+                    }`}
                 >
                   {c}
                 </button>
@@ -317,9 +314,8 @@ export default function SearchPage() {
               <label key={d} className="flex items-center gap-3 cursor-pointer">
                 <div
                   onClick={() => { setSelectedDiscount(selectedDiscount === d ? '' : d); setCurrentPage(1) }}
-                  className={`w-4 h-4 border-2 rounded-full flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${
-                    selectedDiscount === d ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
-                  }`}
+                  className={`w-4 h-4 border-2 rounded-full flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${selectedDiscount === d ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
+                    }`}
                 >
                   {selectedDiscount === d && <span className="w-2 h-2 bg-white rounded-full block"></span>}
                 </div>
@@ -340,9 +336,8 @@ export default function SearchPage() {
               <label key={r} className="flex items-center gap-3 cursor-pointer">
                 <div
                   onClick={() => { setSelectedRating(selectedRating === r ? '' : r); setCurrentPage(1) }}
-                  className={`w-4 h-4 border-2 rounded-full flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${
-                    selectedRating === r ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
-                  }`}
+                  className={`w-4 h-4 border-2 rounded-full flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer ${selectedRating === r ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
+                    }`}
                 >
                   {selectedRating === r && <span className="w-2 h-2 bg-white rounded-full block"></span>}
                 </div>
@@ -361,7 +356,7 @@ export default function SearchPage() {
       <CategoryStrip />
 
       <main className="flex-1 w-full max-w-[1500px] mx-auto px-4 md:px-6 py-6 flex flex-row gap-0">
-        
+
         {/* Sidebar */}
         <div className="hidden md:block w-[270px] flex-shrink-0 mr-6">
           <Sidebar />
@@ -404,9 +399,8 @@ export default function SearchPage() {
                       <button
                         key={opt}
                         onClick={() => { setSortBy(opt); setSortOpen(false); setCurrentPage(1) }}
-                        className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors ${
-                          sortBy === opt ? 'bg-purple-100 text-purple-700 font-bold' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
+                        className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors ${sortBy === opt ? 'bg-purple-100 text-purple-700 font-bold' : 'text-gray-700 hover:bg-gray-50'
+                          }`}
                       >
                         {opt}
                       </button>
@@ -438,8 +432,8 @@ export default function SearchPage() {
                   className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all cursor-pointer group flex flex-col"
                   onClick={() => navigate(`/product/${product.id}`)}
                 >
-                  <div className="relative aspect-[4/3] sm:aspect-[16/11] bg-gray-50 flex items-center justify-center p-2 sm:p-2.5 overflow-hidden">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                  <div className="relative aspect-square w-full bg-white overflow-hidden">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     <button
                       onClick={e => { e.stopPropagation(); toggleWishlist(product) }}
                       className="absolute top-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-pink-500 transition-colors"
@@ -448,76 +442,75 @@ export default function SearchPage() {
                     </button>
                   </div>
 
-                  <div className="p-3.5 flex flex-col flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-gray-900 font-bold text-[12px]">{product.brand_name || 'Generic'}</span>
-                      {product.isAssured && (
-                        <div className="flex items-center gap-0.5 text-[10px] font-bold text-gray-500">
-                          <ShieldCheck size={11} className="text-yellow-500" fill="currentColor" />
-                          <span>Assured</span>
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="text-gray-600 text-[12.5px] line-clamp-1 mb-2">{product.name}</h3>
-                    <div className="text-gray-900 font-black text-[15px] mb-0.5">₹{product.price.toLocaleString()}</div>
-                    <div className={`text-[11px] font-bold mb-3 ${product.stockInfo === 'Only 1 left' ? 'text-red-600' : 'text-green-600'}`}>
-                      {product.stockInfo || 'In Stock'}
-                    </div>
-                    <div className="mt-auto text-gray-400 text-[11px] font-medium border-t border-gray-100 pt-2">
-                      {Array.isArray(product.sizes) ? product.sizes.join(', ') : product.sizes}
+                    <div className="p-3.5 flex flex-col flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-900 font-bold text-[12px]">{product.brand_name || 'Generic'}</span>
+                        {product.isAssured && (
+                          <div className="flex items-center gap-0.5 text-[10px] font-bold text-gray-500">
+                            <ShieldCheck size={11} className="text-yellow-500" fill="currentColor" />
+                            <span>Assured</span>
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="text-gray-600 text-[12.5px] line-clamp-1 mb-2">{product.name}</h3>
+                      <div className="text-gray-900 font-black text-[15px] mb-0.5">₹{product.price.toLocaleString()}</div>
+                      <div className={`text-[11px] font-bold mb-3 ${product.stockInfo === 'Only 1 left' ? 'text-red-600' : 'text-green-600'}`}>
+                        {product.stockInfo || 'In Stock'}
+                      </div>
+                      <div className="mt-auto text-gray-400 text-[11px] font-medium border-t border-gray-100 pt-2">
+                        {Array.isArray(product.sizes) ? product.sizes.join(', ') : product.sizes}
+                      </div>
                     </div>
                   </div>
-                </div>
               ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl p-16 text-center border border-gray-200 mb-8">
-              <div className="text-5xl mb-4">🔍</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">No products found</h3>
-              <p className="text-gray-500 text-sm mb-4">Try adjusting your filters</p>
-              <button onClick={clearAll} className="bg-purple-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-purple-700 transition-colors">Clear Filters</button>
-            </div>
+                </div>
+              ) : (
+              <div className="bg-white rounded-xl p-16 text-center border border-gray-200 mb-8">
+                <div className="text-5xl mb-4">🔍</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No products found</h3>
+                <p className="text-gray-500 text-sm mb-4">Try adjusting your filters</p>
+                <button onClick={clearAll} className="bg-purple-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-purple-700 transition-colors">Clear Filters</button>
+              </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mb-4">
-              <button
-                onClick={() => goPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-600 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <ChevronRight size={16} className="rotate-180" />
-              </button>
-
-              {pageNumbers.map((p, idx) =>
-                p === '...' ? (
-                  <span key={`dot-${idx}`} className="w-8 text-center text-gray-400 text-sm font-bold">...</span>
-                ) : (
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mb-4">
                   <button
-                    key={p}
-                    onClick={() => goPage(p)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-colors ${
-                      currentPage === p
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:border-purple-500 hover:text-purple-600'
-                    }`}
+                    onClick={() => goPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-600 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {p}
+                    <ChevronRight size={16} className="rotate-180" />
                   </button>
-                )
-              )}
 
-              <button
-                onClick={() => goPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-600 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <ChevronRight size={16} />
-              </button>
+                  {pageNumbers.map((p, idx) =>
+                    p === '...' ? (
+                      <span key={`dot-${idx}`} className="w-8 text-center text-gray-400 text-sm font-bold">...</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => goPage(p)}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-colors ${currentPage === p
+                          ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:border-purple-500 hover:text-purple-600'
+                          }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+
+                  <button
+                    onClick={() => goPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-600 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
       </main>
 
       <Footer />
