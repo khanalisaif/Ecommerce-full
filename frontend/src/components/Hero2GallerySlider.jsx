@@ -79,8 +79,9 @@ export default function Hero2GallerySlider({ settings }) {
               >
                 {/* Poster Card: matching Image 2 with smooth rounded corners and no white frame */}
                 <div
-                  className={`w-52 h-72 sm:w-60 sm:h-84 md:w-68 md:h-92 lg:w-72 lg:h-96 rounded-[32px] sm:rounded-[36px] overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-400 relative ${isTouched ? 'shadow-2xl' : ''
-                    }`}
+                  className={`w-52 h-72 sm:w-60 sm:h-84 md:w-68 md:h-92 lg:w-72 lg:h-96 rounded-[32px] sm:rounded-[36px] overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-400 relative ${
+                    isTouched ? 'shadow-2xl' : ''
+                  }`}
                 >
                   {card.image ? (
                     <img
